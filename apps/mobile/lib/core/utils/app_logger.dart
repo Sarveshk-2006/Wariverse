@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import '../config/env_config.dart';
 
 /// Centralized logger with production log redaction for sensitive fields.
@@ -11,6 +11,11 @@ class AppLogger {
   static void i(String message) {
     if (!EnvConfig.enableDebugLogging) return;
     debugPrint('[INFO] ${_sanitize(message)}');
+  }
+
+  static void w(String message) {
+    if (!EnvConfig.enableDebugLogging) return;
+    debugPrint('[WARN] ${_sanitize(message)}');
   }
 
   static void e(String message, [dynamic error, StackTrace? stackTrace]) {

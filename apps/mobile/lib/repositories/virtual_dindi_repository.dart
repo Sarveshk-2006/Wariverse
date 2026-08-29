@@ -182,6 +182,15 @@ class VirtualDindiRepository {
     // Write membership
     await memberDocRef.set(member.toJson(), SetOptions(merge: true));
 
+    // Sync Varkari user document in Firestore
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'dindi_id': dindi.dindiId,
+        'dindi_code': dindi.joinCode,
+        'updated_at': now,
+      }, SetOptions(merge: true));
+    } catch (_) {}
+
     // Only increment active_member_count if member was NOT already active
     if (!isAlreadyActive) {
       await _firestore.collection('virtual_dindis').doc(dindi.dindiId).update({
@@ -243,6 +252,14 @@ class VirtualDindiRepository {
           'updated_at': now,
         });
 
+        try {
+          await _firestore.collection('users').doc(uid).update({
+            'dindi_id': FieldValue.delete(),
+            'dindi_code': FieldValue.delete(),
+            'updated_at': now,
+          });
+        } catch (_) {}
+
         await logEvent(
           dindiId: dindiId,
           type: VirtualDindiEventType.MEMBER_LEFT,
@@ -289,6 +306,14 @@ class VirtualDindiRepository {
           'active_member_count': FieldValue.increment(-1),
           'updated_at': now,
         });
+
+        try {
+          await _firestore.collection('users').doc(targetUid).update({
+            'dindi_id': FieldValue.delete(),
+            'dindi_code': FieldValue.delete(),
+            'updated_at': now,
+          });
+        } catch (_) {}
 
         await logEvent(
           dindiId: dindiId,

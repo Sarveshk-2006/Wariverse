@@ -11,12 +11,38 @@ import '../../providers/virtual_dindi_provider.dart';
 import 'widgets/role_dashboard_header.dart';
 import 'widgets/metric_card.dart';
 import '../incidents/widgets/admin_incident_command.dart';
+import '../../services/firestore_seeder_service.dart';
 
 /// Central Executive Command & Control Center Dashboard for Admin.
 /// Provides real-time telemetry, emergency response command, NGO oversight, Dindi monitoring,
 /// Sanitation dispatches, system health badges, and capability approval controls.
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  bool _isSeeding = false;
+
+  Future<void> _seedDemoData() async {
+    setState(() => _isSeeding = true);
+    final success = await FirestoreSeederService.seedAllDemoData();
+    if (mounted) {
+      setState(() => _isSeeding = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? '✓ Live demo dataset seeded to Cloud Firestore successfully!'
+                : 'Failed to seed demo dataset. Check console logs.',
+          ),
+          backgroundColor: success ? WariColors.success : WariColors.danger,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +81,37 @@ class AdminDashboard extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(WariSpacing.base),
               children: [
+                WariCard(
+                  borderColor: WariColors.primary.withValues(alpha: 0.4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '⚡ Populate Live Firestore Demo Data',
+                              style: WariTypography.titleSmall.copyWith(color: WariColors.primaryDark),
+                            ),
+                            Text(
+                              'Seeds authentic Dindis, Varkaris, Incidents, NGO Aid & Services into Cloud Firestore.',
+                              style: WariTypography.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: WariSpacing.xs),
+                      WariPrimaryButton(
+                        label: _isSeeding ? 'Seeding...' : 'Seed Now',
+                        onPressed: _isSeeding ? null : _seedDemoData,
+                        fullWidth: false,
+                        dense: true,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: WariSpacing.base),
                 // 1. Real-Time Command KPIs Grid
                 Text('📊 Real-Time Operations Telemetry', style: WariTypography.titleSmall),
                 const SizedBox(height: WariSpacing.xs),

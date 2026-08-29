@@ -22,7 +22,10 @@ class NearbyServicesEngine {
     double lat2,
     double lon2,
   ) {
-    if (lat1 == 0.0 || lon1 == 0.0 || lat2 == 0.0 || lon2 == 0.0) {
+    if (lat1.isNaN || lon1.isNaN || lat2.isNaN || lon2.isNaN ||
+        lat1 == 0.0 || lon1 == 0.0 || lat2 == 0.0 || lon2 == 0.0 ||
+        lat1.abs() > 90.0 || lat2.abs() > 90.0 ||
+        lon1.abs() > 180.0 || lon2.abs() > 180.0) {
       return 99999.0;
     }
 

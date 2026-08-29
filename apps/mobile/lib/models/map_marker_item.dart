@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../core/theme/wari_colors.dart';
 
@@ -80,4 +80,21 @@ class MapMarkerItem {
       default:         return 'Service Point';
     }
   }
+
+  static String getSectorLabel(String layer) {
+    switch (layer) {
+      case 'user':     return 'Pilgrim GPS Sector';
+      case 'food':     return 'Food & Annadan Sector';
+      case 'water':    return 'Water & Hydration Sector';
+      case 'medical':  return 'Medical & First Aid Sector';
+      case 'toilets':  return 'Sanitation & Toilet Sector';
+      case 'shelters': return 'Shelter & Rest Pavilion Sector';
+      case 'wellness': return 'Wellness & Seva Sector';
+      case 'sos':      return 'Emergency Response Sector';
+      case 'crowd':    return 'Crowd Density Monitoring Sector';
+      default:         return 'Operational Sector';
+    }
+  }
+
+  String get sectorName => getSectorLabel(layer);
 }

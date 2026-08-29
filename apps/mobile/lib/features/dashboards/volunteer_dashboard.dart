@@ -122,6 +122,40 @@ class _VolunteerDashboardState extends State<VolunteerDashboard> {
                             );
                           }).toList(),
                         ),
+                      const SizedBox(height: WariSpacing.base),
+                      Text('📜 Resolved SOS Response History', style: WariTypography.titleSmall),
+                      const SizedBox(height: WariSpacing.xs),
+                      WariCard(
+                        child: Column(
+                          children: [
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                radius: 14,
+                                backgroundColor: WariColors.successLight,
+                                child: Icon(Icons.check, size: 16, color: WariColors.success),
+                              ),
+                              title: Text('Medical Aid at Sector 4', style: WariTypography.labelMedium),
+                              subtitle: Text('Resolved by Volunteer Team • 45m ago', style: WariTypography.caption),
+                              trailing: const WariStatusChip(label: 'RESOLVED', color: WariColors.success, dense: true),
+                            ),
+                            const Divider(height: 8),
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                radius: 14,
+                                backgroundColor: WariColors.successLight,
+                                child: Icon(Icons.check, size: 16, color: WariColors.success),
+                              ),
+                              title: Text('Lost Pilgrim Reunification', style: WariTypography.labelMedium),
+                              subtitle: Text('Resolved by Volunteer Team • 2h ago', style: WariTypography.caption),
+                              trailing: const WariStatusChip(label: 'RESOLVED', color: WariColors.success, dense: true),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
