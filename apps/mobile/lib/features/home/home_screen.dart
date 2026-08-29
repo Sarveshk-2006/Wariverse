@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
-import '../../core/widgets/wari_widgets_exports.dart';
 import '../../providers/home_provider.dart';
 import '../../repositories/repositories_exports.dart';
 import '../../services/api_service.dart';
@@ -9,9 +8,15 @@ import 'widgets/home_header.dart';
 import 'widgets/crowd_status_card.dart';
 import 'widgets/weather_alert_card.dart';
 import 'widgets/quick_actions_grid.dart';
-import 'widgets/nearby_services_card.dart';
+import 'widgets/nearby_services_section.dart';
 import 'widgets/role_summary_card.dart';
 import 'widgets/live_resources_card.dart';
+import '../dindi/widgets/virtual_dindi_home_card.dart';
+import '../dindi/create_virtual_dindi_screen.dart';
+import '../dindi/join_virtual_dindi_modal.dart';
+import '../dindi/virtual_dindi_detail_screen.dart';
+import '../incidents/widgets/varkari_incident_card.dart';
+import '../incidents/report_threat_screen.dart';
 
 /// Full WariVerse AI Home Dashboard view.
 class HomeScreen extends StatelessWidget {
@@ -56,32 +61,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   Widget build(BuildContext context) {
     final homeProvider = Provider.of<HomeProvider>(context);
 
-    if (homeProvider.isLoading) {
-      return Scaffold(
-        backgroundColor: WariColors.background,
-        body: ListView(
-          padding: const EdgeInsets.all(WariSpacing.base),
-          children: const [
-            WariSkeletonCard(height: 120),
-            SizedBox(height: WariSpacing.base),
-            WariSkeletonCard(height: 80),
-            SizedBox(height: WariSpacing.base),
-            WariSkeletonCard(height: 160),
-          ],
-        ),
-      );
-    }
-
-    if (homeProvider.hasError && homeProvider.weather == null) {
-      return Scaffold(
-        backgroundColor: WariColors.background,
-        body: WariErrorState(
-          message: homeProvider.errorMessage ?? 'Unable to connect to WariVerse servers.',
-          onRetry: () => homeProvider.loadDashboardData(),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: WariColors.background,
       body: RefreshIndicator(
@@ -89,20 +68,45 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         color: WariColors.primary,
         child: ListView(
           padding: const EdgeInsets.all(WariSpacing.base),
-          children: const [
-            HomeHeader(),
-            SizedBox(height: WariSpacing.base),
-            LiveResourcesCard(),
-            SizedBox(height: WariSpacing.base),
+          children: [
+            const HomeHeader(),
+            const SizedBox(height: WariSpacing.base),
             RoleSummaryCard(),
-            SizedBox(height: WariSpacing.base),
+            const SizedBox(height: WariSpacing.base),
+            VarkariIncidentCard(
+              onReportPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportThreatScreen()));
+              },
+            ),
+            const SizedBox(height: WariSpacing.base),
+            VirtualDindiHomeCard(
+              onCreatePressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateVirtualDindiScreen()));
+              },
+              onJoinPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => const JoinVirtualDindiModal(),
+                );
+              },
+              onOpenMapPressed: () {
+                Navigator.pushNamed(context, '/map');
+              },
+              onDetailPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const VirtualDindiDetailScreen()));
+              },
+            ),
+            const SizedBox(height: WariSpacing.base),
+            const LiveResourcesCard(),
+            const SizedBox(height: WariSpacing.base),
             CrowdStatusCard(),
-            SizedBox(height: WariSpacing.base),
+            const SizedBox(height: WariSpacing.base),
             WeatherAlertCard(),
             QuickActionsGrid(),
-            SizedBox(height: WariSpacing.base),
+            const SizedBox(height: WariSpacing.base),
             NearbyServicesSection(),
-            SizedBox(height: WariSpacing.xl),
+            const SizedBox(height: WariSpacing.xl),
           ],
         ),
       ),

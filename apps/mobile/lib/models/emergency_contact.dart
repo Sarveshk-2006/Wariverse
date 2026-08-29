@@ -1,61 +1,57 @@
-﻿class EmergencyContact {
+/// Emergency Contact Model extracted from WoShield SOS system & WariVerse AI.
+class EmergencyContact {
   final String id;
   final String userId;
   final String name;
   final String phoneNumber;
   final String relationship;
-  final int priority; // 1 to 5
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final int priority;
+  final bool isVerified;
+  final dynamic createdAt;
+  final dynamic updatedAt;
 
   const EmergencyContact({
     required this.id,
-    required this.userId,
+    this.userId = '',
     required this.name,
     required this.phoneNumber,
-    required this.relationship,
-    required this.priority,
-    this.isActive = true,
-    required this.createdAt,
-    required this.updatedAt,
+    this.relationship = 'Family',
+    this.priority = 1,
+    this.isVerified = true,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  /// Validates phone numbers and normalizes format.
-  static String normalizePhoneNumber(String input) {
-    var cleaned = input.replaceAll(RegExp(r'\s+|-|\(|\)'), '');
-    if (cleaned.startsWith('+91')) {
-      return cleaned;
-    }
-    if (cleaned.length == 10 && RegExp(r'^[6-9]\d{9}$').hasMatch(cleaned)) {
-      return '+91$cleaned';
-    }
-    return cleaned;
+  static String normalizePhoneNumber(String phone) {
+    return phone.replaceAll(RegExp(r'[^\d+]'), '');
   }
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
     return EmergencyContact(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? 'contact_${DateTime.now().millisecondsSinceEpoch}',
       userId: json['user_id'] as String? ?? json['userId'] as String? ?? '',
-      name: json['name'] as String,
-      phoneNumber: json['phone_number'] as String? ?? json['phoneNumber'] as String? ?? '',
-      relationship: json['relationship'] as String,
-      priority: (json['priority'] as num).toInt(),
-      isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : DateTime.now(),
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : DateTime.now(),
+      name: json['name'] as String? ?? json['display_name'] as String? ?? 'Emergency Contact',
+      phoneNumber: normalizePhoneNumber(json['phone_number'] as String? ?? json['number'] as String? ?? json['phone'] as String? ?? ''),
+      relationship: json['relationship_name'] as String? ?? json['relationship'] as String? ?? 'Family',
+      priority: json['priority'] as int? ?? 1,
+      isVerified: json['is_verified'] as bool? ?? true,
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'name': name,
-        'phone_number': phoneNumber,
-        'relationship': relationship,
-        'priority': priority,
-        'is_active': isActive,
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'name': name,
+      'phone_number': phoneNumber,
+      'relationship_name': relationship,
+      'relationship': relationship,
+      'priority': priority,
+      'is_verified': isVerified,
+      'created_at': createdAt is DateTime ? (createdAt as DateTime).toIso8601String() : createdAt?.toString(),
+      'updated_at': updatedAt is DateTime ? (updatedAt as DateTime).toIso8601String() : updatedAt?.toString(),
+    };
+  }
 }

@@ -25,11 +25,15 @@ import '../features/cleanwari/cleanwari_task_detail_screen.dart';
 import '../features/placeholders/profile_placeholder.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
+import '../features/splash/splash_screen.dart';
 import 'app_routes.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case AppRoutes.splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen(), settings: settings);
+
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen(), settings: settings);
 

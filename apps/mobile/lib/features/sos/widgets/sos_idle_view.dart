@@ -4,10 +4,24 @@ import '../../../core/theme/wari_theme_exports.dart';
 import '../../../core/widgets/wari_widgets_exports.dart';
 import '../../../models/models_exports.dart';
 import '../../../providers/sos_provider.dart';
+import 'emergency_contacts_widget.dart';
 
-/// Primary idle view for one-tap SOS emergency trigger.
-class SosIdleView extends StatelessWidget {
+/// Primary idle view for SOS emergency trigger with 2-second hold evidence recording & WoShield2 features.
+class SosIdleView extends StatefulWidget {
   const SosIdleView({super.key});
+
+  @override
+  State<SosIdleView> createState() => _SosIdleViewState();
+}
+
+class _SosIdleViewState extends State<SosIdleView> {
+  final _voiceSearchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _voiceSearchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,29 +31,118 @@ class SosIdleView extends StatelessWidget {
       padding: const EdgeInsets.all(WariSpacing.base),
       child: Column(
         children: [
-          const SizedBox(height: WariSpacing.base),
+          const SizedBox(height: WariSpacing.xs),
           Text(
             'Emergency Help is One Tap Away',
             style: WariTypography.titleMedium.copyWith(color: WariColors.textMuted),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: WariSpacing.lg),
+          const SizedBox(height: WariSpacing.md),
 
-          // Big Emergency SOS Button
+          // Big Emergency SOS Button (Supports 2-second hold for Evidence Recording)
           Center(
-            child: SosButton(
-              size: 130,
-              label: 'SOS',
-              onPressed: () => sosProvider.setUiState(SosUiState.confirming),
+            child: GestureDetector(
+              onLongPress: () {
+                sosProvider.start2SecondHoldEmergencyRecording();
+              },
+              child: SosButton(
+                size: 135,
+                label: sosProvider.isRecordingEvidence ? 'RECORDING' : 'SOS',
+                onPressed: () => sosProvider.setUiState(SosUiState.confirming),
+              ),
             ),
           ),
-          const SizedBox(height: WariSpacing.base),
+          const SizedBox(height: WariSpacing.sm),
+
+          // Evidence Recording Progress Banner
+          if (sosProvider.isRecordingEvidence) ...[
+            Container(
+              padding: const EdgeInsets.all(WariSpacing.sm),
+              decoration: BoxDecoration(
+                color: WariColors.danger.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: WariColors.danger),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.videocam_rounded, color: WariColors.danger, size: 20),
+                      SizedBox(width: 6),
+                      Text('Capturing 10s Emergency Evidence Recording...', style: TextStyle(fontWeight: FontWeight.bold, color: WariColors.danger, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: sosProvider.recordingProgressSeconds / 10.0,
+                    backgroundColor: WariColors.slate200,
+                    valueColor: const AlwaysStoppedAnimation<Color>(WariColors.danger),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: WariSpacing.sm),
+          ],
+
           Text(
-            'Press for emergency medical, police, or rescue assistance',
+            'Tap for instant SOS. Hold button for 2 seconds to capture evidence recording.',
             style: WariTypography.bodySmall,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: WariSpacing.xl),
+          const SizedBox(height: WariSpacing.base),
+
+          // Voice Threat AI Analysis Bar (Ported from WoShield2 SurakshaVoiceAI)
+          WariCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.record_voice_over_rounded, color: WariColors.primary, size: 18),
+                    SizedBox(width: 6),
+                    Text('Voice Threat AI Detector (SurakshaVoiceAI)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Speaks phrases like "Help", "Bachao", "Doctor", "Police", "Stampede" for automated emergency trigger.',
+                  style: TextStyle(fontSize: 10, color: WariColors.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _voiceSearchController,
+                        decoration: const InputDecoration(
+                          hintText: 'Speak or type spoken text...',
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: WariColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onPressed: () {
+                        final text = _voiceSearchController.text.trim();
+                        if (text.isNotEmpty) {
+                          sosProvider.analyzeVoiceThreatText(text);
+                          _voiceSearchController.clear();
+                        }
+                      },
+                      child: const Text('Analyze AI', style: TextStyle(fontSize: 11)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: WariSpacing.base),
 
           // Category Quick Selector
           WariCard(
@@ -88,6 +191,10 @@ class SosIdleView extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: WariSpacing.base),
+
+          // Emergency Contacts Management & Automated SMS Dispatch
+          const EmergencyContactsWidget(),
 
           // Offline Queue Status Card
           if (sosProvider.offlineQueue.isNotEmpty) ...[

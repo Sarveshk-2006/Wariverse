@@ -1,5 +1,6 @@
 /// Centralized route names for WariVerse AI mobile navigation.
 abstract class AppRoutes {
+  static const String splash = '/splash';
   static const String shell = '/';
   static const String login = '/login';
   static const String register = '/register';

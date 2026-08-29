@@ -10,6 +10,10 @@ import 'test_helpers.dart';
 import 'package:mobile/providers/qr_provider.dart';
 import 'package:mobile/providers/ngo_distribution_provider.dart';
 
+import 'package:mobile/providers/virtual_dindi_provider.dart';
+import 'package:mobile/providers/incident_provider.dart';
+import 'package:mobile/providers/nearby_services_provider.dart';
+
 void main() {
   Widget buildTestableApp() {
     final apiService = ApiService(client: MockTestHttpClient());
@@ -21,6 +25,9 @@ void main() {
         Provider<AuthRepository>.value(value: authRepository),
         ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
+        ChangeNotifierProvider<VirtualDindiProvider>(create: (_) => VirtualDindiProvider()),
+        ChangeNotifierProvider<IncidentProvider>(create: (_) => IncidentProvider()),
+        ChangeNotifierProvider<NearbyServicesProvider>(create: (_) => NearbyServicesProvider()),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),
@@ -78,7 +85,7 @@ void main() {
     await tester.pumpWidget(buildTestableApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Nearest Services'), findsOneWidget);
+    expect(find.textContaining('Nearby Services'), findsOneWidget);
 
     addTearDown(() {
       tester.view.resetPhysicalSize();

@@ -6,6 +6,7 @@ import '../../models/models_exports.dart';
 import '../../providers/sos_provider.dart';
 import 'widgets/role_dashboard_header.dart';
 import 'widgets/metric_card.dart';
+import '../incidents/volunteer_response_queue_screen.dart';
 
 class VolunteerDashboard extends StatefulWidget {
   const VolunteerDashboard({super.key});
@@ -56,6 +57,18 @@ class _VolunteerDashboardState extends State<VolunteerDashboard> {
                   child: ListView(
                     padding: const EdgeInsets.all(WariSpacing.base),
                     children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const VolunteerResponseQueueScreen()));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: WariColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        icon: const Icon(Icons.support_agent_rounded),
+                        label: const Text('OPEN LIVE RESPONSE QUEUE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      ),
+                      const SizedBox(height: WariSpacing.base),
                       GridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),

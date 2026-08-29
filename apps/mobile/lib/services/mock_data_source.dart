@@ -1,4 +1,4 @@
-﻿/// Centralized mock data for WariVerse AI.
+/// Centralized mock data for WariVerse AI.
 /// Mirrors the MOCK_DATA object from lib/api.ts exactly.
 /// Used when the FastAPI backend is unreachable (demo / offline mode).
 abstract class MockDataSource {
@@ -182,6 +182,23 @@ abstract class MockDataSource {
           'latitude': 17.6845,
           'longitude': 75.3160,
         },
+        {
+          'id': 'f_pune_1',
+          'name': 'Solapur Road Annadan Seva Tent',
+          'provider': 'Pune Varkari Seva Mandal',
+          'available_now': true,
+          'current_count': 12000,
+          'capacity': 15000,
+          'estimated_queue_minutes': 5,
+          'hygiene_rating': 4.9,
+          'opening_time': '06:00',
+          'closing_time': '23:00',
+          'distance_m': 320,
+          'walk_minutes': 4,
+          'meal_types': ['BREAKFAST', 'LUNCH', 'DINNER'],
+          'latitude': 18.5215,
+          'longitude': 73.8575,
+        },
       ];
 
   // ── Water ─────────────────────────────────────────────────────
@@ -220,6 +237,17 @@ abstract class MockDataSource {
           'distance_m': 200,
           'walk_minutes': 3,
         },
+        {
+          'id': 'w_pune_1',
+          'name': 'Alandi Palkhi Water Kiosk',
+          'latitude': 18.5200,
+          'longitude': 73.8562,
+          'status': 'AVAILABLE',
+          'water_type': 'RO Purified & Cold ORS',
+          'capacity_liters': 4000,
+          'distance_m': 180,
+          'walk_minutes': 2,
+        },
       ];
 
   // ── Toilets ───────────────────────────────────────────────────
@@ -251,6 +279,19 @@ abstract class MockDataSource {
               .subtract(const Duration(hours: 4))
               .toIso8601String(),
         },
+        {
+          'id': 't_pune_1',
+          'name': 'Palkhi Route Sanitation Complex',
+          'latitude': 18.5195,
+          'longitude': 73.8550,
+          'status': 'CLEAN',
+          'total_units': 24,
+          'gender': 'mixed',
+          'rating': 4.5,
+          'last_cleaned_at': DateTime.now()
+              .subtract(const Duration(minutes: 30))
+              .toIso8601String(),
+        },
       ];
 
   // ── Shelters ──────────────────────────────────────────────────
@@ -277,6 +318,17 @@ abstract class MockDataSource {
           'available_now': true,
           'provider': 'Varkari Seva Samiti',
           'amenities': ['Food', 'Drinking Water'],
+        },
+        {
+          'id': 's_pune_1',
+          'name': 'Hadapsar Palkhi Rest Pavilion',
+          'latitude': 18.5095,
+          'longitude': 73.9270,
+          'capacity': 600,
+          'current_occupancy': 240,
+          'available_now': true,
+          'provider': 'PMC Pilgrim Seva',
+          'amenities': ['Drinking Water', 'Medical Camp', 'Charging', 'Blankets'],
         },
       ];
 
@@ -317,6 +369,18 @@ abstract class MockDataSource {
           'available': true,
           'capacity': 2,
           'contact': '108',
+          'operating_hours': '24/7',
+        },
+        {
+          'id': 'm_pune_1',
+          'name': 'Pune Solapur Road First Aid Camp',
+          'location_type': 'camp',
+          'latitude': 18.5225,
+          'longitude': 73.8585,
+          'services': ['First Aid', 'ORS', 'Heat Stroke Seva', 'Ambulance'],
+          'available': true,
+          'capacity': 50,
+          'contact': '+91 20 2612 0000',
           'operating_hours': '24/7',
         },
       ];
@@ -597,6 +661,7 @@ abstract class MockDataSource {
     'provider@wariverse.demo':  {'role': 'SERVICE_PROVIDER', 'display_name': 'Annadan Kendra Head'},
     'cleaner@wariverse.demo':   {'role': 'CLEANER', 'display_name': 'Swachhata Sevak Ramesh'},
     'admin@wariverse.demo':     {'role': 'ADMIN', 'display_name': 'Wari Control Admin'},
+    '0JNFDa2v1LcBfcDj2gsFwTRUtDd2': {'role': 'ADMIN', 'display_name': 'Executive Command Admin', 'uid': '0JNFDa2v1LcBfcDj2gsFwTRUtDd2'},
   };
 
   /// Returns mock login response for demo users.

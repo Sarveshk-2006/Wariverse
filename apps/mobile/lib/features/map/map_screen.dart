@@ -7,9 +7,12 @@ import '../../core/constants/wari_route_constants.dart';
 import '../../models/models_exports.dart';
 import '../../models/map_marker_item.dart';
 import '../../services/api_service.dart';
+import '../../services/wari_location_service.dart';
 import '../../repositories/repositories_exports.dart';
 import '../../providers/map_provider.dart';
 import '../../providers/offline_map_provider.dart';
+import '../../providers/incident_provider.dart';
+import 'package:latlong2/latlong.dart';
 import 'widgets/map_filter_bar.dart';
 import 'widgets/marker_detail_bottom_sheet.dart';
 import 'widgets/report_issue_bottom_sheet.dart';
@@ -87,8 +90,26 @@ class _MapScreenContentState extends State<_MapScreenContent> {
     super.dispose();
   }
 
-  void _recenterMap() {
-    _mapController.move(WariRouteConstants.pandharpurCenter, 13.0);
+  void _recenterMap() async {
+    final mapProvider = Provider.of<MapProvider>(context, listen: false);
+    final userLoc = mapProvider.userLocation;
+
+    if (userLoc.latitude != 0.0 && userLoc.longitude != 0.0) {
+      _mapController.move(userLoc, 15.0);
+    } else {
+      final locService = WariLocationService();
+      final pos = await locService.getCurrentPosition();
+      if (pos.latitude != 0.0 && pos.longitude != 0.0) {
+        _mapController.move(LatLng(pos.latitude, pos.longitude), 15.0);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location unavailable. Please enable GPS to center map on your position.'),
+            backgroundColor: WariColors.warning,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -165,41 +186,62 @@ class _MapScreenContentState extends State<_MapScreenContent> {
 
               // Service & SOS Marker Layer
               MarkerLayer(
-                markers: markers.map((m) {
-                  final isSelected = selectedMarker?.id == m.id;
+                markers: [
+                  ...markers.map((m) {
+                    final isSelected = selectedMarker?.id == m.id;
 
-                  return Marker(
-                    point: m.location,
-                    width: isSelected ? 44 : 36,
-                    height: isSelected ? 44 : 36,
-                    child: GestureDetector(
-                      onTap: () => mapProvider.selectMarker(m),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        decoration: BoxDecoration(
-                          color: m.color,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected ? WariColors.slate900 : Colors.white,
-                            width: isSelected ? 3 : 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: WariColors.slate900.withValues(alpha: 0.3),
-                              blurRadius: isSelected ? 12 : 6,
-                              offset: const Offset(0, 3),
+                    return Marker(
+                      point: m.location,
+                      width: isSelected ? 44 : 36,
+                      height: isSelected ? 44 : 36,
+                      child: GestureDetector(
+                        onTap: () => mapProvider.selectMarker(m),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          decoration: BoxDecoration(
+                            color: m.color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected ? WariColors.slate900 : Colors.white,
+                              width: isSelected ? 3 : 2,
                             ),
-                          ],
-                        ),
-                        child: Icon(
-                          m.icon,
-                          size: isSelected ? 22 : 18,
-                          color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: WariColors.slate900.withValues(alpha: 0.3),
+                                blurRadius: isSelected ? 12 : 6,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            m.icon,
+                            size: isSelected ? 22 : 18,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }),
+                  ...Provider.of<IncidentProvider>(context).allActiveIncidents.where((i) => i.isActive).map((inc) {
+                    return Marker(
+                      point: LatLng(inc.latitude, inc.longitude),
+                      width: 40,
+                      height: 40,
+                      child: Tooltip(
+                        message: '${inc.category.displayName} (${inc.severity.name})',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: WariColors.danger,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                          ),
+                          child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
               ),
             ],
           ),

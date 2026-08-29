@@ -18,7 +18,10 @@ import 'repositories/repositories_exports.dart';
 
 import 'providers/ngo_distribution_provider.dart';
 import 'providers/offline_map_provider.dart';
+import 'providers/nearby_services_provider.dart';
 import 'providers/qr_provider.dart';
+import 'providers/virtual_dindi_provider.dart';
+import 'providers/incident_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +75,15 @@ void main() async {
         ),
         ChangeNotifierProvider<QrProvider>(
           create: (_) => QrProvider(),
+        ),
+        ChangeNotifierProvider<VirtualDindiProvider>(
+          create: (_) => VirtualDindiProvider(),
+        ),
+        ChangeNotifierProvider<IncidentProvider>(
+          create: (_) => IncidentProvider(),
+        ),
+        ChangeNotifierProvider<NearbyServicesProvider>(
+          create: (_) => NearbyServicesProvider(serviceRepo: serviceRepo),
         ),
       ],
       child: const WariVerseApp(),
@@ -154,15 +166,12 @@ class _WariVerseAppState extends State<WariVerseApp> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final initialRoute = userProvider.isAuthenticated ? AppRoutes.shell : AppRoutes.login;
-
     return MaterialApp(
       navigatorKey: _navigatorKey,
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: WariTheme.light,
-      initialRoute: initialRoute,
+      initialRoute: AppRoutes.splash,
       onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }

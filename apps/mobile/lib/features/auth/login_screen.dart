@@ -24,7 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final Map<String, String> _portalLabels = {
     'VARKARI': 'Varkari Pilgrim Portal',
-    'NGO': 'NGO Coordinator Portal',
+    'DINDI_LEADER': 'Dindi Leader Operations Portal',
+    'VOLUNTEER': 'Volunteer Response Portal',
+    'NGO': 'NGO Resource Operations Portal',
+    'SANITATION': 'Sanitation & Field Worker Portal',
     'ADMIN': 'Executive Command Center (Admin)',
   };
 
@@ -150,13 +153,24 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: WariSpacing.lg),
               Center(
                 child: Container(
-                  width: 84,
-                  height: 84,
+                  width: 90,
+                  height: 90,
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: WariColors.primaryLight,
+                    color: Colors.white,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: WariColors.primary.withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.shield_outlined, size: 48, color: WariColors.primary),
+                  child: Image.asset(
+                    'assets/images/wariverse_logo.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
               const SizedBox(height: WariSpacing.base),

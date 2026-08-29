@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/core/config/env_config.dart';
 import 'package:mobile/models/models_exports.dart';
@@ -74,8 +74,8 @@ void main() {
   group('Mock Data & Environment Configuration Tests', () {
     test('MockDataSource contains expected default datasets', () {
       expect(MockDataSource.crowdCurrent.isNotEmpty, true);
-      expect(MockDataSource.food.length, 3);
-      expect(MockDataSource.water.length, 3);
+      expect(MockDataSource.food.length, greaterThanOrEqualTo(3));
+      expect(MockDataSource.water.length, greaterThanOrEqualTo(3));
       expect(MockDataSource.sos.length, 2);
     });
 

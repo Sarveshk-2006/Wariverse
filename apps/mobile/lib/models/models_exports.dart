@@ -23,3 +23,6 @@ export 'emergency_contact.dart';
 export 'resource_distribution.dart';
 export 'offline_map_snapshot.dart';
 export 'qr_code_model.dart';
+export 'virtual_dindi_model.dart';
+export 'threat_incident_model.dart';
+export 'audit_log.dart';

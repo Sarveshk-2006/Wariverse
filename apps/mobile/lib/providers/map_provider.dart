@@ -73,6 +73,20 @@ class MapProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void focusOnServiceAndRoute(double latitude, double longitude, String name, String categoryKey) {
+    _selectedMarker = MapMarkerItem(
+      id: 'target_${latitude}_$longitude',
+      title: name,
+      layer: categoryKey,
+      latitude: latitude,
+      longitude: longitude,
+      icon: MapMarkerItem.getLayerIcon(categoryKey),
+      color: MapMarkerItem.getLayerColor(categoryKey),
+    );
+    _activeLayer = 'all';
+    notifyListeners();
+  }
+
   void setShowReportModal(bool value) {
     _showReportModal = value;
     notifyListeners();

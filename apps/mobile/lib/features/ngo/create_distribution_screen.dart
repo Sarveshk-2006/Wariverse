@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
 import '../../providers/ngo_distribution_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/wari_location_service.dart';
 
 /// Form screen for creating/publishing a new NGO Aid Distribution.
 class CreateDistributionScreen extends StatefulWidget {
@@ -38,6 +38,9 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
   bool _untilQuantityLasts = true;
   double _latitude = 18.5204;
   double _longitude = 73.8567;
+  double _accuracy = 10.0;
+  String _gpsStatus = 'LIVE';
+  DateTime? _lastGpsUpdate = DateTime.now();
   final DateTime _distributionDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 12, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 15, minute: 0);
@@ -64,27 +67,40 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
   Future<void> _getCurrentGpsLocation() async {
     setState(() => _isLocating = true);
     try {
-      final perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        await Geolocator.requestPermission();
+      final locService = WariLocationService();
+      final pos = await locService.getCurrentPosition();
+      if (pos.latitude != 0.0 && pos.longitude != 0.0) {
+        setState(() {
+          _latitude = pos.latitude;
+          _longitude = pos.longitude;
+          _accuracy = pos.accuracy;
+          _lastGpsUpdate = pos.timestamp;
+          _gpsStatus = pos.status == WariLocationStatus.liveGps ? 'LIVE' : 'SIMULATED';
+          _isLocating = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('GPS captured: ${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)} (Accuracy: ${pos.accuracy.toInt()}m)'),
+              backgroundColor: WariColors.success,
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _isLocating = false;
+          _gpsStatus = 'UNAVAILABLE';
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location unavailable. Please enable GPS and try again.'),
+              backgroundColor: WariColors.warning,
+            ),
+          );
+        }
       }
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
-      setState(() {
-        _latitude = pos.latitude;
-        _longitude = pos.longitude;
-        _isLocating = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('GPS captured: ${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}'),
-            backgroundColor: WariColors.success,
-          ),
-        );
-      }
-    } catch (_) {
+    } catch (e) {
       setState(() => _isLocating = false);
     }
   }
@@ -286,22 +302,37 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
                       ),
                       const SizedBox(height: WariSpacing.sm),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Coordinates: ${_latitude.toStringAsFixed(4)}, ${_longitude.toStringAsFixed(4)}',
-                              style: WariTypography.bodySmall,
+                      Container(
+                        padding: const EdgeInsets.all(WariSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: _gpsStatus == 'LIVE' ? WariColors.success.withValues(alpha: 0.1) : WariColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: _gpsStatus == 'LIVE' ? WariColors.success : WariColors.warning),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(_gpsStatus == 'LIVE' ? Icons.my_location : Icons.location_searching, color: _gpsStatus == 'LIVE' ? WariColors.success : WariColors.warning, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('GPS Status: $_gpsStatus (Accuracy: ${_accuracy.toInt()}m)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                  Text('Coordinates: ${_latitude.toStringAsFixed(5)}, ${_longitude.toStringAsFixed(5)}', style: const TextStyle(fontSize: 11, color: WariColors.textSecondary)),
+                                  if (_lastGpsUpdate != null)
+                                    Text('Updated: ${TimeOfDay.fromDateTime(_lastGpsUpdate!).format(context)}', style: const TextStyle(fontSize: 10, color: WariColors.textMuted)),
+                                ],
+                              ),
                             ),
-                          ),
-                          OutlinedButton.icon(
-                            icon: _isLocating
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                : const Icon(Icons.my_location, size: 18),
-                            label: const Text('Use Real GPS'),
-                            onPressed: _isLocating ? null : _getCurrentGpsLocation,
-                          ),
-                        ],
+                            OutlinedButton.icon(
+                              icon: _isLocating
+                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Icon(Icons.refresh, size: 16),
+                              label: const Text('Refresh', style: TextStyle(fontSize: 11)),
+                              onPressed: _isLocating ? null : _getCurrentGpsLocation,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

@@ -14,6 +14,10 @@ import 'test_helpers.dart';
 import 'package:mobile/providers/qr_provider.dart';
 import 'package:mobile/providers/ngo_distribution_provider.dart';
 
+import 'package:mobile/providers/virtual_dindi_provider.dart';
+import 'package:mobile/providers/incident_provider.dart';
+import 'package:mobile/providers/nearby_services_provider.dart';
+
 void main() {
   Widget buildTestableApp({UserRole role = UserRole.VARKARI}) {
     final apiService = ApiService(client: MockTestHttpClient());
@@ -32,6 +36,9 @@ void main() {
         ChangeNotifierProvider<SosProvider>.value(value: sosProvider),
         ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
+        ChangeNotifierProvider<VirtualDindiProvider>(create: (_) => VirtualDindiProvider()),
+        ChangeNotifierProvider<IncidentProvider>(create: (_) => IncidentProvider()),
+        ChangeNotifierProvider<NearbyServicesProvider>(create: (_) => NearbyServicesProvider()),
         ChangeNotifierProvider<UserProvider>.value(value: userProvider),
       ],
       child: MaterialApp(
@@ -100,8 +107,8 @@ void main() {
     await tester.pumpWidget(buildTestableApp(role: UserRole.POLICE));
     await tester.pumpAndSettle();
 
-    expect(find.text('Command Center Admin'), findsWidgets);
-    expect(find.text('Red Crowd Zones'), findsOneWidget);
+    expect(find.text('COMMAND CENTER ADMIN'), findsWidgets);
+    expect(find.text('Active SOS'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -117,7 +124,7 @@ void main() {
     await tester.pumpWidget(buildTestableApp(role: UserRole.MEDICAL_TEAM));
     await tester.pumpAndSettle();
 
-    expect(find.text('Command Center Admin'), findsWidgets);
+    expect(find.text('COMMAND CENTER ADMIN'), findsWidgets);
     expect(find.text('Active SOS'), findsOneWidget);
 
     addTearDown(() async {
@@ -153,7 +160,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('COMMAND CENTER ADMIN'), findsWidgets);
-    expect(find.text('Active Varkaris'), findsOneWidget);
+    expect(find.text('Critical Incidents'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();

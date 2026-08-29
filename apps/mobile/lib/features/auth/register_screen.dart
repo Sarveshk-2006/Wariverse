@@ -132,12 +132,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: _selectedRole,
                   decoration: const InputDecoration(
-                    labelText: 'Registration Role',
+                    labelText: 'Registration Portal Role',
                     prefixIcon: Icon(Icons.badge),
                   ),
                   items: const [
                     DropdownMenuItem(value: 'VARKARI', child: Text('Varkari Pilgrim Account')),
+                    DropdownMenuItem(value: 'DINDI_LEADER', child: Text('Dindi Leader Account')),
+                    DropdownMenuItem(value: 'VOLUNTEER', child: Text('Volunteer Field Responder Account')),
                     DropdownMenuItem(value: 'NGO', child: Text('NGO Coordinator Account')),
+                    DropdownMenuItem(value: 'SANITATION', child: Text('Sanitation & Field Worker Account')),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedRole = val);

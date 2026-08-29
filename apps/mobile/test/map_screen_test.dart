@@ -12,7 +12,10 @@ import 'package:mobile/repositories/repositories_exports.dart';
 
 import 'package:mobile/providers/offline_map_provider.dart';
 import 'package:mobile/providers/ngo_distribution_provider.dart';
+import 'package:mobile/providers/virtual_dindi_provider.dart';
 import 'package:mobile/providers/qr_provider.dart';
+import 'package:mobile/providers/incident_provider.dart';
+import 'package:mobile/providers/nearby_services_provider.dart';
 
 void main() {
   Widget buildTestableApp() {
@@ -39,7 +42,10 @@ void main() {
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
         ChangeNotifierProvider<OfflineMapProvider>(create: (_) => OfflineMapProvider()),
         ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
+        ChangeNotifierProvider<VirtualDindiProvider>(create: (_) => VirtualDindiProvider()),
         ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
+        ChangeNotifierProvider<IncidentProvider>(create: (_) => IncidentProvider()),
+        ChangeNotifierProvider<NearbyServicesProvider>(create: (_) => NearbyServicesProvider()),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),

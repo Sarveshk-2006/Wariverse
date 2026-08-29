@@ -131,5 +131,89 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.scanned_by == request.auth.uid;
       allow update, delete: if false; // Audit logs are immutable
     }
+
+    // Virtual Dindis & Intelligent Separation Alert Security Rules
+    match /virtual_dindis/{dindiId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.leader_uid == request.auth.uid || 
+        isAdmin() ||
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['leader_uid', 'join_code', 'created_at']))
+      );
+      allow delete: if isAdmin();
+
+      match /members/{uid} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && (
+          uid == request.auth.uid || 
+          get(/databases/$(database)/documents/virtual_dindis/$(dindiId)).data.leader_uid == request.auth.uid ||
+          isAdmin()
+        );
+        allow delete: if isAuthenticated() && (
+          uid == request.auth.uid || 
+          get(/databases/$(database)/documents/virtual_dindis/$(dindiId)).data.leader_uid == request.auth.uid ||
+          isAdmin()
+        );
+      }
+
+      match /events/{eventId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if false; // Audit logs are immutable
+      }
+    }
+
+    // Continuous Threat Reporting & Real-Time Incident Response Rules
+    match /incidents/{incidentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.reporter_uid == request.auth.uid ||
+        resource.data.assigned_volunteer_uid == request.auth.uid ||
+        isRole('VOLUNTEER') ||
+        isRole('MEDICAL_TEAM') ||
+        isRole('POLICE') ||
+        isRole('CLEANER') ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.reporter_uid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.reporter_uid == request.auth.uid ||
+        resource.data.assigned_volunteer_uid == request.auth.uid ||
+        isRole('VOLUNTEER') ||
+        isRole('MEDICAL_TEAM') ||
+        isRole('POLICE') ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      match /reporter_locations/{updateId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /volunteer_locations/{updateId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /events/{eventId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if false;
+      }
+    }
+
+    // Real-Time Location-Based Nearby Services & NGO Deployments
+    match /resource_deployments/{deploymentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isRole('NGO') || isAdmin());
+      allow update: if isAuthenticated() && (resource.data.ngo_id == request.auth.uid || isRole('NGO') || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /food_centres/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /water_points/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /shelters/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /medical_locations/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /toilets/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /wellness_centres/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
   }
 }

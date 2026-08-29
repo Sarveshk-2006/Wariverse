@@ -4,16 +4,19 @@ import '../models/models_exports.dart';
 import '../repositories/sos_repository.dart';
 import '../services/websocket_service.dart';
 import '../services/wari_location_service.dart';
+import '../services/emergency_contacts_service.dart';
+import '../services/suraksha_voice_ai_service.dart';
+import '../services/emergency_evidence_recording_service.dart';
 import '../core/utils/idempotency_util.dart';
 import '../core/config/env_config.dart';
 import '../core/utils/app_logger.dart';
-
 
 enum SosUiState {
   idle,
   confirming,
   gettingLocation,
   submitting,
+  recordingEvidence,
   active,
   updatingLocation,
   offlineQueued,
@@ -22,10 +25,13 @@ enum SosUiState {
   failed,
 }
 
+/// Provider managing SOS & WoShield2 Emergency Features (2-sec hold Evidence Recording, Voice AI, SMS Alerts).
 class SosProvider extends ChangeNotifier {
   final SosRepository _sosRepo;
   final WebSocketService? _wsService;
   final WariLocationService _locationService;
+  final EmergencyContactsService _contactsService = EmergencyContactsService();
+  final EmergencyEvidenceRecordingService _evidenceService = EmergencyEvidenceRecordingService();
 
   SosProvider({
     required SosRepository sosRepo,
@@ -36,6 +42,8 @@ class SosProvider extends ChangeNotifier {
         _locationService = locationService ?? WariLocationService() {
     _initWebSocketListener();
     _checkActiveSosOnLaunch();
+    _loadEmergencyContacts();
+    _evidenceService.addListener(notifyListeners);
   }
 
   SosUiState _uiState = SosUiState.idle;
@@ -47,13 +55,16 @@ class SosProvider extends ChangeNotifier {
   WariPosition? _currentLocation;
   List<SOSIncident> _incidents = [];
   final List<SOSIncident> _offlineQueue = [];
+  List<EmergencyContact> _emergencyContacts = [];
 
   StreamSubscription<WariPosition>? _locationSubscription;
 
   bool _isLoading = false;
   bool _isFromMock = false;
   String? _errorMessage;
+  String? _currentUserId;
 
+  // Getters
   SosUiState get uiState => _uiState;
   SOSCategory get selectedCategory => _selectedCategory;
   String get description => _description;
@@ -63,10 +74,64 @@ class SosProvider extends ChangeNotifier {
   WariPosition? get currentLocation => _currentLocation;
   List<SOSIncident> get incidents => List.unmodifiable(_incidents);
   List<SOSIncident> get offlineQueue => List.unmodifiable(_offlineQueue);
+  List<EmergencyContact> get emergencyContacts => List.unmodifiable(_emergencyContacts);
 
   bool get isLoading => _isLoading;
   bool get isFromMock => _isFromMock;
   String? get errorMessage => _errorMessage;
+  bool get isRecordingEvidence => _evidenceService.isRecording;
+  int get recordingProgressSeconds => _evidenceService.recordingProgressSeconds;
+
+  void setCurrentUser(String userId) {
+    if (_currentUserId != userId) {
+      _currentUserId = userId;
+      _loadEmergencyContacts();
+    }
+  }
+
+  Future<void> _loadEmergencyContacts() async {
+    _emergencyContacts = await _contactsService.loadContacts(userId: _currentUserId);
+    notifyListeners();
+  }
+
+  Future<void> addEmergencyContact(EmergencyContact contact) async {
+    _emergencyContacts = await _contactsService.addContact(contact, userId: _currentUserId);
+    notifyListeners();
+  }
+
+  Future<void> deleteEmergencyContact(String contactId) async {
+    _emergencyContacts = await _contactsService.deleteContact(contactId, userId: _currentUserId);
+    notifyListeners();
+  }
+
+  /// Triggered when user holds the SOS button for 2 seconds (WoShield2 Evidence Recording Protocol).
+  Future<void> start2SecondHoldEmergencyRecording() async {
+    _uiState = SosUiState.recordingEvidence;
+    notifyListeners();
+
+    await _evidenceService.start10SecondEvidenceRecording(
+      onRecordingComplete: (evidenceUrl) async {
+        await triggerSos(
+          category: _selectedCategory,
+          description: '🎥 2-SEC HOLD SOS EVIDENCE RECORDED: 10s video/audio evidence attached.',
+          mediaUrl: evidenceUrl,
+        );
+      },
+    );
+  }
+
+  /// Voice Threat AI Analysis (WoShield2 SurakshaVoiceAI).
+  void analyzeVoiceThreatText(String spokenText) {
+    final threatCategory = SurakshaVoiceAiService.detectThreatCategory(spokenText);
+    if (threatCategory != null) {
+      final category = SurakshaVoiceAiService.mapToSosCategory(threatCategory);
+      final keyword = SurakshaVoiceAiService.getMatchingKeyword(spokenText);
+      triggerSos(
+        category: category,
+        description: '🚨 VOICE THREAT AI TRIGGERED: Keyword "$keyword" detected in phrase "$spokenText"',
+      );
+    }
+  }
 
   void setUiState(SosUiState state) {
     _uiState = state;
@@ -95,6 +160,7 @@ class SosProvider extends ChangeNotifier {
 
   void resetToIdle() {
     _stopLiveLocationTracking();
+    _evidenceService.cancelRecording();
     _uiState = SosUiState.idle;
     _activeIncident = null;
     notifyListeners();
@@ -125,6 +191,7 @@ class SosProvider extends ChangeNotifier {
     double? latitude,
     double? longitude,
     String? description,
+    String? mediaUrl,
     String? userId,
   }) async {
     _isLoading = true;
@@ -159,11 +226,20 @@ class SosProvider extends ChangeNotifier {
         accuracyMeters: pos.accuracy,
         idempotencyKey: idempotencyKey,
         description: description,
-        userId: userId,
+        userId: userId ?? _currentUserId,
       );
       _activeIncident = res.incident;
       _isFromMock = res.isFromMock;
       _uiState = SosUiState.active;
+
+      // Dispatch Automated Emergency SMS Alert to Emergency Contacts with Google Maps link
+      _contactsService.dispatchEmergencySmsAlert(
+        contacts: _emergencyContacts,
+        latitude: pos.latitude != 0.0 ? pos.latitude : 18.5204,
+        longitude: pos.longitude != 0.0 ? pos.longitude : 73.8567,
+        categoryName: category.displayName,
+        customMessage: description,
+      );
 
       _startLiveLocationTracking();
       await loadIncidents();
@@ -171,7 +247,7 @@ class SosProvider extends ChangeNotifier {
       AppLogger.i('Network failed during SOS trigger, queuing offline with idempotency key: $idempotencyKey');
       final pendingIncident = SOSIncident(
         id: idempotencyKey,
-        userId: 'pending-offline-user',
+        userId: _currentUserId ?? 'pending-offline-user',
         latitude: pos.latitude != 0.0 ? pos.latitude : 18.5204,
         longitude: pos.longitude != 0.0 ? pos.longitude : 73.8567,
         category: category,
@@ -322,6 +398,7 @@ class SosProvider extends ChangeNotifier {
   @override
   void dispose() {
     _stopLiveLocationTracking();
+    _evidenceService.removeListener(notifyListeners);
     _wsService?.unsubscribe('SOS_UPDATE', _onWebSocketSosEvent);
     _wsService?.unsubscribe('NEW_SOS', _onWebSocketSosEvent);
     _wsService?.unsubscribe('SOS_LOCATION_UPDATED', _onWebSocketLocationEvent);

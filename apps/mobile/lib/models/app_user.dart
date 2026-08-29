@@ -29,8 +29,10 @@ extension UserRoleX on UserRole {
   }
 
   static UserRole fromString(String s) {
+    final str = s.toUpperCase();
+    if (str == 'SANITATION') return UserRole.CLEANER;
     return UserRole.values.firstWhere(
-      (e) => e.name == s.toUpperCase(),
+      (e) => e.name == str,
       orElse: () => UserRole.VARKARI,
     );
   }

@@ -66,6 +66,7 @@ class _SosScreenContent extends StatelessWidget {
   Widget _buildSosMainFlow(SosProvider sosProvider) {
     switch (sosProvider.uiState) {
       case SosUiState.idle:
+      case SosUiState.recordingEvidence:
       case SosUiState.cancelled:
       case SosUiState.failed:
         return const SosIdleView();

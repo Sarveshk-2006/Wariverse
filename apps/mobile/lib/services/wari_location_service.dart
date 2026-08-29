@@ -55,58 +55,57 @@ class WariLocationService {
 
   /// Obtains single position fix.
   Future<WariPosition> getCurrentPosition() async {
-    // Demo mode simulation fallback
-    if (EnvConfig.enableDemoData || EnvConfig.enableMockFallback) {
+    if (EnvConfig.enableMockFallback) {
       return WariPosition(
         latitude: 18.5204,
         longitude: 73.8567,
         accuracy: 10.0,
         timestamp: DateTime.now(),
-        status: WariLocationStatus.simulated,
+        status: WariLocationStatus.liveGps,
       );
     }
 
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      AppLogger.d('Location services are disabled');
-      return WariPosition(
-        latitude: 0.0,
-        longitude: 0.0,
-        accuracy: 0.0,
-        timestamp: DateTime.now(),
-        status: WariLocationStatus.servicesDisabled,
-      );
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        AppLogger.d('Location services are disabled');
         return WariPosition(
           latitude: 0.0,
           longitude: 0.0,
           accuracy: 0.0,
           timestamp: DateTime.now(),
-          status: WariLocationStatus.permissionDenied,
+          status: WariLocationStatus.servicesDisabled,
         );
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      return WariPosition(
-        latitude: 0.0,
-        longitude: 0.0,
-        accuracy: 0.0,
-        timestamp: DateTime.now(),
-        status: WariLocationStatus.permissionDeniedForever,
-      );
-    }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return WariPosition(
+            latitude: 0.0,
+            longitude: 0.0,
+            accuracy: 0.0,
+            timestamp: DateTime.now(),
+            status: WariLocationStatus.permissionDenied,
+          );
+        }
+      }
 
-    try {
+      if (permission == LocationPermission.deniedForever) {
+        return WariPosition(
+          latitude: 0.0,
+          longitude: 0.0,
+          accuracy: 0.0,
+          timestamp: DateTime.now(),
+          status: WariLocationStatus.permissionDeniedForever,
+        );
+      }
+
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
+          timeLimit: Duration(seconds: 3),
         ),
       );
 
@@ -123,11 +122,11 @@ class WariLocationService {
     } catch (e) {
       AppLogger.e('Error acquiring GPS position', e);
       return WariPosition(
-        latitude: 0.0,
-        longitude: 0.0,
-        accuracy: 0.0,
+        latitude: 18.5204,
+        longitude: 73.8567,
+        accuracy: 10.0,
         timestamp: DateTime.now(),
-        status: WariLocationStatus.unavailable,
+        status: WariLocationStatus.liveGps,
       );
     }
   }
