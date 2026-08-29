@@ -118,27 +118,35 @@ class _WariAppShellState extends State<WariAppShell> {
                 child: Container(
                   margin: const EdgeInsets.only(right: WariSpacing.base),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: WariSpacing.sm,
-                    vertical: WariSpacing.xs,
+                    horizontal: WariSpacing.md,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(WariSpacing.radiusFull),
+                    borderRadius: BorderRadius.circular(24.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         _getRoleIcon(activeRole),
-                        size: 14,
+                        size: 15,
                         color: WariColors.primary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       Text(
                         activeRole.displayName.split(' ').first,
                         style: WariTypography.labelSmall.copyWith(
                           color: WariColors.primaryDark,
                           fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],

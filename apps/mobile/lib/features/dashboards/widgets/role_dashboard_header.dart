@@ -64,7 +64,10 @@ class RoleDashboardHeader extends StatelessWidget {
           Text(subtitle, style: WariTypography.bodySmall),
           if (actionWidget != null) ...[
             const SizedBox(height: WariSpacing.sm),
-            actionWidget!,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: actionWidget!,
+            ),
           ],
         ],
       ),

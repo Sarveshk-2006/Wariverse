@@ -79,6 +79,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           Expanded(
             child: ListView(
+              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.all(WariSpacing.base),
               children: [
                 WariCard(

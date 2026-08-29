@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
 import '../theme/wari_theme_exports.dart';
 
-/// Standard WariVerse content card.
-/// Preserves the rounded, bordered, soft-shadow card style from the web.
+/// Standard WariVerse content card with Apple iOS/macOS Glassmorphism visual design.
 class WariCard extends StatelessWidget {
   const WariCard({
     super.key,
@@ -15,6 +15,7 @@ class WariCard extends StatelessWidget {
     this.borderWidth = 1.0,
     this.radius,
     this.elevation = WariSpacing.elevationSm,
+    this.enableGlass = true,
   });
 
   final Widget child;
@@ -26,27 +27,28 @@ class WariCard extends StatelessWidget {
   final double borderWidth;
   final double? radius;
   final double elevation;
+  final bool enableGlass;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveRadius = radius ?? WariSpacing.radiusMd;
-    final effectivePadding = padding ??
-        const EdgeInsets.all(WariSpacing.cardPadding);
+    final effectiveRadius = radius ?? 18.0;
+    final effectivePadding = padding ?? const EdgeInsets.all(WariSpacing.cardPadding);
+    final cardColor = color ?? (enableGlass ? WariColors.surface.withValues(alpha: 0.92) : WariColors.surface);
 
-    Widget card = Container(
+    Widget innerContent = Container(
       decoration: BoxDecoration(
-        color: color ?? WariColors.surface,
+        color: cardColor,
         borderRadius: BorderRadius.circular(effectiveRadius),
         border: Border.all(
-          color: borderColor ?? WariColors.border,
+          color: borderColor ?? WariColors.border.withValues(alpha: 0.8),
           width: borderWidth,
         ),
         boxShadow: elevation > 0
             ? [
                 BoxShadow(
-                  color: WariColors.slate900.withValues(alpha: 0.05),
-                  blurRadius: elevation * 4,
-                  offset: Offset(0, elevation),
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ]
             : null,
@@ -55,6 +57,16 @@ class WariCard extends StatelessWidget {
         padding: effectivePadding,
         child: child,
       ),
+    );
+
+    Widget card = ClipRRect(
+      borderRadius: BorderRadius.circular(effectiveRadius),
+      child: enableGlass
+          ? BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: innerContent,
+            )
+          : innerContent,
     );
 
     if (onTap != null) {

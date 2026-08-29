@@ -67,6 +67,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         onRefresh: () => homeProvider.refresh(),
         color: WariColors.primary,
         child: ListView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           padding: const EdgeInsets.all(WariSpacing.base),
           children: [
             const HomeHeader(),

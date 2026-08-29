@@ -40,13 +40,22 @@ class _AdminIncidentCommandState extends State<AdminIncidentCommand> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: const [
-                  Icon(Icons.shield_rounded, color: WariColors.danger, size: 22),
-                  SizedBox(width: WariSpacing.xs),
-                  Text('Live Incident Command Queue', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                ],
+              Expanded(
+                child: Row(
+                  children: const [
+                    Icon(Icons.shield_rounded, color: WariColors.danger, size: 22),
+                    SizedBox(width: WariSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        'Live Incident Command Queue',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: WariSpacing.xs),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(

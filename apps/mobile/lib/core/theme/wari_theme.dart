@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'wari_colors.dart';
 import 'wari_typography.dart';
@@ -100,7 +100,7 @@ abstract class WariTheme {
             ),
             textStyle: WariTypography.buttonLabel,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+              borderRadius: BorderRadius.circular(24.0),
             ),
           ),
         ),
@@ -117,7 +117,7 @@ abstract class WariTheme {
             ),
             textStyle: WariTypography.buttonLabel,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+              borderRadius: BorderRadius.circular(24.0),
             ),
           ),
         ),

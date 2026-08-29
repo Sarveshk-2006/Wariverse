@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Centralized color palette for WariVerse AI.
 /// Mirrors the Sacred Saffron design system from globals.css.
@@ -12,10 +12,12 @@ abstract class WariColors {
   static const Color accent = Color(0xFFC2410C);
 
   // ── Backgrounds & Surfaces ─────────────────────────────────────
-  /// Warm devotional neutral background
-  static const Color background = Color(0xFFF8FAFC);
+  /// Warm devotional neutral background with Apple system grey feel
+  static const Color background = Color(0xFFF2F4F7);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceElevated = Color(0xFFFFFFFF);
+  static const Color glassSurface = Color(0xEBF8FAFC);
+  static const Color glassBorder = Color(0x60FFFFFF);
   static const Color border = Color(0xFFE2E8F0);
   static const Color borderSubtle = Color(0xFFF1F5F9);
 
