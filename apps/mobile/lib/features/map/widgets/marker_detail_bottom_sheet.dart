@@ -44,6 +44,12 @@ class MarkerDetailBottomSheet extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(width: WariSpacing.xs),
+                  WariStatusChip(
+                    label: marker.sectorName,
+                    color: layerColor,
+                    dense: true,
+                  ),
                 ],
               ),
               IconButton(
