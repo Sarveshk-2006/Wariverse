@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../providers/user_provider.dart';
@@ -136,13 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: Icon(Icons.badge),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'VARKARI', child: Text('Varkari Pilgrim')),
-                    DropdownMenuItem(value: 'VOLUNTEER', child: Text('Volunteer Field Responder')),
-                    DropdownMenuItem(value: 'DINDI_LEADER', child: Text('Dindi Leader')),
-                    DropdownMenuItem(value: 'MEDICAL_TEAM', child: Text('Medical Team (Requires Approval)')),
-                    DropdownMenuItem(value: 'POLICE', child: Text('Police Command (Requires Approval)')),
-                    DropdownMenuItem(value: 'ADMIN', child: Text('Admin (Requires Approval)')),
-                    DropdownMenuItem(value: 'CLEANER', child: Text('CleanWari Staff (Requires Approval)')),
+                    DropdownMenuItem(value: 'VARKARI', child: Text('Varkari Pilgrim Account')),
+                    DropdownMenuItem(value: 'NGO', child: Text('NGO Coordinator Account')),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedRole = val);

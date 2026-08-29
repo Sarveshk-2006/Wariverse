@@ -46,6 +46,68 @@ class ProfilePlaceholder extends StatelessWidget {
           subtitle: const Text('Governed by WariVerse Backend Identity Policy', style: TextStyle(fontSize: 12)),
         ),
         const SizedBox(height: WariSpacing.base),
+        const SectionHeader(title: 'Secondary Operational Capabilities'),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(
+                  userProvider.isVolunteerApproved ? Icons.volunteer_activism : Icons.handshake_outlined,
+                  color: userProvider.isVolunteerApproved ? WariColors.success : WariColors.textMuted,
+                ),
+                title: const Text('Volunteer Capability'),
+                subtitle: Text('Status: ${userProvider.volunteerStatus}'),
+                trailing: userProvider.isVolunteerApproved
+                    ? Switch(
+                        value: userProvider.isVolunteerEnabled,
+                        activeTrackColor: WariColors.successLight,
+                        onChanged: (enabled) => userProvider.setVolunteerWillingness(enabled),
+                      )
+                    : WariSecondaryButtonInline(
+                        label: userProvider.volunteerStatus == 'REQUESTED' ? 'Pending Approval' : 'Request',
+                        onPressed: userProvider.volunteerStatus == 'NONE'
+                            ? () { userProvider.requestCapability('volunteer'); }
+                            : null,
+                      ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(
+                  userProvider.isDindiLeaderApproved ? Icons.groups : Icons.groups_outlined,
+                  color: userProvider.isDindiLeaderApproved ? WariColors.primary : WariColors.textMuted,
+                ),
+                title: const Text('Dindi Leader Capability'),
+                subtitle: Text('Status: ${userProvider.dindiLeaderStatus}'),
+                trailing: userProvider.isDindiLeaderApproved
+                    ? const WariStatusChip(label: 'APPROVED', color: WariColors.success, dense: true)
+                    : WariSecondaryButtonInline(
+                        label: userProvider.dindiLeaderStatus == 'REQUESTED' ? 'Pending Approval' : 'Request',
+                        onPressed: userProvider.dindiLeaderStatus == 'NONE'
+                            ? () { userProvider.requestCapability('dindi_leader'); }
+                            : null,
+                      ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(
+                  userProvider.isSanitationApproved ? Icons.cleaning_services : Icons.cleaning_services_outlined,
+                  color: userProvider.isSanitationApproved ? WariColors.warning : WariColors.textMuted,
+                ),
+                title: const Text('Sanitation / Field Worker Capability'),
+                subtitle: Text('Status: ${userProvider.sanitationStatus}'),
+                trailing: userProvider.isSanitationApproved
+                    ? const WariStatusChip(label: 'APPROVED', color: WariColors.success, dense: true)
+                    : WariSecondaryButtonInline(
+                        label: userProvider.sanitationStatus == 'REQUESTED' ? 'Pending Approval' : 'Request',
+                        onPressed: userProvider.sanitationStatus == 'NONE'
+                            ? () { userProvider.requestCapability('sanitation'); }
+                            : null,
+                      ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: WariSpacing.base),
         const SectionHeader(title: 'Emergency Safety Contacts'),
         Card(
           child: ListTile(

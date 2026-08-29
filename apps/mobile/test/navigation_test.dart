@@ -13,6 +13,10 @@ import 'package:mobile/providers/sos_provider.dart';
 import 'package:mobile/providers/map_provider.dart';
 import 'package:mobile/repositories/repositories_exports.dart';
 
+import 'package:mobile/providers/ngo_distribution_provider.dart';
+import 'package:mobile/providers/offline_map_provider.dart';
+import 'package:mobile/providers/qr_provider.dart';
+
 void main() {
   Widget buildTestableApp() {
     final apiService = ApiService(client: MockTestHttpClient());
@@ -27,6 +31,9 @@ void main() {
       sosRepo: sosRepo,
     );
 
+    final ngoProvider = NgoDistributionProvider();
+    final offlineMapProvider = OfflineMapProvider();
+
     return MultiProvider(
       providers: [
         Provider<ApiService>.value(value: apiService),
@@ -36,6 +43,9 @@ void main() {
         Provider<CrowdRepository>.value(value: crowdRepo),
         ChangeNotifierProvider<SosProvider>.value(value: sosProvider),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
+        ChangeNotifierProvider<NgoDistributionProvider>.value(value: ngoProvider),
+        ChangeNotifierProvider<OfflineMapProvider>.value(value: offlineMapProvider),
+        ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),
@@ -57,7 +67,7 @@ void main() {
 
     expect(find.text('WariVerse AI'), findsWidgets);
     expect(find.text('Home'), findsWidgets);
-    expect(find.text('Map'), findsWidgets);
+    expect(find.textContaining('Map'), findsWidgets);
     expect(find.textContaining('Alerts'), findsWidgets);
     expect(find.text('Services'), findsWidgets);
     expect(find.text('Profile'), findsWidgets);
@@ -77,7 +87,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap on Map tab
-    await tester.tap(find.text('Map').last);
+    await tester.tap(find.textContaining('Map').last);
     await tester.pumpAndSettle();
     expect(find.text('Everything'), findsOneWidget);
 
@@ -130,11 +140,10 @@ void main() {
     await tester.pumpWidget(buildTestableApp());
     await tester.pumpAndSettle();
 
-    // Drag home ListView up to bring QuickActionsGrid into view
-    await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+    final tileFinder = find.text('Lost & Found').first;
+    await tester.dragUntilVisible(tileFinder, find.byType(ListView).first, const Offset(0, -100));
     await tester.pumpAndSettle();
 
-    final tileFinder = find.text('Lost & Found');
     await tester.tap(tileFinder);
     await tester.pumpAndSettle();
 

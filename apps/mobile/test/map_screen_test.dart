@@ -10,6 +10,10 @@ import 'package:mobile/providers/sos_provider.dart';
 import 'package:mobile/providers/map_provider.dart';
 import 'package:mobile/repositories/repositories_exports.dart';
 
+import 'package:mobile/providers/offline_map_provider.dart';
+import 'package:mobile/providers/ngo_distribution_provider.dart';
+import 'package:mobile/providers/qr_provider.dart';
+
 void main() {
   Widget buildTestableApp() {
     final apiService = ApiService(client: MockTestHttpClient());
@@ -33,6 +37,9 @@ void main() {
         Provider<CrowdRepository>.value(value: crowdRepo),
         ChangeNotifierProvider<SosProvider>.value(value: sosProvider),
         ChangeNotifierProvider<MapProvider>.value(value: mapProvider),
+        ChangeNotifierProvider<OfflineMapProvider>(create: (_) => OfflineMapProvider()),
+        ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
+        ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),

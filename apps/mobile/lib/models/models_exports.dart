@@ -20,3 +20,6 @@ export 'abhang.dart';
 export 'varkari_health_risk.dart';
 export 'cleanliness_report.dart';
 export 'emergency_contact.dart';
+export 'resource_distribution.dart';
+export 'offline_map_snapshot.dart';
+export 'qr_code_model.dart';

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:latlong2/latlong.dart';
 import '../core/theme/wari_theme_exports.dart';
 import '../models/map_marker_item.dart';
@@ -323,7 +324,7 @@ class MapProvider extends ChangeNotifier {
   void _setupFirestoreListeners() {
     _cancelSubscriptions();
     final firestore = _firestore;
-    if (firestore == null || EnvConfig.enableMockFallback) return;
+    if (firestore == null || EnvConfig.enableMockFallback || Firebase.apps.isEmpty) return;
 
     try {
       final sosSub = firestore.collection('sos_incidents').snapshots().listen((snapshot) {
@@ -352,6 +353,18 @@ class MapProvider extends ChangeNotifier {
         }
       });
       _subscriptions.add(crowdSub);
+
+      final resourceSub = firestore.collection('resource_deployments').snapshots().listen((snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          final distributions = snapshot.docs.map((doc) {
+            final d = doc.data();
+            d['id'] = doc.id;
+            return ResourceDistribution.fromJson(d);
+          }).toList();
+          _updateResourceDistributionMarkers(distributions);
+        }
+      });
+      _subscriptions.add(resourceSub);
     } catch (_) {}
   }
 
@@ -380,6 +393,29 @@ class MapProvider extends ChangeNotifier {
         walkMinutes: (dist / 80).ceil(),
         availableNow: true,
         originalData: s,
+      ));
+    }
+    notifyListeners();
+  }
+
+  void _updateResourceDistributionMarkers(List<ResourceDistribution> distributions) {
+    _allMarkers.removeWhere((m) => m.layer == 'ngo_distribution');
+    for (final d in distributions) {
+      if (!d.isActive) continue;
+      final dist = calculateDistanceMeters(_userLocation, LatLng(d.latitude, d.longitude));
+      _allMarkers.add(MapMarkerItem(
+        id: d.id,
+        title: '${d.title} (${d.remainingQuantity} ${d.unit})',
+        layer: d.category.name.toLowerCase() == 'food' ? 'food' : 'ngo_distribution',
+        latitude: d.latitude,
+        longitude: d.longitude,
+        icon: d.category.icon,
+        color: d.category.color,
+        statusLabel: '${d.remainingQuantity} ${d.unit} remaining',
+        distanceM: dist.toInt(),
+        walkMinutes: (dist / 80).ceil(),
+        availableNow: true,
+        originalData: d,
       ));
     }
     notifyListeners();

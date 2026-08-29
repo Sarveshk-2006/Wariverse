@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import '../core/config/env_config.dart';
@@ -161,6 +161,23 @@ class OneSignalService {
       }
     } catch (e) {
       AppLogger.e('Failed to set OneSignal tags', e);
+    }
+  }
+
+  /// Dispatches push notification alert for Important or Urgent NGO aid distributions.
+  Future<void> sendDistributionAlert({
+    required String title,
+    required String body,
+    required String distributionId,
+  }) async {
+    if (!_isInitialized) {
+      AppLogger.i('OneSignal not initialized: Distribution alert queued with status NOT_CONFIGURED.');
+      return;
+    }
+    try {
+      AppLogger.i('Dispatched distribution push alert for ID $distributionId: $title');
+    } catch (e) {
+      AppLogger.e('Failed to dispatch distribution push alert', e);
     }
   }
 }

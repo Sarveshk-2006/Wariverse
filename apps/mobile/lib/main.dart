@@ -16,6 +16,10 @@ import 'services/websocket_service.dart';
 import 'providers/map_provider.dart';
 import 'repositories/repositories_exports.dart';
 
+import 'providers/ngo_distribution_provider.dart';
+import 'providers/offline_map_provider.dart';
+import 'providers/qr_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -59,6 +63,15 @@ void main() async {
             crowdRepo: crowdRepo,
             sosRepo: sosRepository,
           ),
+        ),
+        ChangeNotifierProvider<NgoDistributionProvider>(
+          create: (_) => NgoDistributionProvider(),
+        ),
+        ChangeNotifierProvider<OfflineMapProvider>(
+          create: (_) => OfflineMapProvider(),
+        ),
+        ChangeNotifierProvider<QrProvider>(
+          create: (_) => QrProvider(),
         ),
       ],
       child: const WariVerseApp(),

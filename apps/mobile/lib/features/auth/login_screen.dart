@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
@@ -24,12 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final Map<String, String> _portalLabels = {
     'VARKARI': 'Varkari Pilgrim Portal',
-    'DINDI_LEADER': 'Dindi Leader Operations',
-    'VOLUNTEER': 'Volunteer Field Response',
-    'MEDICAL_TEAM': 'Medical Emergency Shield',
-    'POLICE': 'Police Security Command',
-    'ADMIN': 'Executive Command Center',
-    'CLEANER': 'CleanWari Sanitation Operations',
+    'NGO': 'NGO Coordinator Portal',
+    'ADMIN': 'Executive Command Center (Admin)',
   };
 
   @override
@@ -246,6 +242,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     const SizedBox(height: WariSpacing.base),
+
+                    if (_selectedPortalRole == 'ADMIN') ...[
+                      Container(
+                        padding: const EdgeInsets.all(WariSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: WariColors.slate100,
+                          borderRadius: BorderRadius.circular(WariSpacing.radiusSm),
+                          border: Border.all(color: WariColors.slate300),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.admin_panel_settings_rounded, color: WariColors.primary, size: 18),
+                            const SizedBox(width: WariSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                'Executive Command Center access is restricted to system-provisioned Firebase Admin accounts. Public registration is disabled.',
+                                style: WariTypography.bodySmall.copyWith(fontSize: 11, color: WariColors.slate700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: WariSpacing.base),
+                    ],
 
                     TextField(
                       controller: _emailController,

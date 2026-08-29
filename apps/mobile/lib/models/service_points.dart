@@ -1,4 +1,4 @@
-﻿// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names
 
 /// FoodCentre returned from /food and /food/nearby endpoints.
 class FoodCentre {
@@ -56,6 +56,25 @@ class FoodCentre {
         walkMinutes: json['walk_minutes'] as int?,
         address: json['address'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'provider': provider,
+        'latitude': latitude,
+        'longitude': longitude,
+        'available_now': availableNow,
+        'current_count': currentCount,
+        'capacity': capacity,
+        'estimated_queue_minutes': estimatedQueueMinutes,
+        'hygiene_rating': hygieneRating,
+        'opening_time': openingTime,
+        'closing_time': closingTime,
+        'meal_types': mealTypes,
+        'distance_m': distanceM,
+        'walk_minutes': walkMinutes,
+        'address': address,
+      };
 }
 
 /// WaterStatus enum matching backend.
@@ -106,6 +125,19 @@ class WaterPoint {
         walkMinutes: json['walk_minutes'] as int?,
         address: json['address'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'status': status.name,
+        'water_type': waterType,
+        'capacity_liters': capacityLiters,
+        'distance_m': distanceM,
+        'walk_minutes': walkMinutes,
+        'address': address,
+      };
 }
 
 /// ToiletStatus enum matching backend.
@@ -156,6 +188,19 @@ class ToiletPoint {
         lastCleanedAt: json['last_cleaned_at'] as String?,
         address: json['address'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'status': status.name,
+        'total_units': totalUnits,
+        'gender': gender,
+        'rating': rating,
+        'last_cleaned_at': lastCleanedAt,
+        'address': address,
+      };
 }
 
 /// Shelter returned from /shelters endpoint.
@@ -198,6 +243,19 @@ class Shelter {
       );
 
   int get availableSpots => capacity - currentOccupancy;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'capacity': capacity,
+        'current_occupancy': currentOccupancy,
+        'available_now': availableNow,
+        'provider': provider,
+        'amenities': amenities,
+        'address': address,
+      };
 }
 
 /// MedicalLocation returned from /medical endpoint.
@@ -241,6 +299,20 @@ class MedicalLocation {
         operatingHours: json['operating_hours'] as String? ?? '24/7',
         address: json['address'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'location_type': locationType,
+        'latitude': latitude,
+        'longitude': longitude,
+        'services': services,
+        'available': available,
+        'capacity': capacity,
+        'contact': contact,
+        'operating_hours': operatingHours,
+        'address': address,
+      };
 }
 
 /// WellnessCentre returned from /wellness endpoint.
@@ -275,4 +347,15 @@ class WellnessCentre {
         waitingPilgrims: json['waiting_pilgrims'] as int?,
         address: json['address'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'services': services,
+        'available_now': availableNow,
+        'waiting_pilgrims': waitingPilgrims,
+        'address': address,
+      };
 }

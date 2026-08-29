@@ -5,10 +5,10 @@ import '../../providers/user_provider.dart';
 import '../home/home_screen.dart';
 import 'dindi_leader_dashboard.dart';
 import 'volunteer_dashboard.dart';
-import 'police_dashboard.dart';
-import 'medical_dashboard.dart';
 import 'ngo_dashboard.dart';
 import 'admin_dashboard.dart';
+
+import '../cleanwari/cleanwari_cleaner_screen.dart';
 
 /// Centralized role-based operational dashboard renderer.
 class RoleDashboardView extends StatelessWidget {
@@ -21,21 +21,23 @@ class RoleDashboardView extends StatelessWidget {
 
     switch (activeRole) {
       case UserRole.VARKARI:
+        if (userProvider.isVolunteerEnabled) {
+          return const VolunteerDashboard();
+        }
         return const HomeScreen();
       case UserRole.DINDI_LEADER:
         return const DindiLeaderDashboard();
       case UserRole.VOLUNTEER:
         return const VolunteerDashboard();
       case UserRole.POLICE:
-        return const PoliceDashboard();
       case UserRole.MEDICAL_TEAM:
-        return const MedicalDashboard();
-      case UserRole.NGO:
-      case UserRole.SERVICE_PROVIDER:
-      case UserRole.CLEANER:
-        return const NgoDashboard();
       case UserRole.ADMIN:
         return const AdminDashboard();
+      case UserRole.NGO:
+      case UserRole.SERVICE_PROVIDER:
+        return const NgoDashboard();
+      case UserRole.CLEANER:
+        return const CleanWariCleanerScreen();
     }
   }
 }

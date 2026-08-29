@@ -5,6 +5,8 @@ import '../../core/widgets/wari_widgets_exports.dart';
 import '../../providers/services_provider.dart';
 import '../../repositories/service_repository.dart';
 import '../../services/api_service.dart';
+import '../../providers/ngo_distribution_provider.dart';
+import 'widgets/nearby_distributions_widget.dart';
 import 'widgets/service_category_chips.dart';
 import 'widgets/service_card.dart';
 import 'widgets/service_detail_bottom_sheet.dart';
@@ -15,12 +17,28 @@ class ServicesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final existingServices = Provider.of<ServicesProvider?>(context, listen: false);
+    final existingNgo = Provider.of<NgoDistributionProvider?>(context, listen: false);
+
+    if (existingServices != null && existingNgo != null) {
+      return const _ServicesScreenContent();
+    }
+
     final apiService = Provider.of<ApiService>(context, listen: false);
 
-    return ChangeNotifierProvider<ServicesProvider>(
-      create: (_) => ServicesProvider(
-        serviceRepo: ServiceRepository(apiService),
-      ),
+    return MultiProvider(
+      providers: [
+        if (existingServices == null)
+          ChangeNotifierProvider<ServicesProvider>(
+            create: (_) => ServicesProvider(
+              serviceRepo: ServiceRepository(apiService),
+            )..loadServices(),
+          ),
+        if (existingNgo == null)
+          ChangeNotifierProvider<NgoDistributionProvider>(
+            create: (_) => NgoDistributionProvider(),
+          ),
+      ],
       child: const _ServicesScreenContent(),
     );
   }
@@ -209,9 +227,15 @@ class _ServicesScreenContentState extends State<_ServicesScreenContent> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(WariSpacing.base),
-      itemCount: services.length,
+      itemCount: services.length + 1,
       itemBuilder: (context, index) {
-        final item = services[index];
+        if (index == 0) {
+          return const Padding(
+            padding: EdgeInsets.only(bottom: WariSpacing.base),
+            child: NearbyDistributionsWidget(),
+          );
+        }
+        final item = services[index - 1];
         return Padding(
           padding: const EdgeInsets.only(bottom: WariSpacing.sm),
           child: ServiceCard(

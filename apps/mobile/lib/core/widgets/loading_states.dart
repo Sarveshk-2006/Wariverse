@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../theme/wari_theme_exports.dart';
 
 /// Centered loading spinner with optional label.
@@ -207,11 +207,11 @@ class WariSecondaryButtonInline extends StatelessWidget {
   const WariSecondaryButtonInline({
     super.key,
     required this.label,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

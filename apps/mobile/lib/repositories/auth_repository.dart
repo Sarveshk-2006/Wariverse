@@ -1,8 +1,9 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/api_service.dart';
 import '../models/models_exports.dart';
 import '../core/utils/app_logger.dart';
+import 'qr_repository.dart';
 
 /// Result type that carries auth data and its origin.
 class AuthResult {
@@ -78,12 +79,29 @@ class AuthRepository {
       String role = 'VARKARI';
       String displayName = firebaseUser.displayName ?? email.split('@').first;
 
+      bool volunteerEnabled = false;
+      String volunteerStatus = 'NONE';
+      bool volunteerAvailable = false;
+      String? dindiCode;
+      bool isDindiLeader = false;
+      String dindiLeaderStatus = 'NONE';
+      String sanitationStatus = 'NONE';
+      String ngoStatus = 'NONE';
+
       try {
         final userDoc = await db.collection('users').doc(uid).get();
         if (userDoc.exists && userDoc.data() != null) {
           final data = userDoc.data()!;
           role = data['role'] as String? ?? 'VARKARI';
           displayName = data['display_name'] as String? ?? displayName;
+          volunteerEnabled = data['volunteer_enabled'] as bool? ?? false;
+          volunteerStatus = data['volunteer_status'] as String? ?? (volunteerEnabled ? 'APPROVED' : 'NONE');
+          volunteerAvailable = data['volunteer_available'] as bool? ?? false;
+          dindiCode = data['dindi_code'] as String? ?? data['dindi_id'] as String?;
+          isDindiLeader = data['is_dindi_leader'] as bool? ?? false;
+          dindiLeaderStatus = data['dindi_leader_status'] as String? ?? (isDindiLeader ? 'APPROVED' : 'NONE');
+          sanitationStatus = data['sanitation_status'] as String? ?? 'NONE';
+          ngoStatus = data['ngo_status'] as String? ?? 'NONE';
         } else {
           // Auto-create initial user record in Firestore if missing
           await db.collection('users').doc(uid).set({
@@ -91,6 +109,12 @@ class AuthRepository {
             'email': email.trim(),
             'display_name': displayName,
             'role': 'VARKARI',
+            'volunteer_enabled': false,
+            'volunteer_status': 'NONE',
+            'volunteer_available': false,
+            'dindi_leader_status': 'NONE',
+            'sanitation_status': 'NONE',
+            'ngo_status': 'NONE',
             'created_at': DateTime.now().toIso8601String(),
           });
         }
@@ -101,9 +125,13 @@ class AuthRepository {
             'uid': uid,
             'full_name': displayName,
             'role': role,
+            'volunteer_enabled': false,
             'created_at': DateTime.now().toIso8601String(),
           });
         }
+
+        // Record audit log entry
+        logAuditAction(uid, 'USER_LOGIN', 'users/$uid', {'role': role});
       } catch (firestoreErr) {
         AppLogger.i('Firestore profile read warning for UID $uid: $firestoreErr');
       }
@@ -112,6 +140,11 @@ class AuthRepository {
       if (requestedPortalRole != null && requestedPortalRole.isNotEmpty && requestedPortalRole != 'ALL') {
         final normReq = requestedPortalRole.toUpperCase();
         final normActual = role.toUpperCase();
+
+        if (normReq == 'ADMIN' && normActual != 'ADMIN') {
+          await signOut();
+          throw Exception('This account is not authorized for Executive Command Center Admin access.');
+        }
 
         if (normReq != normActual && normActual != 'ADMIN') {
           throw Exception('You are not authorized for the $requestedPortalRole Portal. Your registered role is $role.');
@@ -123,6 +156,14 @@ class AuthRepository {
         email: email.trim(),
         role: role,
         displayName: displayName,
+        volunteerEnabled: volunteerEnabled,
+        volunteerStatus: volunteerStatus,
+        volunteerAvailable: volunteerAvailable,
+        dindiCode: dindiCode,
+        isDindiLeader: isDindiLeader,
+        dindiLeaderStatus: dindiLeaderStatus,
+        sanitationStatus: sanitationStatus,
+        ngoStatus: ngoStatus,
         isDemoMode: false,
       );
 
@@ -133,7 +174,7 @@ class AuthRepository {
     }
   }
 
-  /// Register new user account using Firebase Authentication.
+  /// Register new user account using Firebase Authentication and provision unique QR identity.
   Future<AppUser> register({
     required String email,
     required String password,
@@ -164,11 +205,25 @@ class AuthRepository {
       final uid = firebaseUser.uid;
       await firebaseUser.updateDisplayName(displayName);
 
+      // Create unique permanent QR identity
+      final qrRepo = QrRepository(firestore: _firestore);
+      final qrCode = await qrRepo.generateQrCode(
+        type: QrType.PERSON,
+        ownerId: uid,
+        targetCollection: 'users',
+        targetDocumentId: uid,
+        createdBy: uid,
+        customPrefix: 'WVRK',
+        metadata: {'user_id': uid, 'title': 'Digital Pilgrim Identity Card'},
+      );
+
       final userData = <String, dynamic>{
         'uid': uid,
         'email': email.trim(),
         'display_name': displayName,
         'role': requestedRole,
+        'qr_id': qrCode.id,
+        'qr_token': qrCode.token,
         'is_active': true,
         'is_verified': requestedRole == 'VARKARI',
         'created_at': DateTime.now().toIso8601String(),
@@ -188,6 +243,8 @@ class AuthRepository {
         'gender': gender ?? 'Not Specified',
         'blood_group': bloodGroup ?? 'O+',
         'role': requestedRole,
+        'qr_id': qrCode.id,
+        'qr_token': qrCode.token,
         'created_at': DateTime.now().toIso8601String(),
       });
 
@@ -218,6 +275,95 @@ class AuthRepository {
     try {
       await auth.signOut();
     } catch (_) {}
+  }
+
+  /// Request a secondary capability (volunteer, dindi_leader, sanitation, ngo).
+  Future<void> requestCapability(String uid, String capability) async {
+    final statusField = '${capability}_status';
+    final requestedAtField = '${capability}_requested_at';
+
+    try {
+      await db.collection('users').doc(uid).set({
+        statusField: 'REQUESTED',
+        requestedAtField: DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
+
+      logAuditAction(uid, '${capability.toUpperCase()}_REQUESTED', 'users/$uid', {
+        'capability': capability,
+        'status': 'REQUESTED',
+      });
+    } catch (e) {
+      AppLogger.i('Warning: Could not save capability request: $e');
+    }
+  }
+
+  /// Admin approval/rejection/suspension of user capabilities.
+  Future<void> adminSetCapabilityStatus(String adminUid, String targetUid, String capability, String newStatus) async {
+    final statusField = '${capability}_status';
+
+    try {
+      final updates = <String, dynamic>{
+        statusField: newStatus,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (capability == 'volunteer') {
+        updates['volunteer_enabled'] = (newStatus == 'APPROVED');
+        updates['volunteer_available'] = (newStatus == 'APPROVED');
+      } else if (capability == 'dindi_leader') {
+        updates['is_dindi_leader'] = (newStatus == 'APPROVED');
+      }
+
+      await db.collection('users').doc(targetUid).set(updates, SetOptions(merge: true));
+
+      logAuditAction(adminUid, '${capability.toUpperCase()}_$newStatus', 'users/$targetUid', {
+        'capability': capability,
+        'new_status': newStatus,
+        'admin_uid': adminUid,
+      });
+    } catch (e) {
+      AppLogger.i('Warning: Could not update capability status: $e');
+    }
+  }
+
+  /// Write operational action log to Firestore audit_logs collection.
+  Future<void> logAuditAction(String actorUid, String action, String target, [Map<String, dynamic>? metadata]) async {
+    try {
+      final logId = 'log_${DateTime.now().millisecondsSinceEpoch}';
+      await db.collection('audit_logs').doc(logId).set({
+        'id': logId,
+        'actor_uid': actorUid,
+        'action': action,
+        'target': target,
+        'metadata': metadata ?? {},
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      AppLogger.i('Audit logging notice: $e');
+    }
+  }
+
+  /// Update volunteer willingness status in Firestore.
+  Future<void> updateVolunteerWillingness(String uid, bool enabled) async {
+    try {
+      final status = enabled ? 'APPROVED' : 'NONE';
+      await db.collection('users').doc(uid).set({
+        'volunteer_enabled': enabled,
+        'volunteer_status': status,
+        'volunteer_available': enabled,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
+
+      await db.collection('profiles').doc(uid).set({
+        'volunteer_enabled': enabled,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
+
+      logAuditAction(uid, enabled ? 'VOLUNTEER_ENABLED' : 'VOLUNTEER_DISABLED', 'users/$uid');
+    } catch (e) {
+      AppLogger.i('Warning: Could not sync volunteer status to Firestore: $e');
+    }
   }
 
   void setToken(String token) => _api.setToken(token);

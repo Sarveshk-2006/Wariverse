@@ -1,4 +1,4 @@
-﻿// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names
 import 'package:latlong2/latlong.dart';
 
 /// Crowd level enum matching backend CrowdLevel enum.
@@ -59,6 +59,18 @@ class CrowdZone {
         radiusM: (json['radius_m'] as num?)?.toDouble() ?? 500.0,
         zoneType: json['zone_type'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'crowd_level': crowdLevel.name,
+        'current_density': currentDensity,
+        'estimated_count': estimatedCount,
+        'latitude': latitude,
+        'longitude': longitude,
+        'radius_m': radiusM,
+        'zone_type': zoneType,
+      };
 }
 
 /// AI-powered crowd prediction for a zone.

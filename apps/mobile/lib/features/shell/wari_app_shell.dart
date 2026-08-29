@@ -3,14 +3,15 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../models/models_exports.dart';
-
 import '../../providers/user_provider.dart';
 import '../dashboards/role_dashboard_view.dart';
 import '../map/map_screen.dart';
 import '../sos/sos_screen.dart';
 import '../services/services_screen.dart';
+import '../ngo/create_distribution_screen.dart';
 import '../placeholders/profile_placeholder.dart';
 
+/// Role & Portal-Specific Application Shell with Custom Operational Navigations.
 class WariAppShell extends StatefulWidget {
   const WariAppShell({super.key, this.initialTabIndex = 0, this.tileProvider});
 
@@ -24,27 +25,10 @@ class WariAppShell extends StatefulWidget {
 class _WariAppShellState extends State<WariAppShell> {
   late int _currentIndex;
 
-  late final List<Widget> _pages;
-
-  static const List<String> _titles = [
-    'WariVerse AI',
-    'Live Pilgrimage Map',
-    'Safety & SOS Emergency',
-    'Pilgrim Services & Facilities',
-    'Profile & Settings',
-  ];
-
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTabIndex;
-    _pages = [
-      const RoleDashboardView(),
-      MapScreen(tileProvider: widget.tileProvider),
-      const SosScreen(),
-      const ServicesScreen(),
-      const ProfilePlaceholder(),
-    ];
   }
 
   void _onTabTapped(int index) {
@@ -53,15 +37,154 @@ class _WariAppShellState extends State<WariAppShell> {
     });
   }
 
+  List<NavigationDestination> _getNavDestinations(UserRole role) {
+    switch (role) {
+      case UserRole.NGO:
+        return const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard, color: WariColors.primary),
+            label: 'NGO Hub',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map, color: WariColors.primary),
+            label: 'Live Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.volunteer_activism_outlined),
+            selectedIcon: Icon(Icons.volunteer_activism, color: WariColors.primary),
+            label: 'Resources',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_active_outlined),
+            selectedIcon: Icon(Icons.notifications_active, color: WariColors.danger),
+            label: 'Emergency',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.business_outlined),
+            selectedIcon: Icon(Icons.business, color: WariColors.primary),
+            label: 'Profile',
+          ),
+        ];
+
+      case UserRole.ADMIN:
+        return const [
+          NavigationDestination(
+            icon: Icon(Icons.admin_panel_settings_outlined),
+            selectedIcon: Icon(Icons.admin_panel_settings, color: WariColors.primary),
+            label: 'Command Center',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map, color: WariColors.primary),
+            label: 'Operations Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.warning_amber_outlined),
+            selectedIcon: Icon(Icons.warning, color: WariColors.danger),
+            label: 'SOS & Risk',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2, color: WariColors.primary),
+            label: 'Resource Monitor',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.manage_accounts_outlined),
+            selectedIcon: Icon(Icons.manage_accounts, color: WariColors.primary),
+            label: 'System Control',
+          ),
+        ];
+
+      case UserRole.VARKARI:
+      default:
+        return const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home, color: WariColors.primary),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map, color: WariColors.primary),
+            label: 'Wari Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_active_outlined),
+            selectedIcon: Icon(Icons.notifications_active, color: WariColors.danger),
+            label: 'Alerts & SOS',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.grid_view_outlined),
+            selectedIcon: Icon(Icons.grid_view, color: WariColors.primary),
+            label: 'Services',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person, color: WariColors.primary),
+            label: 'Profile',
+          ),
+        ];
+    }
+  }
+
+  List<Widget> _getPages(UserRole role) {
+    switch (role) {
+      case UserRole.NGO:
+        return [
+          const RoleDashboardView(),
+          MapScreen(tileProvider: widget.tileProvider),
+          const CreateDistributionScreen(),
+          const SosScreen(),
+          const ProfilePlaceholder(),
+        ];
+      case UserRole.ADMIN:
+        return [
+          const RoleDashboardView(),
+          MapScreen(tileProvider: widget.tileProvider),
+          const SosScreen(),
+          const CreateDistributionScreen(),
+          const ProfilePlaceholder(),
+        ];
+      case UserRole.VARKARI:
+      default:
+        return [
+          const RoleDashboardView(),
+          MapScreen(tileProvider: widget.tileProvider),
+          const SosScreen(),
+          const ServicesScreen(),
+          const ProfilePlaceholder(),
+        ];
+    }
+  }
+
+  String _getPageTitle(UserRole role, int index) {
+    switch (role) {
+      case UserRole.NGO:
+        const titles = ['NGO Operations Hub', 'Resource Deployments Map', 'Publish Aid Resources', 'NGO Emergency & Safety', 'NGO Profile'];
+        return titles[index.clamp(0, titles.length - 1)];
+      case UserRole.ADMIN:
+        const titles = ['Command Center Operations', 'Wari Live Operations Map', 'SOS & Risk Monitoring', 'NGO Resource Oversight', 'Admin System Control'];
+        return titles[index.clamp(0, titles.length - 1)];
+      case UserRole.VARKARI:
+      default:
+        const titles = ['WariVerse AI', 'Live Pilgrimage Map', 'Safety & SOS Emergency', 'Pilgrim Services & Facilities', 'Profile & Settings'];
+        return titles[index.clamp(0, titles.length - 1)];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final activeRole = userProvider.currentRole;
+    final pages = _getPages(activeRole);
+    final safeIndex = _currentIndex.clamp(0, pages.length - 1);
 
     return PopScope(
-      canPop: _currentIndex == 0,
+      canPop: safeIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _currentIndex != 0) {
+        if (!didPop && safeIndex != 0) {
           setState(() {
             _currentIndex = 0;
           });
@@ -74,7 +197,7 @@ class _WariAppShellState extends State<WariAppShell> {
             children: [
               Flexible(
                 child: Text(
-                  _titles[_currentIndex],
+                  _getPageTitle(activeRole, safeIndex),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -185,46 +308,18 @@ class _WariAppShellState extends State<WariAppShell> {
                   },
                 ),
                 const SizedBox(height: WariSpacing.base),
-
               ],
             ),
           ),
         ),
         body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
+          index: safeIndex,
+          children: pages,
         ),
-
         bottomNavigationBar: NavigationBar(
-          selectedIndex: _currentIndex,
+          selectedIndex: safeIndex,
           onDestinationSelected: _onTabTapped,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: WariColors.primary),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map, color: WariColors.primary),
-              label: 'Map',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.notifications_active_outlined),
-              selectedIcon: Icon(Icons.notifications_active, color: WariColors.danger),
-              label: 'Alerts & SOS',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view, color: WariColors.primary),
-              label: 'Services',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: WariColors.primary),
-              label: 'Profile',
-            ),
-          ],
+          destinations: _getNavDestinations(activeRole),
         ),
       ),
     );
@@ -243,5 +338,4 @@ class _WariAppShellState extends State<WariAppShell> {
       case UserRole.ADMIN: return Icons.admin_panel_settings;
     }
   }
-
 }

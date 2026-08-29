@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/models_exports.dart';
 import '../repositories/repositories_exports.dart';
 import '../services/onesignal_service.dart';
+import '../services/offline_map_storage_service.dart';
 
 enum AuthState {
   unauthenticated,
@@ -29,6 +30,14 @@ class UserProvider extends ChangeNotifier {
   bool get isDemoMode => _isDemoMode;
   String? get errorMessage => _errorMessage;
   String get currentLanguage => _currentLanguage;
+  bool get isVolunteerEnabled => _currentUser?.volunteerEnabled ?? false;
+  bool get isVolunteerApproved => _currentUser?.isVolunteerApproved ?? false;
+  bool get isDindiLeaderApproved => _currentUser?.isDindiLeaderApproved ?? false;
+  bool get isSanitationApproved => _currentUser?.isSanitationApproved ?? false;
+
+  String get volunteerStatus => _currentUser?.volunteerStatus ?? 'NONE';
+  String get dindiLeaderStatus => _currentUser?.dindiLeaderStatus ?? 'NONE';
+  String get sanitationStatus => _currentUser?.sanitationStatus ?? 'NONE';
 
   /// Helper for unit tests / default initialization.
   void initDefaultSession() {
@@ -50,6 +59,63 @@ class UserProvider extends ChangeNotifier {
     _authState = AuthState.authenticatedWithRole;
     _isDemoMode = true;
     notifyListeners();
+  }
+
+  /// Toggle volunteer willingness capability for the current Varkari user.
+  Future<bool> setVolunteerWillingness(bool enabled) async {
+    if (_currentUser == null) return false;
+
+    try {
+      await _authRepo.updateVolunteerWillingness(_currentUser!.userId, enabled);
+      _currentUser = _currentUser!.copyWith(
+        volunteerEnabled: enabled,
+        volunteerStatus: enabled ? 'APPROVED' : 'NONE',
+        volunteerAvailable: enabled,
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Request a secondary capability (volunteer, dindi_leader, sanitation).
+  Future<bool> requestCapability(String capability) async {
+    if (_currentUser == null) return false;
+
+    try {
+      await _authRepo.requestCapability(_currentUser!.userId, capability);
+      if (capability == 'volunteer') {
+        _currentUser = _currentUser!.copyWith(volunteerStatus: 'REQUESTED');
+      } else if (capability == 'dindi_leader') {
+        _currentUser = _currentUser!.copyWith(dindiLeaderStatus: 'REQUESTED');
+      } else if (capability == 'sanitation') {
+        _currentUser = _currentUser!.copyWith(sanitationStatus: 'REQUESTED');
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Admin sets status for user capabilities.
+  Future<bool> adminSetCapabilityStatus(String targetUid, String capability, String newStatus) async {
+    if (_currentUser == null) return false;
+
+    try {
+      await _authRepo.adminSetCapabilityStatus(_currentUser!.userId, targetUid, capability, newStatus);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Switch active role for authorized administrative testing.
@@ -139,6 +205,7 @@ class UserProvider extends ChangeNotifier {
   /// Complete production logout.
   void logout() {
     OneSignalService().logoutUser();
+    OfflineMapStorageService().clearUserPrivateOfflineData();
     _authRepo.signOut();
     _currentUser = null;
     _currentRole = UserRole.VARKARI;

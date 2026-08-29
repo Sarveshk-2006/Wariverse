@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/features/home/home_screen.dart';
@@ -6,6 +6,9 @@ import 'package:mobile/providers/user_provider.dart';
 import 'package:mobile/repositories/auth_repository.dart';
 import 'package:mobile/services/api_service.dart';
 import 'test_helpers.dart';
+
+import 'package:mobile/providers/qr_provider.dart';
+import 'package:mobile/providers/ngo_distribution_provider.dart';
 
 void main() {
   Widget buildTestableApp() {
@@ -16,6 +19,8 @@ void main() {
       providers: [
         Provider<ApiService>.value(value: apiService),
         Provider<AuthRepository>.value(value: authRepository),
+        ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
+        ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),
@@ -33,7 +38,7 @@ void main() {
     await tester.pumpWidget(buildTestableApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('राम कृष्ण हरी 🙏'), findsOneWidget);
+    expect(find.textContaining('Palkhi Route'), findsOneWidget);
     expect(find.text('Digital Pilgrim ID'), findsOneWidget);
     expect(find.text('Show e-ID QR'), findsOneWidget);
 
@@ -90,15 +95,17 @@ void main() {
 
     // Tap Show e-ID QR button
     await tester.tap(find.text('Show e-ID QR'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Scan this QR code to verify identity or access emergency contacts.'), findsOneWidget);
+    expect(find.textContaining('Digital Pilgrim Identity Card'), findsOneWidget);
 
-    // Close QR modal using close icon
-    await tester.tap(find.byIcon(Icons.close));
-    await tester.pumpAndSettle();
+    // Close QR modal using close button
+    await tester.tap(find.text('Close'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Scan this QR code to verify identity or access emergency contacts.'), findsNothing);
+    expect(find.textContaining('Digital Pilgrim Identity Card'), findsNothing);
 
     addTearDown(() {
       tester.view.resetPhysicalSize();

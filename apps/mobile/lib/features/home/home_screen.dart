@@ -11,6 +11,7 @@ import 'widgets/weather_alert_card.dart';
 import 'widgets/quick_actions_grid.dart';
 import 'widgets/nearby_services_card.dart';
 import 'widgets/role_summary_card.dart';
+import 'widgets/live_resources_card.dart';
 
 /// Full WariVerse AI Home Dashboard view.
 class HomeScreen extends StatelessWidget {
@@ -90,6 +91,8 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
           padding: const EdgeInsets.all(WariSpacing.base),
           children: const [
             HomeHeader(),
+            SizedBox(height: WariSpacing.base),
+            LiveResourcesCard(),
             SizedBox(height: WariSpacing.base),
             RoleSummaryCard(),
             SizedBox(height: WariSpacing.base),

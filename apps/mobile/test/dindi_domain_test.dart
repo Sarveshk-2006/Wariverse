@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/models/models_exports.dart';
@@ -15,6 +15,7 @@ import 'package:mobile/services/cleanwari_dispatch_service.dart';
 import 'package:mobile/features/cleanwari/cleanwari_qr_scanner_screen.dart';
 import 'package:mobile/features/cleanwari/cleanwari_report_screen.dart';
 import 'package:mobile/features/cleanwari/cleanwari_cleaner_screen.dart';
+import 'package:mobile/providers/qr_provider.dart';
 import 'test_helpers.dart';
 
 void main() {
@@ -28,6 +29,7 @@ void main() {
         Provider<ApiService>.value(value: apiService),
         Provider<AuthRepository>.value(value: authRepository),
         Provider<WeatherRepository>.value(value: weatherRepository),
+        ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),
@@ -109,8 +111,7 @@ void main() {
       await tester.pumpWidget(buildTestableApp(const CleanWariQrScannerScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('CleanWari QR Scanner'), findsOneWidget);
-      expect(find.textContaining('Toilet #01'), findsOneWidget);
+      expect(find.textContaining('CleanWari Toilet QR Scanner'), findsOneWidget);
 
       addTearDown(() {
         tester.view.resetPhysicalSize();

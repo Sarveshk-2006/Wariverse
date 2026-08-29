@@ -4,6 +4,7 @@ import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
 import '../../providers/sos_provider.dart';
+import '../../providers/user_provider.dart';
 import 'widgets/role_dashboard_header.dart';
 import 'widgets/metric_card.dart';
 
@@ -89,6 +90,84 @@ class AdminDashboard extends StatelessWidget {
                             );
                           }).toList(),
                         ),
+
+                      const SizedBox(height: WariSpacing.base),
+                      Text('🛡️ Capability & Role Approval Queue', style: WariTypography.titleSmall),
+                      const SizedBox(height: WariSpacing.xs),
+                      WariCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Pending Capability Requests', style: WariTypography.titleSmall),
+                            const SizedBox(height: 4),
+                            Text('Approve or reject secondary capability requests from registered Varkaris.', style: WariTypography.bodySmall),
+                            const SizedBox(height: WariSpacing.sm),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Volunteer Request — Ramesh Pawar'),
+                              subtitle: const Text('Requested: Volunteer Field Responder Capability'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.check_circle, color: WariColors.success),
+                                    onPressed: () {
+                                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                                      userProvider.adminSetCapabilityStatus('varkari-10', 'volunteer', 'APPROVED');
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Volunteer capability APPROVED for pilgrim.')),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.cancel, color: WariColors.danger),
+                                    onPressed: () {
+                                      final userProvider = Provider.of<UserProvider>(context, listen: false);
+                                      userProvider.adminSetCapabilityStatus('varkari-10', 'volunteer', 'REJECTED');
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: WariSpacing.base),
+                      Text('📦 NGO Resource Operations & Aid Oversight', style: WariTypography.titleSmall),
+                      const SizedBox(height: WariSpacing.xs),
+                      WariCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Live NGO Aid Distributions', style: WariTypography.titleSmall),
+                                const WariStatusChip(label: 'REALTIME OVERSIGHT', color: WariColors.primary, dense: true),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text('Global command center monitoring for food, water, medical camps & shelter aid.', style: WariTypography.bodySmall),
+                            const SizedBox(height: WariSpacing.sm),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.restaurant, color: WariColors.foodColor),
+                              title: const Text('Free Mahaprasad & Tea Distribution'),
+                              subtitle: const Text('By Shivdharma Seva Trust · 650/1000 meals remaining'),
+                              trailing: ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: WariColors.success, padding: const EdgeInsets.symmetric(horizontal: 10)),
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('NGO Aid Distribution verified by Admin.')),
+                                  );
+                                },
+                                child: const Text('Verify', style: TextStyle(fontSize: 12, color: Colors.white)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

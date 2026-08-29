@@ -9,6 +9,7 @@ import '../../repositories/lost_found_repository.dart';
 import '../../services/api_service.dart';
 import 'widgets/lost_person_card.dart';
 import 'widgets/report_lost_person_dialog.dart';
+import '../qr/widgets/wari_qr_scanner_modal.dart';
 
 class LostFoundScreen extends StatelessWidget {
   const LostFoundScreen({super.key});
@@ -62,6 +63,50 @@ class _LostFoundScreenContentState extends State<_LostFoundScreenContent> {
       backgroundColor: WariColors.background,
       appBar: AppBar(
         title: const Text('Lost & Found Recovery'),
+        actions: [
+          IconButton(
+            tooltip: 'Scan Lost Person Tag QR',
+            icon: const Icon(Icons.qr_code_scanner_rounded, color: WariColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => WariQrScannerModal(
+                    title: 'Scan Lost Person Tag',
+                    subtitle: 'Align lost person QR tag to look up safe recovery instructions',
+                    expectedType: QrType.LOST_PERSON,
+                    onValidScan: (qrCode, metadata) {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('🛡️ Lost Person Found'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Case Ref: ${qrCode.targetDocumentId}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              const Text('Safe Recovery Instructions:'),
+                              const Text('• Escort person to nearest Admin / Police Seva Pandal.'),
+                              const Text('• Contact Wari Helpline: 1800-WARI-HELP.'),
+                              const Text('• Do NOT leave person unattended.'),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

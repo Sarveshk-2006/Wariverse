@@ -1,4 +1,4 @@
-﻿// ignore_for_file: dangling_library_doc_comments
+// ignore_for_file: dangling_library_doc_comments
 /// Barrel export for all WariVerse AI repositories.
 export 'auth_repository.dart';
 export 'weather_repository.dart';
@@ -12,3 +12,4 @@ export 'dindi_repository.dart';
 export 'dindi_audio_repository.dart';
 export 'abhang_repository.dart';
 export 'cleanwari_repository.dart';
+export 'qr_repository.dart';

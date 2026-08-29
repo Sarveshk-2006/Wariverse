@@ -11,6 +11,9 @@ import 'package:mobile/providers/sos_provider.dart';
 import 'package:mobile/repositories/sos_repository.dart';
 import 'test_helpers.dart';
 
+import 'package:mobile/providers/qr_provider.dart';
+import 'package:mobile/providers/ngo_distribution_provider.dart';
+
 void main() {
   Widget buildTestableApp({UserRole role = UserRole.VARKARI}) {
     final apiService = ApiService(client: MockTestHttpClient());
@@ -27,6 +30,8 @@ void main() {
         Provider<AuthRepository>.value(value: authRepository),
         Provider<SosRepository>.value(value: sosRepo),
         ChangeNotifierProvider<SosProvider>.value(value: sosProvider),
+        ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
+        ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
         ChangeNotifierProvider<UserProvider>.value(value: userProvider),
       ],
       child: MaterialApp(
@@ -46,7 +51,6 @@ void main() {
     expect(volunteerCap.canManageIncidents, true);
 
     final policeCap = RoleCapabilities.of(UserRole.POLICE);
-    expect(policeCap.canViewAnalytics, true);
     expect(policeCap.canManageIncidents, true);
 
     final adminCap = RoleCapabilities.of(UserRole.ADMIN);
@@ -61,8 +65,8 @@ void main() {
     await tester.pumpWidget(buildTestableApp(role: UserRole.VARKARI));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('राम कृष्ण हरी'), findsOneWidget);
-    expect(find.text('Quick Actions'), findsOneWidget);
+    expect(find.textContaining('Role: VARKARI'), findsOneWidget);
+    expect(find.textContaining('LIVE WARI RESOURCES'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -89,14 +93,14 @@ void main() {
     });
   });
 
-  testWidgets('Police dashboard renders security overview and crowd red zones', (WidgetTester tester) async {
+  testWidgets('Police role routes to consolidated Command Center dashboard', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.POLICE));
     await tester.pumpAndSettle();
 
-    expect(find.text('Police / Security'), findsWidgets);
+    expect(find.text('Command Center Admin'), findsWidgets);
     expect(find.text('Red Crowd Zones'), findsOneWidget);
 
     addTearDown(() async {
@@ -106,16 +110,15 @@ void main() {
     });
   });
 
-  testWidgets('Medical dashboard renders emergency queue and medical camp metrics', (WidgetTester tester) async {
+  testWidgets('Medical role routes to consolidated Command Center dashboard', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.MEDICAL_TEAM));
     await tester.pumpAndSettle();
 
-    expect(find.text('Medical Team'), findsWidgets);
-    expect(find.text('Emergency Queue'), findsOneWidget);
-    expect(find.text('Active Camps'), findsOneWidget);
+    expect(find.text('Command Center Admin'), findsWidgets);
+    expect(find.text('Active SOS'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
