@@ -1,0 +1,167 @@
+﻿import '../models/models_exports.dart';
+
+/// Centralized realistic mock demo data provider for Dindis and Micro-Schedules.
+abstract class MockDindiData {
+  static final List<Dindi> dindis = [
+    const Dindi(
+      id: 'dindi-001',
+      name: 'Alandi Mauli Dindi #1',
+      leaderName: 'H.B.P. Sopanrao Maharaj',
+      leaderPhone: '+91 9822011223',
+      memberCount: 450,
+      routeSection: 'Alandi - Pune - Saswad - Lonand',
+      currentHalt: 'Saswad Pandal',
+      nextHalt: 'Jejuri Temple Halt',
+      etaNextHalt: '16:30',
+      isActive: true,
+      description: 'Primary Mauli Palkhi procession Dindi leading the Alandi route batch.',
+    ),
+    const Dindi(
+      id: 'dindi-002',
+      name: 'Dehu Tukaram Maharaj Dindi #5',
+      leaderName: 'H.B.P. Eknathrao More',
+      leaderPhone: '+91 9822044556',
+      memberCount: 380,
+      routeSection: 'Dehu - Akurdi - Pune - Hadapsar',
+      currentHalt: 'Hadapsar Phata',
+      nextHalt: 'Loni Kalbhor',
+      etaNextHalt: '17:00',
+      isActive: true,
+      description: 'Jagadguru Tukaram Maharaj Palkhi Dindi batch from Dehu Sansthan.',
+    ),
+    const Dindi(
+      id: 'dindi-003',
+      name: 'Pandharpur Vithoba Dindi #12',
+      leaderName: 'H.B.P. Vitthalrao Deshmukh',
+      leaderPhone: '+91 9822077889',
+      memberCount: 290,
+      routeSection: 'Lonand - Taradgaon - Phaltan',
+      currentHalt: 'Phaltan Annachhatra',
+      nextHalt: 'Natepute',
+      etaNextHalt: '15:45',
+      isActive: true,
+      description: 'Devotional Varkari group specializing in Abhang kirtan and Bhajan.',
+    ),
+    const Dindi(
+      id: 'dindi-004',
+      name: 'Sant Sopandev Dindi #8',
+      leaderName: 'H.B.P. Ramchandra Baba',
+      leaderPhone: '+91 9822099112',
+      memberCount: 210,
+      routeSection: 'Saswad - Wakhari - Pandharpur',
+      currentHalt: 'Wakhari Ringan Ground',
+      nextHalt: 'Pandharpur Vitthal Mandir',
+      etaNextHalt: '18:00',
+      isActive: true,
+      description: 'Sopandev Sansthan Saswad Dindi heading to final Ringan celebration.',
+    ),
+  ];
+
+  static List<DindiScheduleItem> getScheduleForDindi(String dindiId) {
+    return [
+      DindiScheduleItem(
+        id: 'sch-$dindiId-1',
+        dindiId: dindiId,
+        title: 'Morning Dindi Departure (सकाळचे प्रस्थान)',
+        type: DindiScheduleType.DEPARTURE,
+        status: DindiScheduleStatus.COMPLETED,
+        scheduledTime: '06:00 AM',
+        locationName: 'Alandi Temple Complex',
+        latitude: 18.6775,
+        longitude: 73.8972,
+        description: 'Morning prayer bhajan and ceremonial flag bearer procession departure.',
+        orderIndex: 1,
+      ),
+      DindiScheduleItem(
+        id: 'sch-$dindiId-2',
+        dindiId: dindiId,
+        title: 'Tea & Breakfast Halt (नाश्ता व चहा)',
+        type: DindiScheduleType.BREAKFAST,
+        status: DindiScheduleStatus.COMPLETED,
+        scheduledTime: '08:30 AM',
+        locationName: 'Dighi Seva Camp',
+        latitude: 18.6250,
+        longitude: 73.8750,
+        description: 'Poha and hot tea distribution by local NGO volunteers.',
+        orderIndex: 2,
+      ),
+      DindiScheduleItem(
+        id: 'sch-$dindiId-3',
+        dindiId: dindiId,
+        title: 'Annachhatra Mahaprasad (महाप्रसाद भोजन)',
+        type: DindiScheduleType.ANNACHHATRA,
+        status: DindiScheduleStatus.CURRENT,
+        scheduledTime: '12:30 PM',
+        locationName: 'Saswad Pandal #3',
+        latitude: 18.3420,
+        longitude: 74.0310,
+        description: 'Fresh warm meal serving for all registered Varkari pilgrims.',
+        orderIndex: 3,
+      ),
+      DindiScheduleItem(
+        id: 'sch-$dindiId-4',
+        dindiId: dindiId,
+        title: 'Ubh Ringan Event (उभे रिंगण सोहळा)',
+        type: DindiScheduleType.RINGAN,
+        status: DindiScheduleStatus.UPCOMING,
+        scheduledTime: '03:15 PM',
+        locationName: 'Jejuri Ringan Maidan',
+        latitude: 18.2750,
+        longitude: 74.1560,
+        description: 'Traditional horse circle ceremony and devotional Fugdi dancing.',
+        orderIndex: 4,
+      ),
+      DindiScheduleItem(
+        id: 'sch-$dindiId-5',
+        dindiId: dindiId,
+        title: 'Temple Bhajan & Darshan (कीर्तन व दर्शन)',
+        type: DindiScheduleType.TEMPLE,
+        status: DindiScheduleStatus.UPCOMING,
+        scheduledTime: '05:30 PM',
+        locationName: 'Khandoba Mandir Corridor',
+        latitude: 18.2740,
+        longitude: 74.1570,
+        description: 'Evening Haripath recitations and community kirtan.',
+        orderIndex: 5,
+      ),
+      DindiScheduleItem(
+        id: 'sch-$dindiId-6',
+        dindiId: dindiId,
+        title: 'Palkhi Night Halt (पालखी मुक्काम शेल्टर)',
+        type: DindiScheduleType.NIGHT_SHELTER,
+        status: DindiScheduleStatus.UPCOMING,
+        scheduledTime: '08:30 PM',
+        locationName: 'Lonand Dharamshala Camp',
+        latitude: 18.0410,
+        longitude: 74.1880,
+        description: 'Overnight tent shelter, medical footcare checkup, and rest.',
+        orderIndex: 6,
+      ),
+    ];
+  }
+
+  static DindiMember mockMember({required String dindiId, required String userId}) {
+    return DindiMember(
+      dindiId: dindiId,
+      userId: userId,
+      userName: 'Warkari Pilgrim',
+      userRole: 'VARKARI',
+      status: DindiMembershipStatus.active,
+      joinedAt: DateTime.now().subtract(const Duration(days: 3)),
+      isLeader: false,
+    );
+  }
+
+  static DindiPass mockPass({required String dindiId, required String userId, String dindiName = 'Alandi Mauli Dindi #1'}) {
+    return DindiPass(
+      passId: 'PASS-${dindiId.toUpperCase()}-${userId.hashCode.abs().toString().substring(0, 4)}',
+      dindiId: dindiId,
+      dindiName: dindiName,
+      userId: userId,
+      userName: 'Registered Pilgrim Pass',
+      qrPayload: 'dindi-pass:$dindiId:$userId',
+      status: 'ACTIVE',
+      issuedAt: DateTime.now().subtract(const Duration(hours: 12)),
+    );
+  }
+}

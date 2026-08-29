@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "685247717959",
+    "firebase_url": "https://wariverse-a8fca-default-rtdb.firebaseio.com",
+    "project_id": "wariverse-a8fca",
+    "storage_bucket": "wariverse-a8fca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685247717959:android:2987f86c991dacbd540762",
+        "android_client_info": {
+          "package_name": "com.wariverse.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF9SRQF-mIwy1G2PzYGnOLZ7cU1rcScZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

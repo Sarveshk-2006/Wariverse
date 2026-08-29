@@ -1,0 +1,61 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'ADMIN';
+    }
+    
+    function isRole(targetRole) {
+      return isAuthenticated() && (request.auth.token.role == targetRole || isAdmin());
+    }
+    
+    function isDindiMember(dindiId) {
+      return isAuthenticated() && (request.auth.token.dindi_id == dindiId || isAdmin());
+    }
+    
+    function isDindiLeader(dindiId) {
+      return isAuthenticated() && ((request.auth.token.role == 'DINDI_LEADER' && request.auth.token.dindi_id == dindiId) || isAdmin());
+    }
+
+    // Realtime Dindi Documents
+    match /realtime/dindis/{dindiId} {
+      allow read: if isDindiMember(dindiId);
+      allow write: if isDindiLeader(dindiId);
+      
+      match /location/{document=**} {
+        allow read: if isDindiMember(dindiId);
+        allow write: if isDindiLeader(dindiId);
+      }
+      
+      match /broadcasts/{document=**} {
+        allow read: if isDindiMember(dindiId);
+        allow write: if isDindiLeader(dindiId);
+      }
+      
+      match /community/{document=**} {
+        allow read: if isDindiMember(dindiId);
+        allow create: if isDindiMember(dindiId);
+        allow update, delete: if isDindiLeader(dindiId) || request.auth.uid == resource.data.author_uid;
+      }
+    }
+
+    // Realtime SOS Documents
+    match /realtime/sos/{incidentId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.user_id || isRole('VOLUNTEER') || isRole('MEDICAL_TEAM') || isRole('POLICE'));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.user_id;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.user_id || 
+        isRole('VOLUNTEER') || 
+        isRole('MEDICAL_TEAM') || 
+        isRole('POLICE')
+      );
+      allow delete: if isAdmin();
+    }
+  }
+}
