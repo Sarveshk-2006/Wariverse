@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
@@ -9,9 +9,14 @@ import '../../services/api_service.dart';
 import 'widgets/role_dashboard_header.dart';
 import 'widgets/metric_card.dart';
 
-class NgoDashboard extends StatelessWidget {
+class NgoDashboard extends StatefulWidget {
   const NgoDashboard({super.key});
 
+  @override
+  State<NgoDashboard> createState() => _NgoDashboardState();
+}
+
+class _NgoDashboardState extends State<NgoDashboard> {
   @override
   Widget build(BuildContext context) {
     final apiService = Provider.of<ApiService>(context, listen: false);
@@ -19,9 +24,32 @@ class NgoDashboard extends StatelessWidget {
     return ChangeNotifierProvider<ServicesProvider>(
       create: (_) => ServicesProvider(
         serviceRepo: ServiceRepository(apiService),
-      )..loadServices(),
-      child: Consumer<ServicesProvider>(
-        builder: (context, provider, _) {
+      ),
+      child: _NgoDashboardContent(),
+    );
+  }
+}
+
+class _NgoDashboardContent extends StatefulWidget {
+  @override
+  State<_NgoDashboardContent> createState() => _NgoDashboardContentState();
+}
+
+class _NgoDashboardContentState extends State<_NgoDashboardContent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<ServicesProvider>(context, listen: false).loadServices();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ServicesProvider>(
+      builder: (context, provider, _) {
           final services = provider.filteredServices;
           final foodItems = services.where((s) => s.categoryKey == 'food').toList();
           final shelterItems = services.where((s) => s.categoryKey == 'shelters').toList();
@@ -112,7 +140,6 @@ class NgoDashboard extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
+      );
   }
 }

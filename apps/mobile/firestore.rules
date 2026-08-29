@@ -1,61 +1,155 @@
-﻿rules_version = '2';
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions
+    // ── Helper Functions ──────────────────────────────────────────────────────
     function isAuthenticated() {
       return request.auth != null;
     }
     
+    function getUserRole() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : (request.auth.token.role != null ? request.auth.token.role : 'VARKARI');
+    }
+    
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.role == 'ADMIN';
+      return isAuthenticated() && (getUserRole() == 'ADMIN' || request.auth.token.role == 'ADMIN');
     }
     
     function isRole(targetRole) {
-      return isAuthenticated() && (request.auth.token.role == targetRole || isAdmin());
-    }
-    
-    function isDindiMember(dindiId) {
-      return isAuthenticated() && (request.auth.token.dindi_id == dindiId || isAdmin());
-    }
-    
-    function isDindiLeader(dindiId) {
-      return isAuthenticated() && ((request.auth.token.role == 'DINDI_LEADER' && request.auth.token.dindi_id == dindiId) || isAdmin());
+      return isAuthenticated() && (getUserRole() == targetRole || isAdmin());
     }
 
-    // Realtime Dindi Documents
-    match /realtime/dindis/{dindiId} {
-      allow read: if isDindiMember(dindiId);
-      allow write: if isDindiLeader(dindiId);
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ── Core Identity & Profiles ─────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(uid);
+      allow update: if isAuthenticated() && (isOwner(uid) || isAdmin());
+      allow delete: if isAdmin();
       
-      match /location/{document=**} {
-        allow read: if isDindiMember(dindiId);
-        allow write: if isDindiLeader(dindiId);
-      }
-      
-      match /broadcasts/{document=**} {
-        allow read: if isDindiMember(dindiId);
-        allow write: if isDindiLeader(dindiId);
-      }
-      
-      match /community/{document=**} {
-        allow read: if isDindiMember(dindiId);
-        allow create: if isDindiMember(dindiId);
-        allow update, delete: if isDindiLeader(dindiId) || request.auth.uid == resource.data.author_uid;
+      match /emergency_contacts/{contactId} {
+        allow read, write: if isOwner(uid);
       }
     }
 
-    // Realtime SOS Documents
-    match /realtime/sos/{incidentId} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.user_id || isRole('VOLUNTEER') || isRole('MEDICAL_TEAM') || isRole('POLICE'));
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.user_id;
+    match /profiles/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isOwner(uid) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ── SOS Incidents Pipeline ───────────────────────────────────────────────
+    match /sos_incidents/{incidentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
       allow update: if isAuthenticated() && (
-        request.auth.uid == resource.data.user_id || 
-        isRole('VOLUNTEER') || 
-        isRole('MEDICAL_TEAM') || 
+        resource.data.user_id == request.auth.uid ||
+        isRole('VOLUNTEER') ||
+        isRole('MEDICAL_TEAM') ||
         isRole('POLICE')
       );
       allow delete: if isAdmin();
+    }
+    
+    // Legacy path support
+    match /realtime/sos/{incidentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Lost Persons Registry ────────────────────────────────────────────────
+    match /lost_persons/{personId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.reported_by_uid == request.auth.uid ||
+        isRole('POLICE') ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Crowd Control & Spatial Analytics ────────────────────────────────────
+    match /crowd_zones/{zoneId} {
+      allow read: if isAuthenticated();
+      allow write: if isRole('POLICE') || isAdmin();
+    }
+
+    match /crowd_observations/{obsId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isRole('POLICE') || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /crowd_alerts/{alertId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isRole('POLICE') || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── CleanWari Sanitation System ──────────────────────────────────────────
+    match /toilets/{toiletId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /cleaning_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isRole('CLEANER') || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    // ── NGO Resource Inventory ───────────────────────────────────────────────
+    match /resource_inventory/{itemId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isRole('NGO') || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ── Service POI Collections ──────────────────────────────────────────────
+    match /food_centres/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /water_points/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /shelters/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /medical_locations/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+    match /wellness_centres/{id} { allow read: if isAuthenticated(); allow write: if isAdmin(); }
+
+    // ── Community Posts ──────────────────────────────────────────────────────
+    match /community_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (resource.data.author_uid == request.auth.uid || isAdmin());
+    }
+
+    // ── Realtime Dindis System ───────────────────────────────────────────────
+    match /dindis/{dindiId} {
+      allow read: if isAuthenticated();
+      allow write: if isRole('DINDI_LEADER') || isAdmin();
+
+      match /location/{docId} {
+        allow read: if isAuthenticated();
+        allow write: if isRole('DINDI_LEADER') || isAdmin();
+      }
+
+      match /community/{docId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isRole('DINDI_LEADER') || isAdmin() || resource.data.author_uid == request.auth.uid;
+      }
+
+      match /schedule/{docId} {
+        allow read: if isAuthenticated();
+        allow write: if isRole('DINDI_LEADER') || isAdmin();
+      }
+    }
+    
+    // Legacy dindi realtime path
+    match /realtime/dindis/{dindiId}/{document=**} {
+      allow read, write: if isAuthenticated();
     }
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
@@ -9,22 +9,42 @@ import '../../repositories/cleanwari_repository.dart';
 import '../../services/api_service.dart';
 
 /// CleanWari Operational Dashboard for Sanitation Cleaner Staff (UserRole.CLEANER).
-class CleanWariCleanerScreen extends StatelessWidget {
+class CleanWariCleanerScreen extends StatefulWidget {
   const CleanWariCleanerScreen({super.key});
 
+  @override
+  State<CleanWariCleanerScreen> createState() => _CleanWariCleanerScreenState();
+}
+
+class _CleanWariCleanerScreenState extends State<CleanWariCleanerScreen> {
   @override
   Widget build(BuildContext context) {
     final apiService = Provider.of<ApiService>(context, listen: false);
 
     return ChangeNotifierProvider<CleanWariProvider>(
-      create: (_) => CleanWariProvider(repository: CleanWariRepository(apiService))..loadReports(),
+      create: (_) => CleanWariProvider(repository: CleanWariRepository(apiService)),
       child: const _CleanWariCleanerContent(),
     );
   }
 }
 
-class _CleanWariCleanerContent extends StatelessWidget {
+class _CleanWariCleanerContent extends StatefulWidget {
   const _CleanWariCleanerContent();
+
+  @override
+  State<_CleanWariCleanerContent> createState() => _CleanWariCleanerContentState();
+}
+
+class _CleanWariCleanerContentState extends State<_CleanWariCleanerContent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<CleanWariProvider>(context, listen: false).loadReports();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

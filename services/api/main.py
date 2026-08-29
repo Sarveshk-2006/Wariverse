@@ -19,7 +19,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth import get_current_user, get_password_hash, verify_password, create_access_token, require_role
+from auth import get_current_user, get_password_hash, verify_password, create_access_token, require_role, require_dindi_leader, require_dindi_member
 from config import get_settings
 from database import AsyncSessionLocal, get_db, init_db
 import models
@@ -1034,7 +1034,7 @@ async def get_dindi_schedules(dindi_id: str, db: AsyncSession = Depends(get_db))
 async def create_dindi_schedule_item(
     dindi_id: str,
     req: DindiScheduleCreateRequest,
-    current_user: models.User = Depends(require_dindi_leader),
+    current_user: models.User = Depends(require_dindi_leader()),
     db: AsyncSession = Depends(get_db)
 ):
     item = models.DindiScheduleItem(
