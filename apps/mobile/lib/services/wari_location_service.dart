@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import '../core/config/env_config.dart';
 import '../core/utils/app_logger.dart';
@@ -52,6 +54,36 @@ class WariLocationService {
       StreamController<WariPosition>.broadcast();
 
   Stream<WariPosition> get positionStream => _positionStreamController.stream;
+
+  /// Resolves human-readable address from latitude/longitude coordinates via OpenStreetMap Nominatim API or fallback route lookup.
+  static Future<String> getAddressFromCoordinates(double lat, double lng) async {
+    try {
+      final uri = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lng&zoom=18&addressdetails=1');
+      final response = await http.get(uri, headers: {'User-Agent': 'WariVerseAI/1.0'}).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final displayName = data['display_name'] as String?;
+        if (displayName != null && displayName.isNotEmpty) {
+          final parts = displayName.split(',');
+          if (parts.length >= 3) {
+            return parts.take(3).join(',').trim();
+          }
+          return displayName;
+        }
+      }
+    } catch (_) {}
+
+    // Smart fallback based on Wari route landmarks
+    if (lat >= 18.66 && lat <= 18.69) return 'Near Alandi Temple Palkhi Route, Pune';
+    if (lat >= 18.61 && lat <= 18.65) return 'Dighi Chowk Hydration Point, Pune';
+    if (lat >= 18.54 && lat <= 18.58) return 'Vishrantwadi Chowk, Pune';
+    if (lat >= 18.51 && lat <= 18.54) return 'Pune Station Palkhi Rest Camp';
+    if (lat >= 18.48 && lat <= 18.51) return 'Hadapsar Solapur Highway Section';
+    if (lat >= 18.25 && lat <= 18.35) return 'Saswad Palkhi Halt Ground';
+    if (lat >= 17.65 && lat <= 17.75) return 'Pandharpur Temple Premises';
+
+    return 'Wari Route Spot (${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)})';
+  }
 
   /// Obtains single position fix.
   Future<WariPosition> getCurrentPosition() async {

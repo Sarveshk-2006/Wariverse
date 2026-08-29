@@ -6,6 +6,7 @@ import '../../models/models_exports.dart';
 import '../../providers/ngo_distribution_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/wari_location_service.dart';
+import '../map/widgets/map_location_picker_modal.dart';
 
 /// Form screen for creating/publishing a new NGO Aid Distribution.
 class CreateDistributionScreen extends StatefulWidget {
@@ -40,7 +41,6 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
   double _longitude = 73.8567;
   double _accuracy = 10.0;
   String _gpsStatus = 'LIVE';
-  DateTime? _lastGpsUpdate = DateTime.now();
   final DateTime _distributionDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 12, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 15, minute: 0);
@@ -74,7 +74,6 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
           _latitude = pos.latitude;
           _longitude = pos.longitude;
           _accuracy = pos.accuracy;
-          _lastGpsUpdate = pos.timestamp;
           _gpsStatus = pos.status == WariLocationStatus.liveGps ? 'LIVE' : 'SIMULATED';
           _isLocating = false;
         });
@@ -102,6 +101,25 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
       }
     } catch (e) {
       setState(() => _isLocating = false);
+    }
+  }
+
+  Future<void> _pickLocationOnMap() async {
+    final result = await MapLocationPickerModal.show(
+      context,
+      initialLatitude: _latitude,
+      initialLongitude: _longitude,
+      title: 'Mark Distribution Spot on Map',
+    );
+
+    if (result != null) {
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+        _locationNameController.text = result.address;
+        _addressController.text = result.address;
+        _gpsStatus = 'SELECTED ON MAP';
+      });
     }
   }
 
@@ -305,31 +323,47 @@ class _CreateDistributionScreenState extends State<CreateDistributionScreen> {
                       Container(
                         padding: const EdgeInsets.all(WariSpacing.sm),
                         decoration: BoxDecoration(
-                          color: _gpsStatus == 'LIVE' ? WariColors.success.withValues(alpha: 0.1) : WariColors.warning.withValues(alpha: 0.1),
+                          color: _gpsStatus == 'LIVE' || _gpsStatus == 'SELECTED ON MAP' ? WariColors.success.withValues(alpha: 0.1) : WariColors.warning.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: _gpsStatus == 'LIVE' ? WariColors.success : WariColors.warning),
+                          border: Border.all(color: _gpsStatus == 'LIVE' || _gpsStatus == 'SELECTED ON MAP' ? WariColors.success : WariColors.warning),
                         ),
-                        child: Row(
+                        child: Column(
                           children: [
-                            Icon(_gpsStatus == 'LIVE' ? Icons.my_location : Icons.location_searching, color: _gpsStatus == 'LIVE' ? WariColors.success : WariColors.warning, size: 20),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('GPS Status: $_gpsStatus (Accuracy: ${_accuracy.toInt()}m)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  Text('Coordinates: ${_latitude.toStringAsFixed(5)}, ${_longitude.toStringAsFixed(5)}', style: const TextStyle(fontSize: 11, color: WariColors.textSecondary)),
-                                  if (_lastGpsUpdate != null)
-                                    Text('Updated: ${TimeOfDay.fromDateTime(_lastGpsUpdate!).format(context)}', style: const TextStyle(fontSize: 10, color: WariColors.textMuted)),
-                                ],
-                              ),
+                            Row(
+                              children: [
+                                Icon(_gpsStatus == 'LIVE' || _gpsStatus == 'SELECTED ON MAP' ? Icons.my_location : Icons.location_searching, color: _gpsStatus == 'LIVE' || _gpsStatus == 'SELECTED ON MAP' ? WariColors.success : WariColors.warning, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('GPS Status: $_gpsStatus (Accuracy: ${_accuracy.toInt()}m)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                      Text('Lat: ${_latitude.toStringAsFixed(5)}, Lng: ${_longitude.toStringAsFixed(5)}', style: const TextStyle(fontSize: 11, color: WariColors.textSecondary)),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            OutlinedButton.icon(
-                              icon: _isLocating
-                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.refresh, size: 16),
-                              label: const Text('Refresh', style: TextStyle(fontSize: 11)),
-                              onPressed: _isLocating ? null : _getCurrentGpsLocation,
+                            const SizedBox(height: WariSpacing.sm),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: _isLocating ? null : _getCurrentGpsLocation,
+                                    icon: const Icon(Icons.gps_fixed),
+                                    label: const Text('Use Current GPS'),
+                                  ),
+                                ),
+                                const SizedBox(width: WariSpacing.xs),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: _pickLocationOnMap,
+                                    icon: const Icon(Icons.map_rounded, color: Colors.white),
+                                    label: const Text('Mark on Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(backgroundColor: WariColors.primary),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

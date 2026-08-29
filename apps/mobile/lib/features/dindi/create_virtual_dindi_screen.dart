@@ -6,6 +6,7 @@ import '../../providers/virtual_dindi_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/virtual_dindi_model.dart';
 import '../../core/theme/wari_theme_exports.dart';
+import '../map/widgets/map_location_picker_modal.dart';
 
 class CreateVirtualDindiScreen extends StatefulWidget {
   const CreateVirtualDindiScreen({super.key});
@@ -49,6 +50,23 @@ class _CreateVirtualDindiScreenState extends State<CreateVirtualDindiScreen> {
       });
     } catch (_) {
       setState(() => _fetchingGps = false);
+    }
+  }
+
+  Future<void> _pickMeetingPointOnMap() async {
+    final result = await MapLocationPickerModal.show(
+      context,
+      initialLatitude: _meetingLat,
+      initialLongitude: _meetingLng,
+      title: 'Mark Meeting Spot on Map',
+    );
+
+    if (result != null) {
+      setState(() {
+        _meetingLat = result.latitude;
+        _meetingLng = result.longitude;
+        _meetingPointNameController.text = result.address;
+      });
     }
   }
 
@@ -156,6 +174,27 @@ class _CreateVirtualDindiScreenState extends State<CreateVirtualDindiScreen> {
                 tooltip: 'Use current GPS location',
               ),
             ),
+          ),
+          const SizedBox(height: WariSpacing.xs),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _fetchingGps ? null : _fetchCurrentGps,
+                  icon: const Icon(Icons.gps_fixed),
+                  label: Text(_fetchingGps ? 'Getting GPS...' : 'Use Current GPS'),
+                ),
+              ),
+              const SizedBox(width: WariSpacing.xs),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _pickMeetingPointOnMap,
+                  icon: const Icon(Icons.map_rounded, color: Colors.white),
+                  label: const Text('Mark on Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(backgroundColor: WariColors.primary),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(

@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../providers/incident_provider.dart';
 import '../../models/threat_incident_model.dart';
 import '../../core/theme/wari_theme_exports.dart';
+import '../map/widgets/map_location_picker_modal.dart';
 
 class ReportThreatScreen extends StatefulWidget {
   const ReportThreatScreen({super.key});
@@ -63,6 +64,22 @@ class _ReportThreatScreenState extends State<ReportThreatScreen> {
       });
     } catch (_) {
       setState(() => _fetchingGps = false);
+    }
+  }
+
+  Future<void> _pickLocationOnMap() async {
+    final result = await MapLocationPickerModal.show(
+      context,
+      initialLatitude: _lat,
+      initialLongitude: _lng,
+      title: 'Mark Incident Spot on Map',
+    );
+
+    if (result != null) {
+      setState(() {
+        _lat = result.latitude;
+        _lng = result.longitude;
+      });
     }
   }
 
@@ -233,6 +250,27 @@ class _ReportThreatScreenState extends State<ReportThreatScreen> {
                           ? 'Acquiring high-accuracy GPS coordinates...'
                           : 'Latitude: ${_lat.toStringAsFixed(6)} | Longitude: ${_lng.toStringAsFixed(6)}\nAccuracy: ±${_accuracy.toInt()}m',
                       style: const TextStyle(fontSize: 11, color: WariColors.textSecondary),
+                    ),
+                    const SizedBox(height: WariSpacing.xs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _fetchingGps ? null : _fetchRealGps,
+                            icon: const Icon(Icons.gps_fixed),
+                            label: Text(_fetchingGps ? 'Getting GPS...' : 'Use Current GPS'),
+                          ),
+                        ),
+                        const SizedBox(width: WariSpacing.xs),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _pickLocationOnMap,
+                            icon: const Icon(Icons.map_rounded, color: Colors.white),
+                            label: const Text('Mark on Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(backgroundColor: WariColors.primary),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
