@@ -46,6 +46,7 @@ export default function VarkariDindiPage() {
   const [activeTab, setActiveTab] = useState<'schedule' | 'feed' | 'audio' | 'badge'>('schedule');
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [qrInput, setQrInput] = useState('');
   const [postMessage, setPostMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -121,6 +122,12 @@ export default function VarkariDindiPage() {
 
   const days = Array.from(new Set(schedule.map(s => s.day_number))).sort((a, b) => a - b);
   const filteredSchedule = schedule.filter(s => s.day_number === selectedDay);
+  const completedCount = schedule.filter(s => s.is_completed).length;
+  const progressPct = schedule.length > 0 ? Math.round((completedCount / schedule.length) * 100) : 0;
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="dashboard-layout">
@@ -132,7 +139,10 @@ export default function VarkariDindiPage() {
             <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>डिंडी सूक्ष्म-वेळापत्रक, थेट मार्ग आणि समूह संवाद</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => setShowJoinModal(true)}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowPrintModal(true)}>
+              🖨️ Print Schedule
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowJoinModal(true)}>
               📷 Scan / Join Dindi
             </button>
           </div>
@@ -182,10 +192,24 @@ export default function VarkariDindiPage() {
                       🚩 Leader: <strong>{selectedDindi.leader_name}</strong> · 📍 Origin: {selectedDindi.origin} · 👥 {selectedDindi.total_members} Pilgrims
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 700 }} onClick={() => setShowPrintModal(true)}>
+                      🖨️ Print
+                    </button>
                     <button className="btn btn-sm" style={{ background: 'white', color: '#7C3AED', fontWeight: 700 }} onClick={() => setActiveTab('badge')}>
                       🪪 View Digital Pass
                     </button>
+                  </div>
+                </div>
+
+                {/* Real-time Checkpoint Progress Bar */}
+                <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.375rem' }}>
+                    <span>🏁 Checkpoint Progress: {completedCount} of {schedule.length} Halts Completed</span>
+                    <span>{progressPct}% Completed</span>
+                  </div>
+                  <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.25)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${progressPct}%`, height: '100%', background: '#22C55E', transition: 'width 0.4s ease' }} />
                   </div>
                 </div>
               </div>
@@ -245,7 +269,7 @@ export default function VarkariDindiPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                               <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1E293B' }}>{halt.title}</span>
                               <span className={`badge ${halt.is_completed ? 'badge-green' : 'badge-purple'}`}>
-                                {halt.scheduled_arrival} - {halt.scheduled_departure}
+                                {halt.is_completed ? '✅ CHECKPOINT CONCLUDED' : `${halt.scheduled_arrival} - ${halt.scheduled_departure}`}
                               </span>
                             </div>
                             <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600, marginBottom: '0.25rem' }}>
@@ -369,6 +393,62 @@ export default function VarkariDindiPage() {
             </div>
           )}
         </div>
+
+        {/* Printable Schedule Modal */}
+        {showPrintModal && selectedDindi && (
+          <div className="modal-overlay" onClick={() => setShowPrintModal(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 700, padding: '2rem' }}>
+              <div id="printable-area">
+                <div style={{ textAlign: 'center', borderBottom: '2px solid #7C3AED', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '2rem' }}>🚩</div>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#7C3AED', margin: '0.25rem 0' }}>{selectedDindi.name}</h1>
+                  <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 600 }}>
+                    Official Wari Itinerary · {selectedDindi.code} · Leader: {selectedDindi.leader_name}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.75rem', color: '#1E293B' }}>📅 Complete Day-by-Day Procession Schedule</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr style={{ background: '#F1F5F9', borderBottom: '2px solid #CBD5E1', textAlign: 'left' }}>
+                        <th style={{ padding: '0.5rem' }}>Day</th>
+                        <th style={{ padding: '0.5rem' }}>Timings</th>
+                        <th style={{ padding: '0.5rem' }}>Type</th>
+                        <th style={{ padding: '0.5rem' }}>Halt Title & Location</th>
+                        <th style={{ padding: '0.5rem' }}>Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {schedule.map((h: any) => (
+                        <tr key={h.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '0.5rem', fontWeight: 700 }}>Day {h.day_number}</td>
+                          <td style={{ padding: '0.5rem' }}>{h.scheduled_arrival} - {h.scheduled_departure}</td>
+                          <td style={{ padding: '0.5rem' }}>{HALT_TYPE_ICONS[h.halt_type]} {h.halt_type}</td>
+                          <td style={{ padding: '0.5rem', fontWeight: 600 }}>{h.title} <br/><span style={{ color: '#64748B', fontSize: '0.75rem' }}>📍 {h.location_name}</span></td>
+                          <td style={{ padding: '0.5rem', fontSize: '0.75rem', color: '#475569' }}>{h.notes || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF5FF', padding: '1rem', borderRadius: 8, border: '1px solid #E9D5FF' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#7C3AED' }}>Scan to Join Dindi on WariVerse App</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B', fontFamily: 'monospace' }}>{selectedDindi.qr_code_data}</div>
+                  </div>
+                  <div style={{ fontSize: '2rem' }}>📱</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+                <button className="btn btn-secondary" onClick={() => setShowPrintModal(false)}>Close</button>
+                <button className="btn btn-primary" onClick={handlePrint}>🖨️ Print Now</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Join Dindi Modal */}
         {showJoinModal && (

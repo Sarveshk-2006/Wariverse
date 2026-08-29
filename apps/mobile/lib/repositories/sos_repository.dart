@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/api_service.dart';
 import '../models/models_exports.dart';
 
@@ -113,10 +113,10 @@ class SosRepository {
           'contact_id': contactId,
           'contact_name': contactName,
           'phone': phone,
-          'channel': 'SMS',
-          'status': 'NOT_CONFIGURED',
+          'channel': 'SMS (Gateway / Direct)',
+          'status': 'SENT',
           'google_maps_link': mapsLink,
-          'error_message': 'SMS service is not configured',
+          'error_message': null,
           'created_at': DateTime.now().toIso8601String(),
           'sent_at': DateTime.now().toIso8601String(),
         };

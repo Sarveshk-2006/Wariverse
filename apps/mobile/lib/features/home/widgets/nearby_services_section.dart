@@ -30,7 +30,7 @@ class NearbyServicesSection extends StatelessWidget {
               children: const [
                 Icon(Icons.near_me_rounded, color: WariColors.primary, size: 22),
                 SizedBox(width: WariSpacing.xs),
-                Text('Nearby Services & NGO Aid', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('Nearby Services', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             _buildNetworkStatusChip(nearbyProvider.networkStatus),
@@ -38,7 +38,7 @@ class NearbyServicesSection extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Facilities nearest to your live GPS position updated in real-time.',
+          'Essential facilities near your location.',
           style: TextStyle(fontSize: 11, color: WariColors.textSecondary),
         ),
         const SizedBox(height: WariSpacing.sm),

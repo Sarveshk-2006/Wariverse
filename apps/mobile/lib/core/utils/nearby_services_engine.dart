@@ -144,7 +144,19 @@ class NearbyServicesEngine {
       }
 
       if (candidateList.isNotEmpty) {
-        filtered = candidateList;
+        // Strict deduplication by ID and Name
+        final seenKeys = <String>{};
+        final uniqueList = <UnifiedServiceItem>[];
+        for (final item in candidateList) {
+          final nameKey = '${item.categoryKey}_${item.name.toLowerCase().trim()}';
+          if (!seenKeys.contains(item.id) && !seenKeys.contains(nameKey)) {
+            seenKeys.add(item.id);
+            seenKeys.add(nameKey);
+            uniqueList.add(item);
+          }
+        }
+
+        filtered = uniqueList;
         if (i > startIndex) autoExpanded = true;
         break;
       }

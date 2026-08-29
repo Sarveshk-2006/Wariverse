@@ -5,11 +5,9 @@ import '../features/dashboards/role_dashboard_view.dart';
 import '../features/map/map_screen.dart';
 import '../features/sos/sos_screen.dart';
 import '../features/services/services_screen.dart';
-import '../features/ngo/create_distribution_screen.dart';
 import '../features/placeholders/profile_placeholder.dart';
 import '../features/dindi/virtual_dindi_detail_screen.dart';
 import '../features/incidents/volunteer_response_queue_screen.dart';
-import '../features/cleanwari/cleanwari_cleaner_screen.dart';
 
 class RoleTabItem {
   final String label;
@@ -113,8 +111,11 @@ class RoleNavigationConfig {
           ),
         ];
 
-      // 3. VOLUNTEER PORTAL
+      // 3. FIELD RESPONDER PORTAL (VOLUNTEER, POLICE, MEDICAL, CLEANER)
       case UserRole.VOLUNTEER:
+      case UserRole.POLICE:
+      case UserRole.MEDICAL_TEAM:
+      case UserRole.CLEANER:
         return [
           RoleTabItem(
             label: 'RESPONSE QUEUE',
@@ -153,126 +154,45 @@ class RoleNavigationConfig {
           ),
         ];
 
-      // 4. NGO PORTAL
+      // 4. WEB PORTAL ROLES (ADMIN & NGO - REDIRECT TO OPERATIONS WEB)
       case UserRole.NGO:
       case UserRole.SERVICE_PROVIDER:
+      case UserRole.ADMIN:
         return [
           RoleTabItem(
-            label: 'OPERATIONS',
-            icon: Icons.dashboard_outlined,
-            selectedIcon: Icons.dashboard,
+            label: 'WEB PORTAL',
+            icon: Icons.laptop_mac_outlined,
+            selectedIcon: Icons.laptop_mac,
             pageWidget: const RoleDashboardView(),
-            pageTitle: 'NGO Operations Hub',
-          ),
-          RoleTabItem(
-            label: 'DEPLOY AID',
-            icon: Icons.add_location_alt_outlined,
-            selectedIcon: Icons.add_location_alt,
-            pageWidget: const CreateDistributionScreen(),
-            pageTitle: 'Publish Live Aid Resource Deployment',
+            pageTitle: 'Operations Web Portal',
           ),
           RoleTabItem(
             label: 'LIVE MAP',
             icon: Icons.map_outlined,
             selectedIcon: Icons.map,
             pageWidget: liveMapWidget,
-            pageTitle: 'NGO Resource Deployments Map',
+            pageTitle: 'Pilgrimage Route Map',
           ),
           RoleTabItem(
-            label: 'DEPLOYMENTS',
-            icon: Icons.volunteer_activism_outlined,
-            selectedIcon: Icons.volunteer_activism,
-            pageWidget: const CreateDistributionScreen(),
-            pageTitle: 'Active Aid Distributions List',
-          ),
-          RoleTabItem(
-            label: 'PROFILE',
-            icon: Icons.business_outlined,
-            selectedIcon: Icons.business,
-            pageWidget: const ProfilePlaceholder(),
-            pageTitle: 'NGO Coordinator Profile',
-          ),
-        ];
-
-      // 5. SANITATION / FIELD WORKER PORTAL
-      case UserRole.CLEANER:
-        return [
-          RoleTabItem(
-            label: 'TASKS',
-            icon: Icons.cleaning_services_outlined,
-            selectedIcon: Icons.cleaning_services,
-            pageWidget: const CleanWariCleanerScreen(),
-            pageTitle: 'CleanWari Sanitation Dispatch Tasks',
-          ),
-          RoleTabItem(
-            label: 'LIVE MAP',
-            icon: Icons.map_outlined,
-            selectedIcon: Icons.map,
-            pageWidget: liveMapWidget,
-            pageTitle: 'Sanitation Facilities & Worker Location',
-          ),
-          RoleTabItem(
-            label: 'ACTIVE TASK',
-            icon: Icons.assignment_outlined,
-            selectedIcon: Icons.assignment,
-            pageWidget: const CleanWariCleanerScreen(),
-            pageTitle: 'Active Sanitation Cleaning Work',
-          ),
-          RoleTabItem(
-            label: 'HISTORY',
-            icon: Icons.history_outlined,
-            selectedIcon: Icons.history,
+            label: 'SAFETY',
+            icon: Icons.shield_outlined,
+            selectedIcon: Icons.shield,
             pageWidget: const SosScreen(),
-            pageTitle: 'Completed Sanitation Logs',
+            pageTitle: 'Safety & SOS Stream',
+          ),
+          RoleTabItem(
+            label: 'SERVICES',
+            icon: Icons.grid_view_outlined,
+            selectedIcon: Icons.grid_view,
+            pageWidget: const ServicesScreen(),
+            pageTitle: 'Field Services',
           ),
           RoleTabItem(
             label: 'PROFILE',
             icon: Icons.person_outline,
             selectedIcon: Icons.person,
             pageWidget: const ProfilePlaceholder(),
-            pageTitle: 'Sanitation Staff Profile',
-          ),
-        ];
-
-      // 6. ADMIN PORTAL
-      case UserRole.ADMIN:
-      case UserRole.POLICE:
-      case UserRole.MEDICAL_TEAM:
-        return [
-          RoleTabItem(
-            label: 'COMMAND',
-            icon: Icons.admin_panel_settings_outlined,
-            selectedIcon: Icons.admin_panel_settings,
-            pageWidget: const RoleDashboardView(),
-            pageTitle: 'Executive Command Center',
-          ),
-          RoleTabItem(
-            label: 'OPERATIONS MAP',
-            icon: Icons.map_outlined,
-            selectedIcon: Icons.map,
-            pageWidget: liveMapWidget,
-            pageTitle: 'Global Pilgrimage Operations Map',
-          ),
-          RoleTabItem(
-            label: 'INCIDENTS',
-            icon: Icons.warning_amber_outlined,
-            selectedIcon: Icons.warning,
-            pageWidget: const SosScreen(),
-            pageTitle: 'Realtime Incident Command Stream',
-          ),
-          RoleTabItem(
-            label: 'RESOURCES',
-            icon: Icons.inventory_2_outlined,
-            selectedIcon: Icons.inventory_2,
-            pageWidget: const CreateDistributionScreen(),
-            pageTitle: 'Global NGO & Service Resource Monitor',
-          ),
-          RoleTabItem(
-            label: 'SYSTEM',
-            icon: Icons.manage_accounts_outlined,
-            selectedIcon: Icons.manage_accounts,
-            pageWidget: const ProfilePlaceholder(),
-            pageTitle: 'System Approvals & Audit Control',
+            pageTitle: 'Account Profile',
           ),
         ];
     }

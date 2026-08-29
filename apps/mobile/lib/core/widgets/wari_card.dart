@@ -1,8 +1,7 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme/wari_theme_exports.dart';
 
-/// Standard WariVerse content card with Apple iOS/macOS Glassmorphism visual design.
+/// Standard WariVerse content card with Apple iOS/macOS visual design aesthetics.
 class WariCard extends StatelessWidget {
   const WariCard({
     super.key,
@@ -35,7 +34,7 @@ class WariCard extends StatelessWidget {
     final effectivePadding = padding ?? const EdgeInsets.all(WariSpacing.cardPadding);
     final cardColor = color ?? (enableGlass ? WariColors.surface.withValues(alpha: 0.92) : WariColors.surface);
 
-    Widget innerContent = Container(
+    Widget card = Container(
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(effectiveRadius),
@@ -57,16 +56,6 @@ class WariCard extends StatelessWidget {
         padding: effectivePadding,
         child: child,
       ),
-    );
-
-    Widget card = ClipRRect(
-      borderRadius: BorderRadius.circular(effectiveRadius),
-      child: enableGlass
-          ? BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: innerContent,
-            )
-          : innerContent,
     );
 
     if (onTap != null) {

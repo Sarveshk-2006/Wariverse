@@ -1969,13 +1969,19 @@ async def join_dindi_by_qr(
     current_user: models.User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Match by QR code payload or shortcode
+    # Match by QR code payload, URL, or shortcode
     qr_clean = req.qr_data.strip()
+    if "dindi=" in qr_clean:
+        qr_clean = qr_clean.split("dindi=")[-1].split("&")[0]
+    elif "token=" in qr_clean:
+        qr_clean = qr_clean.split("token=")[-1].split("&")[0]
+
     result = await db.execute(
         select(models.Dindi).where(
             or_(
-                models.Dindi.qr_code_data == qr_clean,
-                models.Dindi.code == qr_clean.upper()
+                models.Dindi.qr_code_data == req.qr_data.strip(),
+                models.Dindi.code == qr_clean.upper(),
+                models.Dindi.code.icontains(qr_clean)
             )
         )
     )

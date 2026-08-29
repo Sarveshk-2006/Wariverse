@@ -177,14 +177,14 @@ void main() {
 
     final ngoTabs = RoleNavigationConfig.getTabsForRole(UserRole.NGO);
     expect(ngoTabs.length, 5);
-    expect(ngoTabs.map((t) => t.label), containsAll(['OPERATIONS', 'DEPLOY AID', 'LIVE MAP', 'DEPLOYMENTS', 'PROFILE']));
+    expect(ngoTabs.map((t) => t.label), containsAll(['WEB PORTAL', 'LIVE MAP', 'SAFETY', 'SERVICES', 'PROFILE']));
 
     final cleanerTabs = RoleNavigationConfig.getTabsForRole(UserRole.CLEANER);
     expect(cleanerTabs.length, 5);
-    expect(cleanerTabs.map((t) => t.label), containsAll(['TASKS', 'LIVE MAP', 'ACTIVE TASK', 'HISTORY', 'PROFILE']));
+    expect(cleanerTabs.map((t) => t.label), containsAll(['RESPONSE QUEUE', 'LIVE MAP', 'ACTIVE TASK', 'HISTORY', 'PROFILE']));
 
     final adminTabs = RoleNavigationConfig.getTabsForRole(UserRole.ADMIN);
     expect(adminTabs.length, 5);
-    expect(adminTabs.map((t) => t.label), containsAll(['COMMAND', 'OPERATIONS MAP', 'INCIDENTS', 'RESOURCES', 'SYSTEM']));
+    expect(adminTabs.map((t) => t.label), containsAll(['WEB PORTAL', 'LIVE MAP', 'SAFETY', 'SERVICES', 'PROFILE']));
   });
 }

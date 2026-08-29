@@ -1,13 +1,15 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/emergency_contact.dart';
 import '../core/utils/app_logger.dart';
 
-/// Service managing Emergency Contacts and Automated SMS Alert Dispatch (Extracted from WoShield2).
+/// Service managing Emergency Contacts and Automated SMS Alert Dispatch (Ported & Extracted from WoShield2).
 class EmergencyContactsService {
   static const String _contactsPrefKey = 'emergency_contacts';
+  static const MethodChannel _smsChannel = MethodChannel('com.wariverse.mobile/sms');
   late final FirebaseFirestore? _firestore;
 
   EmergencyContactsService({FirebaseFirestore? firestore}) {
@@ -117,36 +119,96 @@ class EmergencyContactsService {
     required double longitude,
     required String categoryName,
     String? customMessage,
+    String? userId,
   }) async {
-    if (contacts.isEmpty) return;
+    final targetContacts = contacts.isNotEmpty ? contacts : await loadContacts(userId: userId);
+    if (targetContacts.isEmpty) return;
 
     final String mapsUrl = 'https://maps.google.com/?q=$latitude,$longitude';
     final String alertText =
-        '🚨 EMERGENCY WARIVERSE ALERT! 🚨\n'
+        'EMERGENCY ALERT!\n'
         'Type: $categoryName\n'
-        'Live Location: $mapsUrl\n'
-        'Details: ${customMessage ?? "Immediate assistance requested."}\n'
-        'Please contact responder immediately!';
+        'I am in danger. My real-time location: $mapsUrl\n'
+        'Details: ${customMessage ?? "Immediate assistance requested."}';
 
-    for (final contact in contacts) {
-      final phone = contact.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
-      if (phone.isEmpty) continue;
+    final phoneNumbers = targetContacts
+        .map((c) => c.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), ''))
+        .where((p) => p.isNotEmpty)
+        .toList();
 
-      final Uri smsUri = Uri(
-        scheme: 'sms',
-        path: phone,
-        queryParameters: <String, String>{
-          'body': alertText,
-        },
-      );
+    if (phoneNumbers.isEmpty) return;
 
+    // 1. Attempt Native Direct Background SMS via SmsManager (WoShield Pattern)
+    bool directSentAny = false;
+    for (final phone in phoneNumbers) {
       try {
-        if (await canLaunchUrl(smsUri)) {
-          await launchUrl(smsUri, mode: LaunchMode.externalApplication);
+        final bool? ok = await _smsChannel.invokeMethod<bool>('sendDirectSMS', {
+          'phoneNumber': phone,
+          'message': alertText,
+        });
+        if (ok == true) {
+          directSentAny = true;
+          AppLogger.i('Direct background SMS dispatched via native SmsManager to $phone');
         }
       } catch (e) {
-        AppLogger.e('SMS dispatch warning for number $phone', e);
+        AppLogger.w('Native SmsManager dispatch notice for $phone: $e');
       }
     }
+
+    if (directSentAny) return;
+
+    // 2. Fallback to URI intent launch if native SmsManager is unavailable
+    final recipientString = phoneNumbers.join(',');
+    final alertEncoded = Uri.encodeComponent(alertText);
+    final Uri smsUri = Uri.parse('sms:$recipientString?body=$alertEncoded');
+
+    try {
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri, mode: LaunchMode.externalApplication);
+      } else {
+        final fallbackUri = Uri(
+          scheme: 'sms',
+          path: recipientString,
+          queryParameters: <String, String>{'body': alertText},
+        );
+        await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      AppLogger.e('SMS dispatch notice for $recipientString: $e');
+    }
+  }
+
+  /// Send direct custom SMS to a specific phone number.
+  Future<bool> sendDirectSms({
+    required String phoneNumber,
+    required String message,
+  }) async {
+    final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleanPhone.isEmpty) return false;
+
+    try {
+      final bool? ok = await _smsChannel.invokeMethod<bool>('sendDirectSMS', {
+        'phoneNumber': cleanPhone,
+        'message': message,
+      });
+      if (ok == true) return true;
+    } catch (_) {}
+
+    final Uri smsUri = Uri(
+      scheme: 'sms',
+      path: cleanPhone,
+      queryParameters: <String, String>{
+        'body': message,
+      },
+    );
+
+    try {
+      if (await canLaunchUrl(smsUri)) {
+        return await launchUrl(smsUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      AppLogger.e('Direct SMS launch failed for $cleanPhone', e);
+    }
+    return false;
   }
 }

@@ -54,7 +54,7 @@ void main() {
     });
   });
 
-  testWidgets('Tapping SOS button opens confirmation sheet', (WidgetTester tester) async {
+  testWidgets('Tapping SOS button triggers instant emergency alert', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
@@ -62,20 +62,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    // Tap SOS button
+    // Tap SOS button - triggers instant emergency dispatch
     await tester.tap(find.text('SOS').first);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('Confirm Emergency SOS'), findsOneWidget);
-    expect(find.text('SEND SOS NOW'), findsOneWidget);
-
-    // Tap CANCEL
-    await tester.tap(find.text('CANCEL'));
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Confirm Emergency SOS'), findsNothing);
+    expect(find.text('SOS SENT & ACTIVE!'), findsOneWidget);
+    expect(find.text('INCIDENT REF'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -84,7 +78,7 @@ void main() {
     });
   });
 
-  testWidgets('Submitting SOS displays active emergency state card', (WidgetTester tester) async {
+  testWidgets('Submitting SOS displays active emergency state card and resolves cleanly', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
@@ -96,11 +90,6 @@ void main() {
 
     // Tap SOS button
     await tester.tap(find.text('SOS').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // Tap SEND SOS NOW
-    await tester.tap(find.text('SEND SOS NOW'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump();

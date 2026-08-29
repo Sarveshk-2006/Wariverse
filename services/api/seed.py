@@ -203,15 +203,15 @@ async def seed():
 
         food_centres = []
         for i, name in enumerate(food_names):
-            rp = random.choice(ROUTE_POINTS)
-            lat, lon = rand_near(rp[0], rp[1], 0.3)
+            rp = ROUTE_POINTS[(i + 3) % len(ROUTE_POINTS)]
+            lat, lon = rand_near(rp[0], rp[1], 0.2 + (i * 0.12))
             meals = random.sample(["BREAKFAST", "LUNCH", "DINNER", "SNACKS"], k=random.randint(2, 4))
             fc = FoodCentre(
-                id=str(uuid.uuid4()),
+                id=f"fc_{i+1:02d}",
                 name=name,
                 provider=random.choice(food_providers),
-                latitude=lat,
-                longitude=lon,
+                latitude=round(lat, 6),
+                longitude=round(lon, 6),
                 meal_types=meals,
                 available_now=random.choice([True, True, True, False]),
                 opening_time=random.choice(["05:00", "06:00", "07:00"]),
@@ -239,13 +239,13 @@ async def seed():
 
         water_points = []
         for i, name in enumerate(water_names):
-            rp = random.choice(ROUTE_POINTS)
-            lat, lon = rand_near(rp[0], rp[1], 0.4)
+            rp = ROUTE_POINTS[i % len(ROUTE_POINTS)]
+            lat, lon = rand_near(rp[0], rp[1], 0.3 + (i * 0.15))
             wp = WaterPoint(
-                id=str(uuid.uuid4()),
+                id=f"wp_{i+1:02d}",
                 name=name,
-                latitude=lat,
-                longitude=lon,
+                latitude=round(lat, 6),
+                longitude=round(lon, 6),
                 status=random.choice(water_statuses),
                 water_type=random.choice(["drinking", "drinking", "filtered", "tanker"]),
                 capacity_liters=random.randint(500, 5000),
@@ -673,7 +673,7 @@ async def seed():
         ]
 
         for d_info in dindi_data:
-            qr_data = f"WARIVERSE:DINDI:{d_info['code']}:{str(uuid.uuid4())[:8]}"
+            qr_data = f"https://web-one-tau-17.vercel.app/dashboard/varkari/dindi?code={d_info['code']}&token={str(uuid.uuid4())[:8]}"
             dindi_obj = Dindi(
                 id=str(uuid.uuid4()),
                 name=d_info["name"],

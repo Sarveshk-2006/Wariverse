@@ -140,13 +140,38 @@ class WariQrCode {
     return '${p}_$hex';
   }
 
-  /// Extract clean token identifier from raw scanned camera string (URL, deep-link, or WVRK: token).
+  /// Base web domain for QR verification links.
+  static String get qrBaseDomain {
+    return 'https://web-one-tau-17.vercel.app';
+  }
+
+  /// Universal URL format for 100% camera app, browser, and mobile scanner compatibility.
+  String get qrUrl {
+    if (token.startsWith('http://') || token.startsWith('https://')) {
+      return token;
+    }
+    final base = qrBaseDomain;
+    if (type == QrType.DINDI) {
+      return '$base/dashboard/varkari/dindi?code=$token';
+    }
+    return '$base/dashboard/varkari/connect?token=$token';
+  }
+
+  /// Extract clean token identifier from raw scanned camera string (URL, deep-link wariverse://, or WVRK: token).
   static String parseTokenFromRawPayload(String raw) {
     final trimmed = raw.trim();
-    if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+    if (trimmed.startsWith('wariverse://') || trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
       final uri = Uri.tryParse(trimmed);
-      if (uri != null && uri.pathSegments.isNotEmpty) {
-        return uri.pathSegments.last.trim();
+      if (uri != null) {
+        if (uri.queryParameters.containsKey('token')) {
+          return uri.queryParameters['token']!.trim();
+        }
+        if (uri.queryParameters.containsKey('dindi') || uri.queryParameters.containsKey('code')) {
+          return (uri.queryParameters['dindi'] ?? uri.queryParameters['code'])!.trim();
+        }
+        if (uri.pathSegments.isNotEmpty) {
+          return uri.pathSegments.last.trim();
+        }
       }
     }
     return trimmed;

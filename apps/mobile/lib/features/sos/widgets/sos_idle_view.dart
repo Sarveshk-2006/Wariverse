@@ -39,7 +39,7 @@ class _SosIdleViewState extends State<SosIdleView> {
           ),
           const SizedBox(height: WariSpacing.md),
 
-          // Big Emergency SOS Button (Supports 2-second hold for Evidence Recording)
+          // Big Emergency SOS Button (Supports 2-second hold for Evidence Recording & Instant 1-Tap Trigger)
           Center(
             child: GestureDetector(
               onLongPress: () {
@@ -48,7 +48,7 @@ class _SosIdleViewState extends State<SosIdleView> {
               child: SosButton(
                 size: 135,
                 label: sosProvider.isRecordingEvidence ? 'RECORDING' : 'SOS',
-                onPressed: () => sosProvider.setUiState(SosUiState.confirming),
+                onPressed: () => sosProvider.submitSOS(),
               ),
             ),
           ),
@@ -70,7 +70,7 @@ class _SosIdleViewState extends State<SosIdleView> {
                     children: const [
                       Icon(Icons.videocam_rounded, color: WariColors.danger, size: 20),
                       SizedBox(width: 6),
-                      Text('Capturing 10s Emergency Evidence Recording...', style: TextStyle(fontWeight: FontWeight.bold, color: WariColors.danger, fontSize: 13)),
+                      Text('Capturing Emergency Evidence Recording...', style: TextStyle(fontWeight: FontWeight.bold, color: WariColors.danger, fontSize: 13)),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -86,7 +86,7 @@ class _SosIdleViewState extends State<SosIdleView> {
           ],
 
           Text(
-            'Tap for instant SOS. Hold button for 2 seconds to capture evidence recording.',
+            'Tap button to send instant emergency alert to contacts. Hold for 2s for evidence.',
             style: WariTypography.bodySmall,
             textAlign: TextAlign.center,
           ),
@@ -101,12 +101,12 @@ class _SosIdleViewState extends State<SosIdleView> {
                   children: const [
                     Icon(Icons.record_voice_over_rounded, color: WariColors.primary, size: 18),
                     SizedBox(width: 6),
-                    Text('Voice Threat AI Detector (SurakshaVoiceAI)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text('Voice Threat Detector', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Speaks phrases like "Help", "Bachao", "Doctor", "Police", "Stampede" for automated emergency trigger.',
+                  'Say phrases like "Help", "Bachao", "Doctor", or "Police" for instant emergency alert.',
                   style: TextStyle(fontSize: 10, color: WariColors.textSecondary),
                 ),
                 const SizedBox(height: 8),
@@ -116,7 +116,7 @@ class _SosIdleViewState extends State<SosIdleView> {
                       child: TextField(
                         controller: _voiceSearchController,
                         decoration: const InputDecoration(
-                          hintText: 'Speak or type spoken text...',
+                          hintText: 'Speak or type emergency phrase...',
                           isDense: true,
                           contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         ),
@@ -135,7 +135,7 @@ class _SosIdleViewState extends State<SosIdleView> {
                           _voiceSearchController.clear();
                         }
                       },
-                      child: const Text('Analyze AI', style: TextStyle(fontSize: 11)),
+                      child: const Text('Detect', style: TextStyle(fontSize: 11)),
                     ),
                   ],
                 ),
@@ -151,7 +151,7 @@ class _SosIdleViewState extends State<SosIdleView> {
               children: [
                 const SectionHeader(
                   title: 'Select Emergency Type',
-                  subtitle: 'Quickly categorize your request before sending',
+                  subtitle: 'Tap category for immediate emergency alert dispatch',
                 ),
                 const SizedBox(height: WariSpacing.sm),
                 Wrap(
@@ -162,7 +162,7 @@ class _SosIdleViewState extends State<SosIdleView> {
                     return GestureDetector(
                       onTap: () {
                         sosProvider.setSelectedCategory(cat);
-                        sosProvider.setUiState(SosUiState.confirming);
+                        sosProvider.triggerSos(category: cat, description: 'Instant ${cat.displayName} Alert');
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

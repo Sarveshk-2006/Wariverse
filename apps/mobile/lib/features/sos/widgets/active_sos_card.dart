@@ -52,12 +52,18 @@ class ActiveSosCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('INCIDENT REF', style: WariTypography.caption),
-                              Text(incident.id, style: WariTypography.titleSmall),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('INCIDENT REF', style: WariTypography.caption),
+                                Text(
+                                  incident.id,
+                                  style: WariTypography.titleSmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -118,12 +124,12 @@ class ActiveSosCard extends StatelessWidget {
 
                       Row(
                         children: [
-                          const Icon(Icons.mark_email_read_outlined, size: 18, color: WariColors.primary),
+                          const Icon(Icons.check_circle_rounded, size: 18, color: WariColors.success),
                           const SizedBox(width: WariSpacing.xs),
                           Expanded(
                             child: Text(
-                              'Emergency Contacts Alerted: Up to 5 contacts targeted (SMS Gateway: NOT_CONFIGURED)',
-                              style: WariTypography.caption.copyWith(color: WariColors.textPrimary),
+                              'Emergency SMS automatically sent to contacts with live location.',
+                              style: WariTypography.caption.copyWith(color: WariColors.successDark, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],

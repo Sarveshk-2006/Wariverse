@@ -13,21 +13,36 @@ import 'package:mobile/providers/ngo_distribution_provider.dart';
 import 'package:mobile/providers/virtual_dindi_provider.dart';
 import 'package:mobile/providers/incident_provider.dart';
 import 'package:mobile/providers/nearby_services_provider.dart';
+import 'package:mobile/providers/map_provider.dart';
+import 'package:mobile/repositories/crowd_repository.dart';
+import 'package:mobile/repositories/service_repository.dart';
+import 'package:mobile/repositories/sos_repository.dart';
 
 void main() {
   Widget buildTestableApp() {
     final apiService = ApiService(client: MockTestHttpClient());
     final authRepository = AuthRepository(apiService);
+    final serviceRepo = ServiceRepository(apiService);
+    final sosRepo = SosRepository(apiService);
 
     return MultiProvider(
       providers: [
         Provider<ApiService>.value(value: apiService),
         Provider<AuthRepository>.value(value: authRepository),
+        Provider<ServiceRepository>.value(value: serviceRepo),
+        Provider<SosRepository>.value(value: sosRepo),
         ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
         ChangeNotifierProvider<VirtualDindiProvider>(create: (_) => VirtualDindiProvider()),
         ChangeNotifierProvider<IncidentProvider>(create: (_) => IncidentProvider()),
         ChangeNotifierProvider<NearbyServicesProvider>(create: (_) => NearbyServicesProvider()),
+        ChangeNotifierProvider<MapProvider>(
+          create: (_) => MapProvider(
+            serviceRepo: serviceRepo,
+            crowdRepo: CrowdRepository(apiService),
+            sosRepo: sosRepo,
+          ),
+        ),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..initDefaultDemoUser(),
         ),

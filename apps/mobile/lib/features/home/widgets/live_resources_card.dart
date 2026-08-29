@@ -86,16 +86,19 @@ class LiveResourcesCard extends StatelessWidget {
           const SizedBox(height: WariSpacing.md),
 
           // Horizontal list of live resource cards
-          SizedBox(
-            height: 175,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: activeDeployments.length,
-              separatorBuilder: (context, index) => const SizedBox(width: WariSpacing.sm),
-              itemBuilder: (context, index) {
-                final d = activeDeployments[index];
-                return _buildResourceTile(context, d);
-              },
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: activeDeployments.map((d) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: WariSpacing.sm),
+                  child: SizedBox(
+                    height: 175,
+                    child: _buildResourceTile(context, d),
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],

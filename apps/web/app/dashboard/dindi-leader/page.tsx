@@ -19,7 +19,7 @@ export default function DindiLeaderDashboardPage() {
   const [haltTitle, setHaltTitle] = useState('');
   const [haltLocation, setHaltLocation] = useState('');
   const [haltArr, setHaltArr] = useState('12:00');
-  const [haltDep, setHaltDep] = useState( '13:30');
+  const [haltDep, setHaltDep] = useState('13:30');
   const [haltNotes, setHaltNotes] = useState('');
 
   const [announcementMsg, setAnnouncementMsg] = useState('');
@@ -61,6 +61,28 @@ export default function DindiLeaderDashboardPage() {
       }, token);
       alert(nextState ? '📡 Live GPS Beacon Activated! Transmitting location to members.' : 'Beacon Deactivated.');
     } catch {}
+  };
+
+  const markHaltCompleted = async (halt: any) => {
+    if (!selectedDindi) return;
+    try {
+      // Toggle completed state
+      const updatedSchedule = schedule.map(h => h.id === halt.id ? { ...h, is_completed: true } : h);
+      setSchedule(updatedSchedule);
+
+      // Auto-broadcast checkpoint conclusion alert
+      const autoBroadcastMsg = `✅ Checkpoint Concluded: ${halt.title} (${halt.location_name}) completed. Procession resuming march to next destination.`;
+      await apiCall(`/dindi/${selectedDindi.id}/posts`, {
+        method: 'POST',
+        body: JSON.stringify({ message: autoBroadcastMsg, is_announcement: true, post_type: 'ANNOUNCEMENT' })
+      }, token);
+
+      const pst = await apiCall(`/dindi/${selectedDindi.id}/posts`);
+      setPosts(pst);
+      alert(`✅ Checkpoint "${halt.title}" marked as CONCLUDED & broadcasted to all members!`);
+    } catch (e: any) {
+      alert('Error concluding checkpoint: ' + e.message);
+    }
   };
 
   const handleAddHalt = async () => {
@@ -112,6 +134,8 @@ export default function DindiLeaderDashboardPage() {
       setSubmitting(false);
     }
   };
+
+  const completedCount = schedule.filter(s => s.is_completed).length;
 
   return (
     <div className="dashboard-layout">
@@ -172,10 +196,15 @@ export default function DindiLeaderDashboardPage() {
                   </div>
                 </div>
 
-                {/* Itinerary Schedule Management */}
+                {/* Itinerary Schedule & Checkpoint Management */}
                 <div className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800 }}>📅 Micro-Schedule & Halts Itinerary</h3>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0 }}>🏁 Checkpoint & Halt Management</h3>
+                      <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '0.25rem' }}>
+                        Progress: {completedCount} of {schedule.length} Checkpoints Concluded
+                      </div>
+                    </div>
                     <button className="btn btn-primary btn-sm" onClick={() => setShowAddHalt(true)}>
                       + Add Halt / Stop
                     </button>
@@ -183,17 +212,25 @@ export default function DindiLeaderDashboardPage() {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {schedule.map((halt: any) => (
-                      <div key={halt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.875rem', border: '1px solid #E2E8F0', borderRadius: 10, background: '#F8FAFC' }}>
+                      <div key={halt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.875rem', border: '1px solid #E2E8F0', borderRadius: 10, background: halt.is_completed ? '#F0FDF4' : '#F8FAFC' }}>
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1E293B' }}>
+                          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                             [Day {halt.day_number}] {halt.title} ({halt.halt_type})
+                            {halt.is_completed && <span className="badge badge-green">✓ CONCLUDED</span>}
                           </div>
                           <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '0.25rem' }}>
                             📍 {halt.location_name} · ⏰ {halt.scheduled_arrival} - {halt.scheduled_departure}
                           </div>
                           {halt.notes && <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.25rem' }}>💡 {halt.notes}</div>}
                         </div>
-                        <span className="badge badge-green">Active</span>
+
+                        {!halt.is_completed ? (
+                          <button className="btn btn-sm" style={{ background: '#22C55E', color: 'white', fontWeight: 700 }} onClick={() => markHaltCompleted(halt)}>
+                            ✓ Conclude Checkpoint
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#16A34A' }}>Completed</span>
+                        )}
                       </div>
                     ))}
                     {schedule.length === 0 && (
@@ -224,7 +261,7 @@ export default function DindiLeaderDashboardPage() {
                     <div style={{ fontSize: '0.7rem', fontFamily: 'monospace', color: '#64748B', marginTop: '0.25rem' }}>{selectedDindi.qr_code_data}</div>
                   </div>
                   <p style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '0.75rem' }}>Print or share this QR code for new pilgrims to scan and join instantly.</p>
-                  <button className="btn btn-secondary btn-sm btn-full" onClick={() => alert('Printing Official Dindi QR Badge...')}>
+                  <button className="btn btn-secondary btn-sm btn-full" onClick={() => window.print()}>
                     🖨️ Print / Download QR Badge
                   </button>
                 </div>

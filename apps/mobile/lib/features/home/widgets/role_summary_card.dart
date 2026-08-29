@@ -33,7 +33,7 @@ class RoleSummaryCard extends StatelessWidget {
                   Icon(_getRoleIcon(role), size: 18, color: _getRoleColor(role)),
                   const SizedBox(width: WariSpacing.xs),
                   Text(
-                    '${role.displayName} Workspace',
+                    'Role: ${role.displayName}',
                     style: WariTypography.titleMedium.copyWith(
                       color: _getRoleColor(role),
                       fontWeight: FontWeight.bold,

@@ -5,6 +5,8 @@ import '../../../providers/sos_provider.dart';
 import '../../../core/theme/wari_theme_exports.dart';
 import '../../../core/widgets/wari_widgets_exports.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 /// Interactive Emergency Contacts Management & Automated SMS Dispatch Widget.
 /// Extracted & ported from WoShield2 EmergencyContactActivity.
 class EmergencyContactsWidget extends StatefulWidget {
@@ -42,7 +44,7 @@ class _EmergencyContactsWidgetState extends State<EmergencyContactsWidget> {
                 children: const [
                   Icon(Icons.contact_phone_rounded, color: WariColors.primary, size: 20),
                   SizedBox(width: WariSpacing.xs),
-                  Text('Emergency Contacts (WoShield SOS)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  Text('Emergency Contacts', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 ],
               ),
               IconButton(
@@ -53,7 +55,7 @@ class _EmergencyContactsWidgetState extends State<EmergencyContactsWidget> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Automated SMS alerts with live Google Maps GPS link will be sent to these contacts during SOS triggers.',
+            'Emergency SMS alerts with live location will be sent to these contacts.',
             style: TextStyle(fontSize: 11, color: WariColors.textSecondary),
           ),
           const SizedBox(height: WariSpacing.sm),
@@ -91,9 +93,36 @@ class _EmergencyContactsWidgetState extends State<EmergencyContactsWidget> {
                             ],
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, color: WariColors.danger, size: 18),
-                          onPressed: () => sosProvider.deleteEmergencyContact(c.id),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.sms_rounded, color: WariColors.primary, size: 18),
+                              tooltip: 'Send Test SMS to ${c.name}',
+                              onPressed: () async {
+                                final cleanPhone = c.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+                                final msg = 'TEST EMERGENCY ALERT!\nI am testing WariVerse WoShield emergency SOS alert to my contact ${c.name}.';
+                                final uri = Uri(
+                                  scheme: 'sms',
+                                  path: cleanPhone,
+                                  queryParameters: <String, String>{'body': msg},
+                                );
+                                try {
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                } catch (e) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Could not open Messages app: $e')),
+                                  );
+                                }
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: WariColors.danger, size: 18),
+                              onPressed: () => sosProvider.deleteEmergencyContact(c.id),
+                            ),
+                          ],
                         ),
                       ],
                     ),

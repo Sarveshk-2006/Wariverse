@@ -199,6 +199,18 @@ class SosProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    // 1. IMMEDIATELY dispatch Emergency SMS on gesture release (Synchronous UI interaction context)
+    final initialLat = latitude ?? _currentLocation?.latitude ?? 18.5204;
+    final initialLng = longitude ?? _currentLocation?.longitude ?? 73.8567;
+    _contactsService.dispatchEmergencySmsAlert(
+      contacts: _emergencyContacts,
+      latitude: initialLat != 0.0 ? initialLat : 18.5204,
+      longitude: initialLng != 0.0 ? initialLng : 73.8567,
+      categoryName: category.displayName,
+      customMessage: description,
+      userId: userId ?? _currentUserId,
+    );
+
     WariPosition pos;
     if (latitude != null && longitude != null) {
       pos = WariPosition(
@@ -231,15 +243,6 @@ class SosProvider extends ChangeNotifier {
       _activeIncident = res.incident;
       _isFromMock = res.isFromMock;
       _uiState = SosUiState.active;
-
-      // Dispatch Automated Emergency SMS Alert to Emergency Contacts with Google Maps link
-      _contactsService.dispatchEmergencySmsAlert(
-        contacts: _emergencyContacts,
-        latitude: pos.latitude != 0.0 ? pos.latitude : 18.5204,
-        longitude: pos.longitude != 0.0 ? pos.longitude : 73.8567,
-        categoryName: category.displayName,
-        customMessage: description,
-      );
 
       _startLiveLocationTracking();
       await loadIncidents();

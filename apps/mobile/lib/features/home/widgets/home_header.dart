@@ -28,41 +28,48 @@ class HomeHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: WariColors.primary.withValues(alpha: 0.15),
-                    radius: 22,
-                    child: Text(
-                      user?.displayName.substring(0, 1).toUpperCase() ?? 'V',
-                      style: WariTypography.headlineSmall.copyWith(color: WariColors.primary),
+              Expanded(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: WariColors.primary.withValues(alpha: 0.15),
+                      radius: 22,
+                      child: Text(
+                        user?.displayName.substring(0, 1).toUpperCase() ?? 'V',
+                        style: WariTypography.headlineSmall.copyWith(color: WariColors.primary),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: WariSpacing.sm),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.displayName ?? 'Respected Pilgrim',
-                        style: WariTypography.titleMedium,
+                    const SizedBox(width: WariSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.displayName ?? 'Respected Pilgrim',
+                            style: WariTypography.titleMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Role: ${role.displayName}',
+                            style: WariTypography.bodySmall.copyWith(color: WariColors.textSecondary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Role: ${role.name} • ${user?.email ?? "Realtime Device Active"}',
-                        style: WariTypography.bodySmall.copyWith(color: WariColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               WariStatusChip(
-                label: role.name,
+                label: role.displayName,
                 color: WariColors.primary,
               ),
             ],
           ),
-          const SizedBox(height: WariSpacing.md),
+          const SizedBox(height: WariSpacing.sm),
           Container(
-            padding: const EdgeInsets.all(WariSpacing.sm),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: WariColors.primaryLight.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
@@ -70,12 +77,12 @@ class HomeHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.wb_sunny_outlined, color: WariColors.primary, size: 20),
+                const Icon(Icons.location_on_outlined, color: WariColors.primary, size: 18),
                 const SizedBox(width: WariSpacing.xs),
                 Expanded(
                   child: Text(
-                    'Palkhi Route: Alandi → Pandharpur • Live GPS Connected',
-                    style: WariTypography.labelSmall.copyWith(color: WariColors.primaryDark),
+                    'Palkhi Route: Alandi → Pandharpur',
+                    style: WariTypography.labelSmall.copyWith(color: WariColors.primaryDark, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],

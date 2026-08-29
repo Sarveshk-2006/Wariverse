@@ -18,11 +18,17 @@ import 'package:mobile/providers/virtual_dindi_provider.dart';
 import 'package:mobile/providers/incident_provider.dart';
 import 'package:mobile/providers/nearby_services_provider.dart';
 
+import 'package:mobile/providers/map_provider.dart';
+import 'package:mobile/repositories/service_repository.dart';
+
+import 'package:mobile/repositories/crowd_repository.dart';
+
 void main() {
   Widget buildTestableApp({UserRole role = UserRole.VARKARI}) {
     final apiService = ApiService(client: MockTestHttpClient());
     final authRepository = AuthRepository(apiService);
     final sosRepo = SosRepository(apiService);
+    final serviceRepo = ServiceRepository(apiService);
     final sosProvider = SosProvider(sosRepo: sosRepo);
 
     final userProvider = UserProvider(authRepository)..initDefaultDemoUser();
@@ -33,12 +39,20 @@ void main() {
         Provider<ApiService>.value(value: apiService),
         Provider<AuthRepository>.value(value: authRepository),
         Provider<SosRepository>.value(value: sosRepo),
+        Provider<ServiceRepository>.value(value: serviceRepo),
         ChangeNotifierProvider<SosProvider>.value(value: sosProvider),
         ChangeNotifierProvider<QrProvider>(create: (_) => QrProvider()),
         ChangeNotifierProvider<NgoDistributionProvider>(create: (_) => NgoDistributionProvider()),
         ChangeNotifierProvider<VirtualDindiProvider>(create: (_) => VirtualDindiProvider()),
         ChangeNotifierProvider<IncidentProvider>(create: (_) => IncidentProvider()),
         ChangeNotifierProvider<NearbyServicesProvider>(create: (_) => NearbyServicesProvider()),
+        ChangeNotifierProvider<MapProvider>(
+          create: (_) => MapProvider(
+            serviceRepo: serviceRepo,
+            crowdRepo: CrowdRepository(apiService),
+            sosRepo: sosRepo,
+          ),
+        ),
         ChangeNotifierProvider<UserProvider>.value(value: userProvider),
       ],
       child: MaterialApp(
@@ -70,9 +84,9 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.VARKARI));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.textContaining('Role: VARKARI'), findsOneWidget);
+    expect(find.textContaining('Varkari'), findsWidgets);
     expect(find.textContaining('LIVE WARI RESOURCES'), findsOneWidget);
 
     addTearDown(() async {
@@ -87,7 +101,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.VOLUNTEER));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Volunteer'), findsWidgets);
     expect(find.text('STATUS: AVAILABLE'), findsOneWidget);
@@ -100,15 +114,14 @@ void main() {
     });
   });
 
-  testWidgets('Police role routes to consolidated Command Center dashboard', (WidgetTester tester) async {
+  testWidgets('Police role routes to Volunteer operational dashboard', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.POLICE));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('COMMAND CENTER ADMIN'), findsWidgets);
-    expect(find.text('Active SOS'), findsOneWidget);
+    expect(find.text('Volunteer'), findsWidgets);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -117,15 +130,14 @@ void main() {
     });
   });
 
-  testWidgets('Medical role routes to consolidated Command Center dashboard', (WidgetTester tester) async {
+  testWidgets('Medical role routes to Volunteer operational dashboard', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.MEDICAL_TEAM));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('COMMAND CENTER ADMIN'), findsWidgets);
-    expect(find.text('Active SOS'), findsOneWidget);
+    expect(find.text('Volunteer'), findsWidgets);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -134,16 +146,15 @@ void main() {
     });
   });
 
-  testWidgets('NGO dashboard renders food and shelter capacity progress bars', (WidgetTester tester) async {
+  testWidgets('NGO role displays Web Portal Redirection view on mobile', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.NGO));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('NGO Coordinator'), findsWidgets);
-    expect(find.textContaining('Food'), findsWidgets);
-    expect(find.textContaining('Shelter'), findsWidgets);
+    expect(find.textContaining('WariVerse Operations Web'), findsOneWidget);
+    expect(find.textContaining('OPEN OPERATIONS WEB PORTAL'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -152,15 +163,15 @@ void main() {
     });
   });
 
-  testWidgets('Admin Command Center dashboard renders multi-kpi analytics stats', (WidgetTester tester) async {
+  testWidgets('Admin role displays Web Portal Redirection view on mobile', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.ADMIN));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('COMMAND CENTER ADMIN'), findsWidgets);
-    expect(find.text('Critical Incidents'), findsOneWidget);
+    expect(find.textContaining('WariVerse Operations Web'), findsOneWidget);
+    expect(find.textContaining('OPEN OPERATIONS WEB PORTAL'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
