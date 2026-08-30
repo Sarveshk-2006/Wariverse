@@ -80,6 +80,12 @@ class AppUser {
 
   UserRole get userRole => UserRoleX.fromString(role);
 
+  String get formattedVarkariId {
+    final cleanId = userId.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
+    final shortId = cleanId.length > 8 ? cleanId.substring(0, 8) : cleanId;
+    return 'WVRK-$shortId';
+  }
+
   String get formattedQrPayload {
     if (qrPayload != null && qrPayload!.isNotEmpty) return qrPayload!;
     final dindi = dindiCode != null && dindiCode!.isNotEmpty ? dindiCode! : 'VDND-4107';

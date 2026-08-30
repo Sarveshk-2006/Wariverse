@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models_exports.dart';
 import '../repositories/repositories_exports.dart';
 import '../services/onesignal_service.dart';
@@ -192,6 +193,29 @@ class UserProvider extends ChangeNotifier {
     _persistSession();
     notifyListeners();
   }
+
+  /// Update user profile details in state, local session, and Firestore.
+  void updateProfileInfo({required String displayName, String? phone}) {
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
+        displayName: displayName,
+      );
+      _persistSession();
+      try {
+        final fs = _authRepo.firestore;
+        if (fs != null) {
+          fs.collection('users').doc(_currentUser!.userId).set({
+            'displayName': displayName,
+            if (phone != null && phone.isNotEmpty) 'phone': phone,
+            'updated_at': DateTime.now().toIso8601String(),
+          }, SetOptions(merge: true));
+        }
+      } catch (_) {}
+      notifyListeners();
+    }
+  }
+
+  void setRole(UserRole role) => switchRole(role);
 
   /// Sets authenticated user session derived strictly from backend/Firestore authoritative authentication.
   void setAuthenticatedUser(AppUser user) {

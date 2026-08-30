@@ -25,6 +25,16 @@ class AuthRepository {
   final FirebaseAuth? _firebaseAuth;
   final FirebaseFirestore? _firestore;
 
+  FirebaseFirestore? get firestore => _firestore ?? _getFirestoreSafely();
+
+  FirebaseFirestore? _getFirestoreSafely() {
+    try {
+      return FirebaseFirestore.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
   FirebaseAuth get auth => _firebaseAuth ?? FirebaseAuth.instance;
   FirebaseFirestore get db => _firestore ?? FirebaseFirestore.instance;
 
