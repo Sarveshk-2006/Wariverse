@@ -66,6 +66,43 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
 
+
+@app.on_event("startup")
+async def seed_admin_user():
+    async with database.SessionLocal() as db:
+        from core.security import get_password_hash
+        # Check admin
+        admin_res = await db.execute(select(models.User).where(models.User.email == 'admin@wariverse.demo'))
+        if not admin_res.scalar_one_or_none():
+            user = models.User(
+                id=str(uuid.uuid4()),
+                email='admin@wariverse.demo',
+                hashed_password=get_password_hash('Demo@123'),
+                role=models.UserRole.ADMIN,
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(user)
+            db.add(models.Profile(id=str(uuid.uuid4()), user_id=user.id, display_name='Admin TerminalX'))
+            await db.commit()
+            print("Seeded admin@wariverse.demo")
+        
+        # Check NGO
+        ngo_res = await db.execute(select(models.User).where(models.User.email == 'ngo@wariverse.demo'))
+        if not ngo_res.scalar_one_or_none():
+            user = models.User(
+                id=str(uuid.uuid4()),
+                email='ngo@wariverse.demo',
+                hashed_password=get_password_hash('Demo@123'),
+                role=models.UserRole.NGO,
+                is_active=True,
+                is_verified=True,
+            )
+            db.add(user)
+            db.add(models.Profile(id=str(uuid.uuid4()), user_id=user.id, display_name='NGO Partner'))
+            await db.commit()
+            print("Seeded ngo@wariverse.demo")
+
 app = FastAPI(
     title="WariVerse AI API",
     description="AI-powered Digital Operating System for Wari pilgrimage management",
