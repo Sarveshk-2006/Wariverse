@@ -22,6 +22,18 @@ class EnvConfig {
   static const String _iosSimulatorWsUrl = 'ws://127.0.0.1:8000/ws';
   static const String _productionWsUrl = 'wss://api.wariverse.app/ws';
 
+  /// Centralized Operations Web application base URL.
+  static const String webBaseUrl = String.fromEnvironment(
+    'WEB_BASE_URL',
+    defaultValue: 'https://web-one-tau-17.vercel.app',
+  );
+
+  /// Resolved Web Admin Command Center Dashboard URL.
+  static String get adminDashboardUrl => '$webBaseUrl/dashboard/admin';
+
+  /// Resolved Web NGO Operations Dashboard URL.
+  static String get ngoDashboardUrl => '$webBaseUrl/dashboard/ngo';
+
   /// Resolves current environment enum.
   static AppEnvironment get currentEnvironment {
     switch (_envString.toLowerCase()) {

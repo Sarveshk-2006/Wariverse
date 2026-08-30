@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/config/env_config.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../models/models_exports.dart';
 import '../../providers/user_provider.dart';
@@ -8,6 +9,7 @@ import '../home/home_screen.dart';
 import 'dindi_leader_dashboard.dart';
 import 'volunteer_dashboard.dart';
 import '../cleanwari/cleanwari_cleaner_screen.dart';
+import '../sos/sos_incident_history_screen.dart';
 
 /// Centralized role-based operational dashboard renderer for WariVerse Field Mobile.
 class RoleDashboardView extends StatelessWidget {
@@ -47,7 +49,21 @@ class WebPortalRedirectWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final roleName = userProvider.currentRole.displayName;
+    final role = userProvider.currentRole;
+    final isAdmin = role == UserRole.ADMIN;
+    final isNgo = role == UserRole.NGO || role == UserRole.SERVICE_PROVIDER;
+
+    final String titleText = isAdmin
+        ? 'Executive Command Center'
+        : (isNgo ? 'NGO Operations Portal' : 'Operations Web Portal');
+
+    final String buttonLabel = isAdmin
+        ? 'Open Admin Web Dashboard →'
+        : (isNgo ? 'Open NGO Web Dashboard →' : 'Open Web Dashboard →');
+
+    final String targetUrl = isAdmin
+        ? EnvConfig.adminDashboardUrl
+        : (isNgo ? EnvConfig.ngoDashboardUrl : EnvConfig.webBaseUrl);
 
     return Scaffold(
       body: Center(
@@ -71,20 +87,20 @@ class WebPortalRedirectWidget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const CircleAvatar(
-                  radius: 36,
+                  radius: 32,
                   backgroundColor: WariColors.primaryLight,
-                  child: Icon(Icons.laptop_mac_rounded, size: 40, color: WariColors.primaryDark),
+                  child: Icon(Icons.laptop_mac_rounded, size: 36, color: WariColors.primaryDark),
                 ),
                 const SizedBox(height: WariSpacing.base),
                 Text(
-                  'WariVerse Operations Web',
+                  titleText,
                   style: WariTypography.headlineSmall.copyWith(color: WariColors.primaryDark),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: WariSpacing.xs),
                 Text(
-                  '$roleName Command Center & NGO Operations are managed via the dedicated Web Application.',
-                  style: WariTypography.bodyMedium.copyWith(color: WariColors.textSecondary),
+                  'Operational controls are available in the WariVerse Web Dashboard.',
+                  style: WariTypography.bodySmall.copyWith(color: WariColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: WariSpacing.lg),
@@ -92,19 +108,45 @@ class WebPortalRedirectWidget extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final Uri url = Uri.parse('https://web-one-tau-17.vercel.app');
+                      final Uri url = Uri.parse(targetUrl);
                       if (await canLaunchUrl(url)) {
                         await launchUrl(url, mode: LaunchMode.externalApplication);
                       }
                     },
                     icon: const Icon(Icons.open_in_browser_rounded, color: Colors.white),
-                    label: const Text(
-                      'OPEN OPERATIONS WEB PORTAL',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    label: Text(
+                      buttonLabel,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WariColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WariSpacing.radiusMd)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: WariSpacing.base),
+                const Divider(),
+                const SizedBox(height: WariSpacing.sm),
+                Text(
+                  'Emergency & SOS History',
+                  style: WariTypography.titleSmall,
+                ),
+                const SizedBox(height: WariSpacing.xs),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SosIncidentHistoryScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.history_rounded, color: WariColors.primary),
+                    label: const Text('View Incident History', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: WariColors.primary),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(WariSpacing.radiusMd)),
                     ),
                   ),

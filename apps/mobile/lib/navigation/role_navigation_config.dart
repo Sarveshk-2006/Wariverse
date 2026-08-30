@@ -8,6 +8,7 @@ import '../features/services/services_screen.dart';
 import '../features/placeholders/profile_placeholder.dart';
 import '../features/dindi/virtual_dindi_detail_screen.dart';
 import '../features/incidents/volunteer_response_queue_screen.dart';
+import '../features/sos/sos_incident_history_screen.dart';
 
 class RoleTabItem {
   final String label;
@@ -154,38 +155,24 @@ class RoleNavigationConfig {
           ),
         ];
 
-      // 4. WEB PORTAL ROLES (ADMIN & NGO - REDIRECT TO OPERATIONS WEB)
+      // 4. WEB PORTAL ROLES (ADMIN & NGO - MINIMAL MOBILE EXPERIENCE)
       case UserRole.NGO:
       case UserRole.SERVICE_PROVIDER:
       case UserRole.ADMIN:
         return [
           RoleTabItem(
-            label: 'WEB PORTAL',
+            label: 'WEB DASHBOARD',
             icon: Icons.laptop_mac_outlined,
             selectedIcon: Icons.laptop_mac,
             pageWidget: const RoleDashboardView(),
-            pageTitle: 'Operations Web Portal',
+            pageTitle: 'Operations Web Dashboard',
           ),
           RoleTabItem(
-            label: 'LIVE MAP',
-            icon: Icons.map_outlined,
-            selectedIcon: Icons.map,
-            pageWidget: liveMapWidget,
-            pageTitle: 'Pilgrimage Route Map',
-          ),
-          RoleTabItem(
-            label: 'SAFETY',
-            icon: Icons.shield_outlined,
-            selectedIcon: Icons.shield,
-            pageWidget: const SosScreen(),
-            pageTitle: 'Safety & SOS Stream',
-          ),
-          RoleTabItem(
-            label: 'SERVICES',
-            icon: Icons.grid_view_outlined,
-            selectedIcon: Icons.grid_view,
-            pageWidget: const ServicesScreen(),
-            pageTitle: 'Field Services',
+            label: 'SOS HISTORY',
+            icon: Icons.history_rounded,
+            selectedIcon: Icons.history,
+            pageWidget: const SosIncidentHistoryScreen(),
+            pageTitle: 'Emergency SOS & Incident History',
           ),
           RoleTabItem(
             label: 'PROFILE',

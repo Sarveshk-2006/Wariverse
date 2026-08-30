@@ -153,8 +153,9 @@ void main() {
     await tester.pumpWidget(buildTestableApp(role: UserRole.NGO));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.textContaining('WariVerse Operations Web'), findsOneWidget);
-    expect(find.textContaining('OPEN OPERATIONS WEB PORTAL'), findsOneWidget);
+    expect(find.textContaining('NGO Operations Portal'), findsOneWidget);
+    expect(find.textContaining('Open NGO Web Dashboard →'), findsOneWidget);
+    expect(find.textContaining('View Incident History'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();
@@ -170,8 +171,9 @@ void main() {
     await tester.pumpWidget(buildTestableApp(role: UserRole.ADMIN));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.textContaining('WariVerse Operations Web'), findsOneWidget);
-    expect(find.textContaining('OPEN OPERATIONS WEB PORTAL'), findsOneWidget);
+    expect(find.textContaining('Executive Command Center'), findsOneWidget);
+    expect(find.textContaining('Open Admin Web Dashboard →'), findsOneWidget);
+    expect(find.textContaining('View Incident History'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();

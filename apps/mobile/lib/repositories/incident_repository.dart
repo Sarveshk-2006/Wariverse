@@ -343,6 +343,21 @@ class IncidentRepository {
         .map((snap) => snap.docs.map((doc) => ThreatIncident.fromJson(doc.data())).toList());
   }
 
+  /// One-time fetch of historical incidents from Cloud Firestore.
+  Future<List<ThreatIncident>> getIncidents() async {
+    if (_firestore == null) return [];
+    try {
+      final snap = await _firestore
+          .collection('incidents')
+          .orderBy('created_at', descending: true)
+          .get();
+      return snap.docs.map((doc) => ThreatIncident.fromJson(doc.data())).toList();
+    } catch (e) {
+      AppLogger.e('Failed to fetch incidents from Firestore', e);
+      return [];
+    }
+  }
+
   /// Realtime Stream of incidents assigned to a specific Volunteer.
   Stream<List<ThreatIncident>> streamAssignedIncidents(String volunteerUid) {
     if (_firestore == null) return Stream.value([]);
