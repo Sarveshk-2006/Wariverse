@@ -93,14 +93,14 @@ export default function AdminLostPage() {
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'center' }}>
-                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem', fontSize: '0.75rem', color: '#6B7280' }}>
-                      {lp.blood_group && <div>🩸 Blood: {lp.blood_group}</div>}
-                      {lp.emergency_contact && <div>📞 {lp.emergency_contact}</div>}
-                      <div style={{ fontFamily: 'monospace', color: '#6366F1' }}>ID: {lp.qr_code}</div>
-                      <div>📅 {new Date(lp.created_at).toLocaleDateString()}</div>
+                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem', fontSize: '0.75rem', color: '#4B5563' }}>
+                      {lp.blood_group ? (<div>🩸 Blood: {lp.blood_group}</div>) : (<div>📍 {lp.last_seen || 'Unknown location'}</div>)}
+                      {lp.emergency_contact ? (<div>📞 {lp.emergency_contact}</div>) : (<div>⚠️ No Contact</div>)}
+                      <div style={{ fontFamily: 'monospace', color: '#4338CA', fontWeight: 700 }}>ID: {lp.qr_code || lp.id?.slice(0, 8).toUpperCase() || 'N/A'}</div>
+                      <div>📅 {new Date(lp.created_at || Date.now()).toLocaleDateString()}</div>
                     </div>
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`MISSING PERSON\nName: ${lp.name}\nAge: ${lp.age}\nGender: ${lp.gender}\nAadhar: 9876 5432 ${lp.id.slice(0,4).replace(/\D/g, '0').padEnd(4, '0')}\nAddress: 12, Pandurang Niwas, Vari Route\nBlood Group: ${lp.blood_group || 'Unknown'}\nGuardian Contact: ${lp.emergency_contact || 'N/A'}\nID: ${lp.qr_code}`)}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`MISSING PERSON\nName: ${lp.name}\nAge: ${lp.age}\nGender: ${lp.gender || 'Unknown'}\nLast Seen: ${lp.last_seen || 'Unknown'}\nID: ${lp.qr_code || lp.id || 'N/A'}`)}`} 
                       alt="Missing Person QR" 
                       style={{ width: 64, height: 64, borderRadius: 8, border: '1px solid #E2E8F0', cursor: 'pointer' }}
                       title="Scan to view missing person details"
@@ -141,7 +141,7 @@ export default function AdminLostPage() {
                 
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: 12, display: 'inline-block', border: '1px solid #E2E8F0' }}>
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`MISSING PERSON\nName: ${showQrModal.name}\nAge: ${showQrModal.age}\nGender: ${showQrModal.gender}\nAadhar: 9876 5432 ${showQrModal.id.slice(0,4).replace(/\D/g, '0').padEnd(4, '0')}\nAddress: 12, Pandurang Niwas, Vari Route\nBlood Group: ${showQrModal.blood_group || 'Unknown'}\nGuardian Contact: ${showQrModal.emergency_contact || 'N/A'}\nID: ${showQrModal.qr_code}`)}`} 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`MISSING PERSON\nName: ${showQrModal.name}\nAge: ${showQrModal.age}\nGender: ${showQrModal.gender || 'Unknown'}\nLast Seen: ${showQrModal.last_seen || 'Unknown'}\nID: ${showQrModal.qr_code || showQrModal.id || 'N/A'}`)}`} 
                     alt="Enlarged QR ID" 
                     style={{ width: 200, height: 200, display: 'block' }} 
                   />
