@@ -51,7 +51,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('WariVerse AI'), findsOneWidget);
       expect(find.text('Multi-Portal Pilgrimage Operations System'), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 1100));
+      await tester.pump(const Duration(milliseconds: 2500));
     });
 
     testWidgets('LoginScreen renders portal options and Admin Notice box when ADMIN is selected', (WidgetTester tester) async {
