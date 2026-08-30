@@ -12,14 +12,40 @@ void main() {
 
   group('VirtualDindi Engine & Geospatial Tests', () {
     test('Haversine distance calculates accurate distance between two GPS points', () {
-      // Distance between Pune Shaniwar Wada (18.5196, 73.8553) and Alandi (18.6773, 73.8967) is ~18.1 km
+      // 1. Same point distance must be zero
+      final samePoint = VirtualDindiEngine.haversineDistance(18.5204, 73.8567, 18.5204, 73.8567);
+      expect(samePoint, equals(0.0));
+
+      // 2. ~100m separation: (18.5204, 73.8567) to (18.5213, 73.8567)
+      final dist100m = VirtualDindiEngine.haversineDistance(18.5204, 73.8567, 18.5213, 73.8567);
+      expect(dist100m, greaterThan(85));
+      expect(dist100m, lessThan(115));
+
+      // 3. ~1km separation: (18.5204, 73.8567) to (18.5294, 73.8567)
+      final dist1km = VirtualDindiEngine.haversineDistance(18.5204, 73.8567, 18.5294, 73.8567);
+      expect(dist1km, greaterThan(900));
+      expect(dist1km, lessThan(1100));
+
+      // 4. ~3km separation: (18.5204, 73.8567) to (18.5474, 73.8567)
+      final dist3km = VirtualDindiEngine.haversineDistance(18.5204, 73.8567, 18.5474, 73.8567);
+      expect(dist3km, greaterThan(2800));
+      expect(dist3km, lessThan(3200));
+
+      // 5. Distance between Pune Shaniwar Wada (18.5196, 73.8553) and Alandi (18.6773, 73.8967) is ~18.1 km
       final distMeters = VirtualDindiEngine.haversineDistance(18.5196, 73.8553, 18.6773, 73.8967);
       expect(distMeters, greaterThan(17500));
       expect(distMeters, lessThan(18500));
 
-      // Same point distance must be zero
-      final samePoint = VirtualDindiEngine.haversineDistance(18.5204, 73.8567, 18.5204, 73.8567);
-      expect(samePoint, equals(0.0));
+      // 6. Invalid coordinate check
+      final invalidDist = VirtualDindiEngine.haversineDistance(0.0, 0.0, 18.5204, 73.8567);
+      expect(invalidDist, equals(0.0));
+    });
+
+    test('formatDistance produces clean human-readable distance strings', () {
+      expect(VirtualDindiEngine.formatDistance(42.3), equals('42 m away'));
+      expect(VirtualDindiEngine.formatDistance(950), equals('950 m away'));
+      expect(VirtualDindiEngine.formatDistance(1420), equals('1.4 km away'));
+      expect(VirtualDindiEngine.formatDistance(3050), equals('3.0 km away'));
     });
 
     test('calculateRobustGroupCenter filters stale and low-accuracy GPS readings', () {
@@ -59,25 +85,24 @@ void main() {
           lastLocationAt: now.subtract(const Duration(minutes: 25)).toIso8601String(),
           lastOnlineAt: now.toIso8601String(),
         ),
-        // Inaccurate GPS member (accuracy = 150m) -> MUST BE IGNORED
+        // Low accuracy GPS member (>120m accuracy) -> MUST BE IGNORED
         VirtualDindiMember(
           uid: 'm4_inaccurate',
           displayName: 'Inaccurate GPS Member',
           joinedAt: now.toIso8601String(),
-          lastLatitude: 19.9999,
-          lastLongitude: 74.9999,
+          lastLatitude: 18.5205,
+          lastLongitude: 73.8565,
           accuracyMeters: 150.0,
           lastLocationAt: now.toIso8601String(),
           lastOnlineAt: now.toIso8601String(),
         ),
       ];
 
-      final groupCenter = VirtualDindiEngine.calculateRobustGroupCenter(members);
-
-      expect(groupCenter.activeContributingMembers, equals(2));
-      expect(groupCenter.isReliable, isTrue);
-      expect(groupCenter.latitude, closeTo(18.5205, 0.001));
-      expect(groupCenter.longitude, closeTo(73.8565, 0.001));
+      final center = VirtualDindiEngine.calculateRobustGroupCenter(members, maxAccuracyMeters: 100.0);
+      expect(center.activeContributingMembers, equals(2));
+      expect(center.isReliable, isTrue);
+      expect(center.latitude, closeTo(18.5205, 0.001));
+      expect(center.longitude, closeTo(73.8565, 0.001));
     });
 
     test('evaluateMemberSeparation evaluates thresholds and trend correctly', () {

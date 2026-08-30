@@ -35,6 +35,14 @@ class MemberSeparationEvaluation {
 
 /// Deterministic Geospatial Engine for Virtual Dindi Separation & Group Analysis.
 class VirtualDindiEngine {
+  /// Validates standard GPS latitude and longitude parameters.
+  static bool isValidCoordinate(double lat, double lng) {
+    if (lat == 0.0 && lng == 0.0) return false;
+    if (lat.isNaN || lng.isNaN || lat.isInfinite || lng.isInfinite) return false;
+    if (lat.abs() > 90.0 || lng.abs() > 180.0) return false;
+    return true;
+  }
+
   /// Computes Haversine distance between two sets of GPS coordinates in meters.
   static double haversineDistance(
     double lat1,
@@ -42,7 +50,12 @@ class VirtualDindiEngine {
     double lat2,
     double lon2,
   ) {
-    const double R = 6371000; // Earth radius in meters
+    if (!isValidCoordinate(lat1, lon1) || !isValidCoordinate(lat2, lon2)) {
+      return 0.0;
+    }
+    if (lat1 == lat2 && lon1 == lon2) return 0.0;
+
+    const double R = 6371000.0; // Earth radius in meters
     final double dLat = _toRadians(lat2 - lat1);
     final double dLon = _toRadians(lon2 - lon1);
 
@@ -52,52 +65,66 @@ class VirtualDindiEngine {
             math.sin(dLon / 2) *
             math.sin(dLon / 2);
 
-    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    final double c = 2 * math.asin(math.sqrt(a.clamp(0.0, 1.0)));
     return R * c;
   }
 
   static double _toRadians(double degree) => degree * math.pi / 180.0;
 
+  /// Format distance into clean human readable string (e.g., "42 m away", "1.4 km away").
+  static String formatDistance(double meters) {
+    if (meters < 0) return '0 m away';
+    if (meters < 1000) {
+      return '${meters.round()} m away';
+    } else {
+      return '${(meters / 1000.0).toStringAsFixed(1)} km away';
+    }
+  }
+
   /// Calculates robust group center of active Dindi members.
   /// Filters out:
-  /// 1. Stale locations (> 10 minutes old).
-  /// 2. Low-accuracy GPS fixes (> 100m accuracy).
-  /// 3. Inactive/left members.
+  /// 1. Invalid coordinates.
+  /// 2. Stale locations (> 10 minutes old).
+  /// 3. Low-accuracy GPS fixes (> 150m accuracy).
+  /// 4. Inactive/left members.
   static GroupCenterResult calculateRobustGroupCenter(
     List<VirtualDindiMember> members, {
     double fallbackLat = 18.5204,
     double fallbackLng = 73.8567,
-    int maxStaleMinutes = 10,
-    double maxAccuracyMeters = 100.0,
+    int maxStaleMinutes = 15,
+    double maxAccuracyMeters = 150.0,
   }) {
     final now = DateTime.now();
 
     final validMembers = members.where((m) {
       if (m.memberStatus != 'ACTIVE') return false;
+      if (!isValidCoordinate(m.lastLatitude, m.lastLongitude)) return false;
       if (m.accuracyMeters > maxAccuracyMeters) return false;
 
       final locTime = DateTime.tryParse(m.lastLocationAt);
-      if (locTime == null) return false;
-      if (now.difference(locTime).inMinutes > maxStaleMinutes) return false;
+      if (locTime != null && now.difference(locTime).inMinutes > maxStaleMinutes) {
+        return false;
+      }
 
       return true;
     }).toList();
 
     if (validMembers.isEmpty) {
-      // If no valid member locations, fall back to leader position or fallback coordinates
+      // If no valid member locations pass accuracy filter, use any member with valid coordinates (preferably Leader)
       final leader = members.firstWhere(
-        (m) => m.isLeader,
-        orElse: () => members.isNotEmpty
-            ? members.first
-            : VirtualDindiMember(
-                uid: 'fallback',
-                displayName: 'Fallback',
-                joinedAt: now.toIso8601String(),
-                lastLatitude: fallbackLat,
-                lastLongitude: fallbackLng,
-                lastLocationAt: now.toIso8601String(),
-                lastOnlineAt: now.toIso8601String(),
-              ),
+        (m) => m.isLeader && isValidCoordinate(m.lastLatitude, m.lastLongitude),
+        orElse: () => members.firstWhere(
+          (m) => isValidCoordinate(m.lastLatitude, m.lastLongitude),
+          orElse: () => VirtualDindiMember(
+            uid: 'fallback',
+            displayName: 'Fallback',
+            joinedAt: now.toIso8601String(),
+            lastLatitude: fallbackLat,
+            lastLongitude: fallbackLng,
+            lastLocationAt: now.toIso8601String(),
+            lastOnlineAt: now.toIso8601String(),
+          ),
+        ),
       );
 
       return GroupCenterResult(
@@ -151,7 +178,6 @@ class VirtualDindiEngine {
     );
 
     // Incorporate GPS accuracy into effective distance confidence interval.
-    // If accuracy is poor (e.g. 80m), we subtract accuracy/2 to avoid false alarms.
     final double effectiveDistance = math.max(0.0, rawDistance - (accuracyMeters / 2.0));
 
     // Determine Movement Trend (delta vs previous distance sample)

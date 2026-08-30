@@ -8,6 +8,7 @@ import '../repositories/virtual_dindi_repository.dart';
 import '../services/virtual_dindi_local_service.dart';
 import '../services/dindi_notification_service.dart';
 import '../core/utils/virtual_dindi_engine.dart';
+import '../core/utils/app_logger.dart';
 
 enum DindiNetworkStatus {
   LIVE,
@@ -262,39 +263,66 @@ class VirtualDindiProvider with ChangeNotifier {
   void _recalculateGroupCenterAndSeparation({Position? currentPosition}) {
     if (_members.isEmpty) return;
 
+    final fallbackLat = _activeDindi?.meetingPointLat ?? 18.5204;
+    final fallbackLng = _activeDindi?.meetingPointLng ?? 73.8567;
+
     // Calculate Robust Geographic Center
-    _groupCenter = VirtualDindiEngine.calculateRobustGroupCenter(_members);
+    _groupCenter = VirtualDindiEngine.calculateRobustGroupCenter(
+      _members,
+      fallbackLat: fallbackLat,
+      fallbackLng: fallbackLng,
+    );
     VirtualDindiLocalService.saveGroupCenter(_groupCenter!.latitude, _groupCenter!.longitude);
 
-    if (_currentUserUid != null && _activeDindi != null) {
-      final me = _members.firstWhere(
-        (m) => m.uid == _currentUserUid,
-        orElse: () => _members.first,
+    final refLat = _groupCenter!.latitude;
+    final refLng = _groupCenter!.longitude;
+
+    // Recalculate distance and separation for EVERY member in the Dindi roster
+    for (int i = 0; i < _members.length; i++) {
+      final m = _members[i];
+      final rawDist = VirtualDindiEngine.haversineDistance(
+        m.lastLatitude,
+        m.lastLongitude,
+        refLat,
+        refLng,
       );
 
       final eval = VirtualDindiEngine.evaluateMemberSeparation(
-        memberLat: me.lastLatitude,
-        memberLng: me.lastLongitude,
-        accuracyMeters: me.accuracyMeters,
-        groupCenterLat: _groupCenter!.latitude,
-        groupCenterLng: _groupCenter!.longitude,
-        currentPreviousState: _currentSeparationState,
-        stateEnteredAt: _stateEnteredAt,
-        previousDistanceMeters: _previousDistanceMeters,
-        safeRadius: _activeDindi!.safeRadiusMeters,
-        cautionThreshold: _activeDindi!.separationThresholdMeters,
-        criticalThreshold: _activeDindi!.criticalThresholdMeters,
+        memberLat: m.lastLatitude,
+        memberLng: m.lastLongitude,
+        accuracyMeters: m.accuracyMeters,
+        groupCenterLat: refLat,
+        groupCenterLng: refLng,
+        currentPreviousState: m.separationState,
+        stateEnteredAt: DateTime.now(),
+        previousDistanceMeters: m.distanceFromGroupMeters,
+        safeRadius: _activeDindi?.safeRadiusMeters ?? 75.0,
+        cautionThreshold: _activeDindi?.separationThresholdMeters ?? 150.0,
+        criticalThreshold: _activeDindi?.criticalThresholdMeters ?? 300.0,
       );
 
-      _previousDistanceMeters = _distanceFromGroupMeters;
-      _distanceFromGroupMeters = eval.rawDistanceMeters;
-      _currentTrend = eval.trend;
+      _members[i] = m.copyWith(
+        distanceFromGroupMeters: rawDist,
+        separationState: eval.separationState,
+        trend: eval.trend,
+        isInsideDindi: eval.separationState == SeparationState.SAFE,
+      );
 
-      if (eval.stateChanged) {
-        _currentSeparationState = eval.separationState;
+      AppLogger.d('DINDI LOCATION DEBUG: member=${m.displayName} (${m.lastLatitude}, ${m.lastLongitude}) ref=($refLat, $refLng) distance=${rawDist.toStringAsFixed(1)}m status=${eval.separationState.name}');
+    }
+
+    if (_currentUserUid != null && _activeDindi != null) {
+      final meIndex = _members.indexWhere((m) => m.uid == _currentUserUid);
+      final me = meIndex >= 0 ? _members[meIndex] : _members.first;
+
+      _previousDistanceMeters = _distanceFromGroupMeters;
+      _distanceFromGroupMeters = me.distanceFromGroupMeters;
+      _currentTrend = me.trend;
+
+      if (_currentSeparationState != me.separationState) {
+        _currentSeparationState = me.separationState;
         _stateEnteredAt = DateTime.now();
 
-        // Trigger local notification alert with cooldown
         _notificationService.triggerSeparationAlert(
           state: _currentSeparationState,
           distanceMeters: _distanceFromGroupMeters,
@@ -302,7 +330,6 @@ class VirtualDindiProvider with ChangeNotifier {
           trend: _currentTrend,
         );
 
-        // Log Firestore separation event on escalation
         if (_currentSeparationState == SeparationState.SEPARATED || _currentSeparationState == SeparationState.CRITICAL) {
           _repository.logEvent(
             dindiId: _activeDindi!.dindiId,
@@ -319,7 +346,6 @@ class VirtualDindiProvider with ChangeNotifier {
         }
       }
 
-      // Update Firestore member record
       _repository.updateMemberState(
         dindiId: _activeDindi!.dindiId,
         uid: me.uid,

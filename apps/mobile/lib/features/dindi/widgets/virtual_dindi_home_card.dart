@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/virtual_dindi_provider.dart';
 import '../../../models/virtual_dindi_model.dart';
 import '../../../core/theme/wari_theme_exports.dart';
+import '../../../core/utils/virtual_dindi_engine.dart';
 
 /// Interactive Virtual Dindi Home Dashboard Card displaying live separation status, distance, and action controls.
 class VirtualDindiHomeCard extends StatelessWidget {
@@ -30,7 +31,6 @@ class VirtualDindiHomeCard extends StatelessWidget {
 
     final state = dindiProvider.currentSeparationState;
     final trend = dindiProvider.currentTrend;
-    final dist = dindiProvider.distanceFromGroupMeters.toInt();
     final networkStatus = dindiProvider.networkStatus;
 
     Color stateColor;
@@ -139,7 +139,7 @@ class VirtualDindiHomeCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Distance to Group Center: ${dist}m (${trend.displayName})',
+                        'Distance to Dindi Leader / Group: ${VirtualDindiEngine.formatDistance(dindiProvider.distanceFromGroupMeters)} (${trend.displayName})',
                         style: const TextStyle(fontSize: 11, color: WariColors.textSecondary),
                       ),
                     ],

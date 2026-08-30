@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../providers/virtual_dindi_provider.dart';
-import '../../models/virtual_dindi_model.dart';
 import '../../core/theme/wari_theme_exports.dart';
+import '../../core/utils/virtual_dindi_engine.dart';
+import '../../models/models_exports.dart';
+import '../../providers/virtual_dindi_provider.dart';
 
 class VirtualDindiDetailScreen extends StatefulWidget {
   const VirtualDindiDetailScreen({super.key});
@@ -342,7 +343,6 @@ class _VirtualDindiDetailScreenState extends State<VirtualDindiDetailScreen> {
               separatorBuilder: (context, index) => const SizedBox(height: 6),
               itemBuilder: (ctx, i) {
                 final m = members[i];
-                final mDist = m.distanceFromGroupMeters.toInt();
 
                 Color badgeColor;
                 switch (m.separationState) {
@@ -380,7 +380,7 @@ class _VirtualDindiDetailScreenState extends State<VirtualDindiDetailScreen> {
                     ],
                   ),
                   subtitle: Text(
-                    '${mDist}m from center • ${m.trend.displayName}',
+                    '${VirtualDindiEngine.formatDistance(m.distanceFromGroupMeters)} • ${m.trend.displayName} • GPS ±${m.accuracyMeters.toInt()}m',
                     style: const TextStyle(fontSize: 11),
                   ),
                   trailing: Row(
