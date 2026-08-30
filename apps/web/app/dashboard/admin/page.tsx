@@ -215,15 +215,15 @@ export default function AdminDashboard() {
                   </div>
                   {crowdZones.map((zone: any) => (
                     <div key={zone.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid #F3F4F6' }}>
-                      <div style={{ width: 12, height: 12, borderRadius: '50%', background: crowdColor[zone.crowd_level], flexShrink: 0 }} />
+                      <div style={{ width: 12, height: 12, borderRadius: '50%', background: crowdColor[zone.density || zone.crowd_level || 'GREEN'], flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '0.8rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {zone.name}
+                          {zone.zone || zone.name}
                         </div>
-                        <div style={{ fontSize: '0.7rem', color: '#6B7280' }}>{zone.estimated_count.toLocaleString()} people · {(zone.current_density * 100).toFixed(0)}%</div>
+                        <div style={{ fontSize: '0.7rem', color: '#6B7280' }}>{(zone.count || zone.estimated_count || 0).toLocaleString()} people · {zone.density || zone.crowd_level}</div>
                       </div>
                       <div className="progress-bar" style={{ width: 80 }}>
-                        <div className="progress-fill" style={{ width: `${zone.current_density * 100}%`, background: crowdColor[zone.crowd_level] }} />
+                        <div className="progress-fill" style={{ width: '100%', background: crowdColor[zone.density || zone.crowd_level || 'GREEN'] }} />
                       </div>
                     </div>
                   ))}
