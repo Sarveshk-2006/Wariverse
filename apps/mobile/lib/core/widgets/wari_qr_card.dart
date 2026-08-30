@@ -105,7 +105,7 @@ class WariQrCard extends StatelessWidget {
                       Opacity(
                         opacity: 0.2,
                         child: QrImageView(
-                          data: qrCode.qrUrl,
+                          data: qrCode.formattedQrPayload,
                           version: QrVersions.auto,
                           size: size,
                           gapless: true,
@@ -129,7 +129,7 @@ class WariQrCard extends StatelessWidget {
                     ],
                   )
                 : QrImageView(
-                    data: qrCode.qrUrl,
+                    data: qrCode.formattedQrPayload,
                     version: QrVersions.auto,
                     size: size,
                     gapless: true,

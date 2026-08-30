@@ -34,7 +34,7 @@ class VirtualDindiOverviewScreen extends StatelessWidget {
                 border: Border.all(color: WariColors.border),
               ),
               child: QrImageView(
-                data: 'https://web-one-tau-17.vercel.app/join-dindi?code=${dindi.joinCode}',
+                data: 'VARKARI DINDI JOIN CODE: ${dindi.joinCode}\nNAME: ${dindi.name}\nLEADER: ${dindi.leaderName}',
                 version: QrVersions.auto,
                 size: 180.0,
               ),

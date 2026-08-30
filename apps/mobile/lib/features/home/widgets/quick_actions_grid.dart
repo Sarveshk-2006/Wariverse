@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/wari_theme_exports.dart';
-import '../../../core/widgets/wari_widgets_exports.dart';
 import '../../../navigation/app_routes.dart';
 
-/// Quick actions matrix widget matching the web mobile navigation grid.
+/// Senior-Friendly 2x2 Primary Quick Action Grid for Varkari Home Launcher.
 class QuickActionsGrid extends StatelessWidget {
   const QuickActionsGrid({super.key});
 
@@ -12,67 +12,51 @@ class QuickActionsGrid extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(
-          title: 'Quick Actions',
-          subtitle: 'Instant access to critical pilgrimage tools',
+        const Text(
+          'Quick Actions (द्रुत कृती)',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: WariColors.textPrimary),
         ),
-        const SizedBox(height: WariSpacing.sm),
+        const SizedBox(height: 10),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 4,
-          mainAxisSpacing: WariSpacing.sm,
-          crossAxisSpacing: WariSpacing.sm,
-          childAspectRatio: 0.82,
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.85,
           children: [
-            _QuickActionTile(
-              icon: Icons.groups,
-              label: 'My Dindi',
-              color: WariColors.primaryDark,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.dindi),
-            ),
-            _QuickActionTile(
-              icon: Icons.map,
-              label: 'Live Map',
-              color: WariColors.info,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.map),
-            ),
-            _QuickActionTile(
-              icon: Icons.emergency,
-              label: 'Smart SOS',
+            // 1. 🆘 SOS Emergency (Prominent Red Gradient Card)
+            _BigActionCard(
+              icon: LucideIcons.siren,
+              title: 'SOS Emergency',
+              subtitle: '1-Tap Instant Help',
               color: WariColors.danger,
               isEmergency: true,
               onTap: () => Navigator.pushNamed(context, AppRoutes.sosStatus, arguments: 'new-sos'),
             ),
-            _QuickActionTile(
-              icon: Icons.person_search,
-              label: 'Lost & Found',
-              color: WariColors.accent,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.lostFound),
+            // 2. 🗺 Live Map
+            _BigActionCard(
+              icon: LucideIcons.map,
+              title: 'Live Map',
+              subtitle: 'Route & Halts',
+              color: WariColors.primary,
+              onTap: () => Navigator.pushNamed(context, AppRoutes.map),
             ),
-            _QuickActionTile(
-              icon: Icons.campaign,
-              label: 'Community',
+            // 3. 🏥 Nearby Services
+            _BigActionCard(
+              icon: LucideIcons.heartPulse,
+              title: 'Nearby Services',
+              subtitle: 'Water, Food, Care',
+              color: WariColors.info,
+              onTap: () => Navigator.pushNamed(context, AppRoutes.services),
+            ),
+            // 4. 👥 My Dindi
+            _BigActionCard(
+              icon: LucideIcons.users,
+              title: 'My Dindi',
+              subtitle: 'Group & Roster',
               color: WariColors.success,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.community),
-            ),
-            _QuickActionTile(
-              icon: Icons.restaurant,
-              label: 'Annadan',
-              color: WariColors.foodColor,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.services),
-            ),
-            _QuickActionTile(
-              icon: Icons.water_drop,
-              label: 'Water',
-              color: WariColors.waterColor,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.services),
-            ),
-            _QuickActionTile(
-              icon: Icons.local_hospital,
-              label: 'Medical',
-              color: WariColors.medicalColor,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.services),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.dindi),
             ),
           ],
         ),
@@ -81,17 +65,19 @@ class QuickActionsGrid extends StatelessWidget {
   }
 }
 
-class _QuickActionTile extends StatelessWidget {
-  const _QuickActionTile({
+class _BigActionCard extends StatelessWidget {
+  const _BigActionCard({
     required this.icon,
-    required this.label,
+    required this.title,
+    required this.subtitle,
     required this.color,
     required this.onTap,
     this.isEmergency = false,
   });
 
   final IconData icon;
-  final String label;
+  final String title;
+  final String subtitle;
   final Color color;
   final VoidCallback onTap;
   final bool isEmergency;
@@ -99,42 +85,74 @@ class _QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isEmergency ? WariColors.dangerLight : WariColors.surface,
-      borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+            gradient: isEmergency
+                ? const LinearGradient(
+                    colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: isEmergency ? null : WariColors.surface,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isEmergency ? WariColors.danger : WariColors.border,
-              width: isEmergency ? 1.5 : 1,
+              width: isEmergency ? 2 : 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: isEmergency ? WariColors.danger.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(vertical: WariSpacing.xs),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(WariSpacing.xs),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  color: isEmergency ? Colors.white.withValues(alpha: 0.2) : color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 20, color: color),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: WariTypography.labelSmall.copyWith(
-                  fontSize: 10,
-                  color: isEmergency ? WariColors.danger : WariColors.textPrimary,
-                  fontWeight: isEmergency ? FontWeight.bold : FontWeight.w600,
+                child: Icon(
+                  icon,
+                  color: isEmergency ? Colors.white : color,
+                  size: 24,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isEmergency ? Colors.white : WariColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isEmergency ? Colors.white70 : WariColors.textMuted,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

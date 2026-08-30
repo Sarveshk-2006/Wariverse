@@ -86,8 +86,8 @@ void main() {
     await tester.pumpWidget(buildTestableApp(role: UserRole.VARKARI));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.textContaining('Varkari'), findsWidgets);
-    expect(find.textContaining('LIVE WARI RESOURCES'), findsOneWidget);
+    expect(find.textContaining('WariVerse'), findsWidgets);
+    expect(find.textContaining('Essential Services Nearby'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();

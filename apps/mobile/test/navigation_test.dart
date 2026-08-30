@@ -9,7 +9,7 @@ import 'package:mobile/navigation/app_router.dart';
 import 'package:mobile/navigation/role_navigation_config.dart';
 import 'test_helpers.dart';
 
-import 'package:mobile/features/lost_found/lost_found_screen.dart';
+import 'package:mobile/features/services/services_screen.dart';
 import 'package:mobile/providers/sos_provider.dart';
 import 'package:mobile/providers/map_provider.dart';
 import 'package:mobile/repositories/repositories_exports.dart';
@@ -149,11 +149,11 @@ void main() {
     await tester.pumpWidget(buildTestableApp());
     await tester.pumpAndSettle();
 
-    final tileFinder = find.text('Lost & Found').first;
+    final tileFinder = find.text('Nearby Services').first;
     await tester.tap(tileFinder);
     await tester.pumpAndSettle();
 
-    expect(find.byType(LostFoundScreen), findsOneWidget);
+    expect(find.byType(ServicesScreen), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();

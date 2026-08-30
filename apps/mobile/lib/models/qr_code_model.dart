@@ -145,6 +145,24 @@ class WariQrCode {
     return 'https://web-one-tau-17.vercel.app';
   }
 
+  /// Formatted plain text payload for native Google Camera / Google Lens scanning.
+  String get formattedQrPayload {
+    final cleanName = metadata?['name'] ?? metadata?['full_name'] ?? metadata?['displayName'] ?? ownerId;
+    final ageStr = metadata?['age'] != null ? ' Age: ${metadata!['age']}' : '';
+    final genderStr = metadata?['gender'] != null ? ' Gender: ${metadata!['gender']}' : '';
+    final aadharStr = metadata?['aadhar'] != null ? ' Aadhar: ${metadata!['aadhar']}' : '';
+    final addressStr = metadata?['address'] != null ? ' Address: ${metadata!['address']}' : '';
+    final guardianStr = metadata?['guardian_contact'] != null ? ' Guardian Contact: ${metadata!['guardian_contact']}' : '';
+    final dindiStr = metadata?['dindi_name'] ?? metadata?['dindi_code'] ?? 'VDND-4107';
+
+    if (type == QrType.LOST_PERSON) {
+      return 'MISSING PERSON Name: $cleanName$ageStr$genderStr$aadharStr$addressStr$guardianStr Dindi: $dindiStr Ref: REG-2026-WARI';
+    }
+
+    final contactStr = metadata?['contact'] ?? metadata?['phoneNumber'] ?? '+91 9822011111';
+    return 'VARKARI PILGRIM Name: $cleanName$ageStr$genderStr ID: $shortDisplayId Dindi: $dindiStr Contact: $contactStr Emergency: 112';
+  }
+
   /// Universal URL format for 100% camera app, browser, and mobile scanner compatibility.
   String get qrUrl {
     if (token.startsWith('http://') || token.startsWith('https://')) {

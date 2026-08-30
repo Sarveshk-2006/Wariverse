@@ -185,10 +185,10 @@ class _ProfilePlaceholderState extends State<ProfilePlaceholder> {
       children: [
         // Header Profile Card
         Container(
-          padding: const EdgeInsets.all(WariSpacing.md),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: WariColors.surface,
-            borderRadius: BorderRadius.circular(WariSpacing.radiusLg),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: WariColors.border),
             boxShadow: [
               BoxShadow(
@@ -198,51 +198,50 @@ class _ProfilePlaceholderState extends State<ProfilePlaceholder> {
               ),
             ],
           ),
-          child: Column(
+          child: Row(
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: WariColors.primary,
-                    child: Text(
-                      user?.displayName.isNotEmpty == true ? user!.displayName[0].toUpperCase() : 'W',
-                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: WariColors.primary,
+                child: Text(
+                  user?.displayName.isNotEmpty == true ? user!.displayName[0].toUpperCase() : 'W',
+                  style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.displayName ?? 'Pilgrim Varkari',
+                      style: WariTypography.headlineSmall.copyWith(fontSize: 18),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text(
-                          user?.displayName ?? 'Pilgrim Varkari',
-                          style: WariTypography.headlineSmall.copyWith(fontSize: 18),
+                        WariStatusChip(
+                          label: userProvider.currentRole.displayName,
+                          color: WariColors.primary,
+                          dense: true,
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            WariStatusChip(
-                              label: userProvider.currentRole.displayName,
-                              color: WariColors.primary,
-                              dense: true,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              user?.formattedVarkariId ?? 'WVRK-2026-9041',
-                              style: const TextStyle(fontSize: 11, color: WariColors.textMuted, fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                        Text(
+                          user?.formattedVarkariId ?? 'WVRK-2026-9041',
+                          style: const TextStyle(fontSize: 11, color: WariColors.textMuted, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(LucideIcons.edit3, color: WariColors.primary),
-                    onPressed: () => _showEditProfileDialog(context, userProvider),
-                    tooltip: 'Edit Profile',
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(LucideIcons.edit3, color: WariColors.primary, size: 20),
+                onPressed: () => _showEditProfileDialog(context, userProvider),
+                tooltip: 'Edit Profile',
               ),
             ],
           ),
@@ -251,28 +250,55 @@ class _ProfilePlaceholderState extends State<ProfilePlaceholder> {
 
         // Active Dindi Information Card
         const SectionHeader(title: 'Joined Dindi Information'),
-        WariCard(
-          child: Column(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: WariColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: WariColors.border),
+          ),
+          child: Row(
             children: [
-              ListTile(
-                leading: const Icon(LucideIcons.users, color: WariColors.primary),
-                title: Text(
-                  activeDindi != null ? activeDindi.name : 'Not Joined to Dindi',
-                  style: WariTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: WariColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                subtitle: Text(
-                  activeDindi != null
-                      ? 'Code: ${activeDindi.joinCode} • Members: ${activeDindi.activeMemberCount}'
-                      : 'Join a Dindi via QR scanner or Dindi code',
-                  style: WariTypography.bodySmall,
-                ),
-                trailing: activeDindi != null
-                    ? const WariStatusChip(label: 'ACTIVE', color: WariColors.success, dense: true)
-                    : OutlinedButton(
-                        onPressed: () => Navigator.of(context).pushNamed(AppRoutes.dindiJoin),
-                        child: const Text('Join', style: TextStyle(fontSize: 12)),
-                      ),
+                child: const Icon(LucideIcons.users, color: WariColors.primary, size: 22),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      activeDindi != null ? activeDindi.name : 'Not Joined to Dindi',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      activeDindi != null
+                          ? 'Code: ${activeDindi.joinCode} • Members: ${activeDindi.activeMemberCount}'
+                          : 'Join a Dindi via QR scanner or Dindi code',
+                      style: const TextStyle(fontSize: 12, color: WariColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              activeDindi != null
+                  ? const WariStatusChip(label: 'ACTIVE', color: WariColors.success, dense: true)
+                  : ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).pushNamed(AppRoutes.dindiJoin),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: WariColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      ),
+                      icon: const Icon(LucideIcons.qrCode, size: 14, color: Colors.white),
+                      label: const Text('Join', style: TextStyle(fontSize: 12, color: Colors.white)),
+                    ),
             ],
           ),
         ),
@@ -280,40 +306,67 @@ class _ProfilePlaceholderState extends State<ProfilePlaceholder> {
 
         // Role & Capabilities Matrix
         const SectionHeader(title: 'Role & Capabilities Matrix'),
-        WariCard(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: WariColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: WariColors.border),
+          ),
           child: Column(
             children: [
-              ListTile(
-                leading: const Icon(LucideIcons.shieldCheck, color: WariColors.primary),
-                title: const Text('Active Portal View Role'),
-                subtitle: Text(userProvider.currentRole.displayName),
-                trailing: DropdownButton<UserRole>(
-                  value: userProvider.currentRole,
-                  underline: const SizedBox(),
-                  onChanged: (newRole) {
-                    if (newRole != null) {
-                      userProvider.setRole(newRole);
-                    }
-                  },
-                  items: UserRole.values
-                      .map((r) => DropdownMenuItem(
-                            value: r,
-                            child: Text(r.displayName, style: const TextStyle(fontSize: 12)),
-                          ))
-                      .toList(),
-                ),
+              Row(
+                children: [
+                  const Icon(LucideIcons.shieldCheck, color: WariColors.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Active Portal View Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(userProvider.currentRole.displayName, style: const TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  DropdownButton<UserRole>(
+                    value: userProvider.currentRole,
+                    underline: const SizedBox(),
+                    onChanged: (newRole) {
+                      if (newRole != null) userProvider.setRole(newRole);
+                    },
+                    items: UserRole.values
+                        .map((r) => DropdownMenuItem(
+                              value: r,
+                              child: Text(r.displayName, style: const TextStyle(fontSize: 12)),
+                            ))
+                        .toList(),
+                  ),
+                ],
               ),
-              const Divider(height: 1),
-              SwitchListTile(
-                secondary: Icon(
-                  userProvider.isVolunteerEnabled ? LucideIcons.heartHandshake : LucideIcons.heart,
-                  color: userProvider.isVolunteerEnabled ? WariColors.success : WariColors.textMuted,
-                ),
-                title: const Text('Volunteer Willingness'),
-                subtitle: const Text('Receive local crowd assistance requests'),
-                value: userProvider.isVolunteerEnabled,
-                activeTrackColor: WariColors.successLight,
-                onChanged: (val) => userProvider.setVolunteerWillingness(val),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  Icon(
+                    userProvider.isVolunteerEnabled ? LucideIcons.heartHandshake : LucideIcons.heart,
+                    color: userProvider.isVolunteerEnabled ? WariColors.success : WariColors.textMuted,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Volunteer Willingness', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('Receive local crowd assistance requests', style: TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: userProvider.isVolunteerEnabled,
+                    activeTrackColor: WariColors.successLight,
+                    onChanged: (val) => userProvider.setVolunteerWillingness(val),
+                  ),
+                ],
               ),
             ],
           ),
@@ -322,81 +375,172 @@ class _ProfilePlaceholderState extends State<ProfilePlaceholder> {
 
         // Emergency Safety Contacts Tile
         const SectionHeader(title: 'Emergency Contacts'),
-        WariCard(
-          child: ListTile(
-            leading: const Icon(LucideIcons.phoneCall, color: WariColors.danger),
-            title: const Text('Emergency Contacts'),
-            subtitle: const Text('Manage family priority emergency contacts'),
-            trailing: const Icon(LucideIcons.chevronRight, size: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: WariColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: WariColors.border),
+          ),
+          child: InkWell(
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()),
               );
             },
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: WariColors.danger.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(LucideIcons.phoneCall, color: WariColors.danger, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Emergency Safety Contacts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('Manage priority family emergency contacts', style: TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                const Icon(LucideIcons.chevronRight, size: 18, color: WariColors.textMuted),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: WariSpacing.base),
 
         // App Preferences & Notification Settings
         const SectionHeader(title: 'App Preferences & Alerts'),
-        WariCard(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: WariColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: WariColors.border),
+          ),
           child: Column(
             children: [
-              SwitchListTile(
-                secondary: const Icon(LucideIcons.bellRing, color: WariColors.warning),
-                title: const Text('Realtime SOS Alerts'),
-                subtitle: const Text('Receive instant nearby emergency alerts'),
-                value: _sosAlertsEnabled,
-                onChanged: _toggleSosAlerts,
+              Row(
+                children: [
+                  const Icon(LucideIcons.bellRing, color: WariColors.warning, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Realtime SOS Alerts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('Receive instant nearby emergency alerts', style: TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _sosAlertsEnabled,
+                    onChanged: _toggleSosAlerts,
+                  ),
+                ],
               ),
-              const Divider(height: 1),
-              SwitchListTile(
-                secondary: const Icon(LucideIcons.radio, color: WariColors.primary),
-                title: const Text('Palkhi Audio Announcements'),
-                subtitle: const Text('Auto-play high priority leader audio broadcasts'),
-                value: _audioAlertsEnabled,
-                onChanged: _toggleAudioAlerts,
+              const Divider(height: 24),
+              Row(
+                children: [
+                  const Icon(LucideIcons.radio, color: WariColors.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Palkhi Audio Announcements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('Auto-play leader audio broadcasts', style: TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _audioAlertsEnabled,
+                    onChanged: _toggleAudioAlerts,
+                  ),
+                ],
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(LucideIcons.languages, color: WariColors.primary),
-                title: const Text('Language (भाषा)'),
-                subtitle: Text(userProvider.currentLanguage == 'mr' ? 'मराठी (Marathi)' : 'English'),
-                trailing: SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'en', label: Text('EN', style: TextStyle(fontSize: 11))),
-                    ButtonSegment(value: 'mr', label: Text('मराठी', style: TextStyle(fontSize: 11))),
-                  ],
-                  selected: {userProvider.currentLanguage},
-                  onSelectionChanged: (set) {
-                    if (set.isNotEmpty) {
-                      userProvider.setLanguage(set.first);
-                    }
-                  },
-                ),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  const Icon(LucideIcons.languages, color: WariColors.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Language (भाषा)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(userProvider.currentLanguage == 'mr' ? 'मराठी (Marathi)' : 'English', style: const TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'en', label: Text('EN', style: TextStyle(fontSize: 11))),
+                      ButtonSegment(value: 'mr', label: Text('मराठी', style: TextStyle(fontSize: 11))),
+                    ],
+                    selected: {userProvider.currentLanguage},
+                    onSelectionChanged: (set) {
+                      if (set.isNotEmpty) userProvider.setLanguage(set.first);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
         ),
         const SizedBox(height: WariSpacing.base),
 
-        // Help, Support & Information
+        // Support & Information
         const SectionHeader(title: 'Support & Information'),
-        WariCard(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: WariColors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: WariColors.border),
+          ),
           child: Column(
             children: [
-              ListTile(
-                leading: const Icon(LucideIcons.helpCircle, color: WariColors.info),
-                title: const Text('Palkhi Help & Helplines'),
-                subtitle: const Text('24/7 Emergency & Command Center Numbers'),
-                trailing: const Icon(LucideIcons.chevronRight, size: 20),
+              InkWell(
                 onTap: () => _showHelpSupportDialog(context),
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.helpCircle, color: WariColors.info, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('Palkhi Help & Helplines', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text('24/7 Emergency & Command Center Numbers', style: TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                        ],
+                      ),
+                    ),
+                    const Icon(LucideIcons.chevronRight, size: 18, color: WariColors.textMuted),
+                  ],
+                ),
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(LucideIcons.info, color: WariColors.textMuted),
-                title: const Text('WariVerse Version'),
-                subtitle: const Text('v2.4.0 • Production Build (Render Backend)'),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  const Icon(LucideIcons.info, color: WariColors.textMuted, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('WariVerse Version', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('v2.4.0 • Production Build (Render Backend)', style: TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

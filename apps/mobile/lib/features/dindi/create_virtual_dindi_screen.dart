@@ -251,7 +251,7 @@ class _CreateVirtualDindiScreenState extends State<CreateVirtualDindiScreen> {
 
   Widget _buildSuccessView() {
     final dindi = _createdDindi!;
-    final qrPayload = 'WV_DINDI:${dindi.dindiId}';
+    final qrPayload = 'VARKARI DINDI JOIN CODE: ${dindi.joinCode}\nNAME: ${dindi.name}\nLEADER: ${dindi.leaderName}';
 
     return Column(
       children: [
