@@ -7,6 +7,7 @@ import '../../providers/sos_provider.dart';
 import 'widgets/role_dashboard_header.dart';
 import 'widgets/metric_card.dart';
 import '../incidents/volunteer_response_queue_screen.dart';
+import '../cleanwari/cleanwari_report_screen.dart';
 
 class VolunteerDashboard extends StatefulWidget {
   const VolunteerDashboard({super.key});
@@ -57,16 +58,45 @@ class _VolunteerDashboardState extends State<VolunteerDashboard> {
                   child: ListView(
                     padding: const EdgeInsets.all(WariSpacing.base),
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const VolunteerResponseQueueScreen()));
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: WariColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        icon: const Icon(Icons.support_agent_rounded),
-                        label: const Text('OPEN LIVE RESPONSE QUEUE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const VolunteerResponseQueueScreen()));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: WariColors.primary,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              icon: const Icon(Icons.support_agent_rounded, size: 18),
+                              label: const Text('LIVE RESPONSE QUEUE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CleanWariReportScreen(
+                                      toiletId: 'vol-sanitation-01',
+                                      toiletQrCode: 'cleanwari:field:volunteer',
+                                      toiletName: 'Volunteer Field Sanitation Point',
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: WariColors.info,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              icon: const Icon(Icons.cleaning_services_rounded, size: 18),
+                              label: const Text('REPORT SANITATION', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: WariSpacing.base),
                       GridView.count(

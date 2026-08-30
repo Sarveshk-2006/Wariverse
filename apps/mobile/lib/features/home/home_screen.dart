@@ -4,8 +4,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../providers/home_provider.dart';
 import '../../providers/virtual_dindi_provider.dart';
+import '../../providers/qr_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../models/models_exports.dart';
 import '../../repositories/repositories_exports.dart';
 import '../../services/api_service.dart';
+import '../../core/widgets/wari_qr_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_actions_grid.dart';
 import '../dindi/widgets/virtual_dindi_home_card.dart';
@@ -94,6 +98,10 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
             ),
             const SizedBox(height: 14),
 
+            // C2. Pilgrim e-ID QR Pass Card
+            const PilgrimQrPassHomeCard(),
+            const SizedBox(height: 14),
+
             // D. Primary Quick Actions (2x2 Grid)
             const QuickActionsGrid(),
             const SizedBox(height: 16),
@@ -118,6 +126,7 @@ class LocationSafetyStatusCard extends StatelessWidget {
     final activeDindi = dindiProvider.activeDindi;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: WariColors.surface,
@@ -132,37 +141,33 @@ class LocationSafetyStatusCard extends StatelessWidget {
         ],
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // GPS Location Active Badge
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: WariColors.success,
-                    shape: BoxShape.circle,
-                  ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: WariColors.success,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'GPS Active',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: WariColors.textPrimary),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'GPS Active',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: WariColors.textPrimary),
+              ),
+            ],
           ),
           Container(width: 1, height: 16, color: WariColors.border),
-          const SizedBox(width: 12),
 
           // Dindi Connection Badge
-          Expanded(
-            flex: 2,
+          Flexible(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 8,
@@ -173,7 +178,7 @@ class LocationSafetyStatusCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Expanded(
+                Flexible(
                   child: Text(
                     activeDindi != null ? 'Connected: ${activeDindi.name}' : 'Not Joined to Dindi',
                     style: TextStyle(
@@ -182,6 +187,7 @@ class LocationSafetyStatusCard extends StatelessWidget {
                       color: activeDindi != null ? WariColors.successDark : WariColors.warningDark,
                     ),
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
               ],
@@ -200,46 +206,161 @@ class ContextualNearbyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: WariColors.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: WariColors.primary.withValues(alpha: 0.2)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: WariColors.primary.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(LucideIcons.mapPin, color: WariColors.primary, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Essential Services Nearby',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: WariColors.primaryDark),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: WariColors.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(LucideIcons.mapPin, color: WariColors.primary, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Essential Services Nearby',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: WariColors.primaryDark),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/services'),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                SizedBox(height: 2),
-                Text(
-                  'Water Kiosks, Medical Camps & Annadhan within 500m',
-                  style: TextStyle(fontSize: 11, color: WariColors.textSecondary),
+                child: const Text('View All →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: WariColors.primary)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Water Kiosks, Medical Camps & Annadhan within 500m',
+            style: TextStyle(fontSize: 12, color: WariColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Senior-Friendly Pilgrim e-ID QR Pass Card for Varkari Home Dashboard.
+class PilgrimQrPassHomeCard extends StatefulWidget {
+  const PilgrimQrPassHomeCard({super.key});
+
+  @override
+  State<PilgrimQrPassHomeCard> createState() => _PilgrimQrPassHomeCardState();
+}
+
+class _PilgrimQrPassHomeCardState extends State<PilgrimQrPassHomeCard> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final qrProvider = Provider.of<QrProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.currentUser;
+    final userId = user?.userId ?? 'varkari-001';
+
+    final qrCode = qrProvider.activeUserQr ??
+        WariQrCode(
+          id: 'qr_$userId',
+          token: 'WVQ_WVRK-892147',
+          type: QrType.PERSON,
+          status: QrStatus.ACTIVE,
+          ownerId: userId,
+          targetCollection: 'users',
+          targetDocumentId: userId,
+          createdAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+          createdBy: userId,
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: WariColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: WariColors.primary.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: WariColors.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
+                child: const Icon(LucideIcons.qrCode, color: WariColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Varkari Pilgrim e-ID QR (क्यूआर पास)',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: WariColors.primaryDark),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _isExpanded ? 'Scan with Google Camera / Google Lens' : 'Tap to show your e-ID QR Code for scanning',
+                      style: const TextStyle(fontSize: 11, color: WariColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  _isExpanded ? 'Hide ▲' : 'Show QR ▼',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: WariColors.primary),
+                ),
+              ),
+            ],
           ),
-          OutlinedButton(
-            onPressed: () => Navigator.pushNamed(context, '/services'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          if (_isExpanded) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: WariQrCard(
+                qrCode: qrCode,
+                title: user?.displayName ?? 'Ramabai Shinde',
+                subtitle: 'Official WariVerse Pilgrim Identity Tag',
+                size: 160.0,
+              ),
             ),
-            child: const Text('View All', style: TextStyle(fontSize: 11)),
-          ),
+          ],
         ],
       ),
     );

@@ -8,6 +8,7 @@ import '../../providers/ngo_distribution_provider.dart';
 import '../../providers/user_provider.dart';
 import 'create_distribution_screen.dart';
 import 'ngo_food_distribution_screen.dart';
+import '../cleanwari/cleanwari_report_screen.dart';
 
 /// Clean, Apple-style NGO Operational Home Dashboard for Mobile Client.
 class NgoDashboard extends StatelessWidget {
@@ -115,6 +116,43 @@ class NgoDashboard extends StatelessWidget {
                     icon: const Icon(Icons.open_in_browser_rounded, color: Colors.white, size: 18),
                     label: const Text('Open NGO Operations Portal →', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: WariSpacing.base),
+
+          // Sanitation Reporting CTA
+          WariCard(
+            borderColor: WariColors.info,
+            child: Row(
+              children: [
+                const Icon(Icons.cleaning_services_rounded, color: WariColors.info, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Report Sanitation Issue', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('Report overflow, garbage, or toilet cleanliness issues in real time', style: TextStyle(fontSize: 11, color: WariColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CleanWariReportScreen(
+                          toiletId: 'ngo-field-sanitation-01',
+                          toiletQrCode: 'cleanwari:field:ngo',
+                          toiletName: 'NGO Seva Area Sanitation Point',
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: WariColors.info),
+                  child: const Text('REPORT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                 ),
               ],
             ),

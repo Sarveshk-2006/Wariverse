@@ -28,9 +28,13 @@ import '../features/auth/register_screen.dart';
 import '../features/splash/splash_screen.dart';
 import 'app_routes.dart';
 
+import '../features/voice_assistant/wari_voice_assistant_screen.dart';
+
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case AppRoutes.voiceAssistant:
+        return MaterialPageRoute(builder: (_) => const WariVoiceAssistantScreen(), settings: settings);
       case AppRoutes.splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen(), settings: settings);
 

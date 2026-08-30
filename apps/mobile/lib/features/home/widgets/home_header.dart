@@ -76,18 +76,28 @@ class HomeHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
+          // Voice Assistant Mic Button
+          IconButton(
+            icon: const Icon(LucideIcons.mic, color: WariColors.primary, size: 22),
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.voiceAssistant);
+            },
+            tooltip: 'Voice Assistant (आवाज सहाय्यक)',
+          ),
+          const SizedBox(width: 4),
+
           // Profile Avatar Button
           GestureDetector(
             onTap: () {
               Navigator.of(context).pushNamed(AppRoutes.profile);
             },
             child: CircleAvatar(
-              radius: 22,
+              radius: 20,
               backgroundColor: WariColors.primary.withValues(alpha: 0.15),
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : 'W',
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: WariColors.primary,
                 ),

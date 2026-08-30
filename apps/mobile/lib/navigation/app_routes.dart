@@ -35,4 +35,5 @@ abstract class AppRoutes {
   static const String lostPersonDetail = '/lost-person-detail';
   static const String roleDashboard = '/role-dashboard';
   static const String notifications = '/notifications';
+  static const String voiceAssistant = '/voice-assistant';
 }

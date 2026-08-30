@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/models_exports.dart';
 import '../repositories/cleanwari_repository.dart';
 import '../services/cleanwari_dispatch_service.dart';
+import '../services/sanitation_priority_engine.dart';
 
 /// Provider managing CleanWari reporting workflows, cleaner task feed, and duplicate protection.
 /// Real-time powered directly by Cloud Firestore `sanitation_reports` collection.
@@ -95,6 +96,9 @@ class CleanWariProvider extends ChangeNotifier {
     required String toiletQrCode,
     required String toiletName,
     required String reporterId,
+    String reporterRole = 'VARKARI',
+    double? latitude,
+    double? longitude,
     required CleanlinessIssueType issueType,
     required String description,
   }) async {
@@ -105,19 +109,27 @@ class CleanWariProvider extends ChangeNotifier {
       return _reports.firstWhere((r) => r.toiletId == toiletId && r.issueType == issueType);
     }
 
-    final priority = CleanWariDispatchService.calculatePriority(issueType);
+    final priority = SanitationPriorityEngine.calculatePriority(
+      issueType: issueType,
+      description: description,
+      nearbyUnresolvedCount: _reports.where((r) => r.status != CleanlinessReportStatus.RESOLVED).length,
+    );
+
     final report = CleanlinessReport(
       id: 'rep-${DateTime.now().millisecondsSinceEpoch}',
       toiletId: toiletId,
       toiletQrCode: toiletQrCode,
       toiletName: toiletName,
       reporterId: reporterId,
+      reporterRole: reporterRole,
+      latitude: latitude ?? 18.5204,
+      longitude: longitude ?? 73.8567,
       issueType: issueType,
       description: description,
       reportedAt: DateTime.now(),
       status: CleanlinessReportStatus.REPORTED,
       priority: priority,
-      isDemo: true,
+      isDemo: false,
     );
 
     final submitted = await _repository.submitReport(report);

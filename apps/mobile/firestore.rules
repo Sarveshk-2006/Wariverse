@@ -142,7 +142,13 @@ service cloud.firestore {
       allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (
         resource.data.reporter_id == request.auth.uid ||
+        resource.data.reporter_role == 'VARKARI' ||
+        resource.data.reporter_role == 'VOLUNTEER' ||
+        resource.data.reporter_role == 'NGO' ||
         isRole('CLEANER') ||
+        isRole('SANITATION') ||
+        isRole('VOLUNTEER') ||
+        isRole('NGO') ||
         isAdmin()
       );
       allow delete: if isAdmin();

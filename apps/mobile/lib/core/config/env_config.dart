@@ -25,7 +25,7 @@ class EnvConfig {
   /// Centralized Operations Web application base URL.
   static const String webBaseUrl = String.fromEnvironment(
     'WEB_BASE_URL',
-    defaultValue: 'https://web-one-tau-17.vercel.app',
+    defaultValue: 'https://web-ivory-six-92.vercel.app',
   );
 
   /// Resolved Web Admin Command Center Dashboard URL.

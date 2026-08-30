@@ -1,9 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
+import '../../providers/cleanwari_provider.dart';
 
-/// Varkari-facing status tracking screen for a submitted CleanWari report.
+/// Varkari/Volunteer/NGO-facing real-time status tracking screen for a submitted CleanWari report.
 class CleanWariReportStatusScreen extends StatelessWidget {
   final CleanlinessReport report;
 
@@ -14,6 +16,12 @@ class CleanWariReportStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CleanWariProvider>(context);
+    final activeReport = provider.reports.firstWhere(
+      (r) => r.id == report.id,
+      orElse: () => provider.activeReport ?? report,
+    );
+
     return Scaffold(
       backgroundColor: WariColors.background,
       appBar: AppBar(
@@ -24,7 +32,7 @@ class CleanWariReportStatusScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (report.isDemo)
+            if (activeReport.isDemo)
               const OfflineBanner(message: 'Demo Mode — Sanitation task dispatched to mock cleaner staff'),
 
             // Confirmation Header Card
@@ -58,22 +66,22 @@ class CleanWariReportStatusScreen extends StatelessWidget {
                 children: [
                   Text('FACILITY & ISSUE', style: WariTypography.labelSmall),
                   const SizedBox(height: WariSpacing.xs),
-                  Text(report.toiletName, style: WariTypography.headlineSmall),
+                  Text(activeReport.toiletName, style: WariTypography.headlineSmall),
                   const SizedBox(height: WariSpacing.xs),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Issue: ${report.issueType.displayName}', style: WariTypography.bodyMedium),
+                      Text('Issue: ${activeReport.issueType.displayName}', style: WariTypography.bodyMedium),
                       WariStatusChip(
-                        label: report.priority.name,
-                        color: report.isHighPriority ? WariColors.warning : WariColors.primary,
+                        label: activeReport.priority.name,
+                        color: activeReport.isHighPriority ? WariColors.warning : WariColors.primary,
                         dense: true,
                       ),
                     ],
                   ),
-                  if (report.description.isNotEmpty) ...[
+                  if (activeReport.description.isNotEmpty) ...[
                     const SizedBox(height: WariSpacing.xs),
-                    Text('Note: "${report.description}"', style: WariTypography.caption),
+                    Text('Note: "${activeReport.description}"', style: WariTypography.caption),
                   ],
                 ],
               ),
@@ -88,25 +96,25 @@ class CleanWariReportStatusScreen extends StatelessWidget {
 
             _buildTimelineItem(
               title: '✓ REPORTED',
-              subtitle: 'Submitted by Varkari pilgrim',
+              subtitle: 'Submitted by ${activeReport.reporterRole} pilgrim/volunteer',
               isCompleted: true,
             ),
             _buildTimelineItem(
               title: '✓ ASSIGNED',
-              subtitle: report.assignedCleanerName != null
-                  ? 'Assigned to cleaner: ${report.assignedCleanerName}'
+              subtitle: activeReport.assignedCleanerName != null
+                  ? 'Assigned to cleaner: ${activeReport.assignedCleanerName}'
                   : 'Assigning nearest sanitation team member...',
-              isCompleted: report.status.index >= CleanlinessReportStatus.ASSIGNED.index,
+              isCompleted: activeReport.status.index >= CleanlinessReportStatus.ASSIGNED.index,
             ),
             _buildTimelineItem(
               title: '● IN PROGRESS',
               subtitle: 'Sanitation staff active on site',
-              isCompleted: report.status.index >= CleanlinessReportStatus.IN_PROGRESS.index,
+              isCompleted: activeReport.status.index >= CleanlinessReportStatus.IN_PROGRESS.index,
             ),
             _buildTimelineItem(
               title: '✓ RESOLVED',
-              subtitle: report.resolutionNote ?? 'Facility sanitized and inspected',
-              isCompleted: report.status == CleanlinessReportStatus.RESOLVED,
+              subtitle: activeReport.resolutionNote ?? 'Facility sanitized and inspected',
+              isCompleted: activeReport.status == CleanlinessReportStatus.RESOLVED,
               isLast: true,
             ),
           ],

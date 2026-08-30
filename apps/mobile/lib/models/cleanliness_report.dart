@@ -1,4 +1,4 @@
-﻿// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names
 
 /// Category of cleanliness issues reported at toilet facilities.
 enum CleanlinessIssueType {
@@ -68,6 +68,9 @@ class CleanlinessReport {
   final String? assignedCleanerName;
   final DateTime? resolvedAt;
   final String? resolutionNote;
+  final String reporterRole;
+  final double? latitude;
+  final double? longitude;
   final bool isDemo;
 
   const CleanlinessReport({
@@ -76,6 +79,9 @@ class CleanlinessReport {
     required this.toiletQrCode,
     required this.toiletName,
     required this.reporterId,
+    this.reporterRole = 'VARKARI',
+    this.latitude,
+    this.longitude,
     required this.issueType,
     required this.description,
     required this.reportedAt,
@@ -104,6 +110,9 @@ class CleanlinessReport {
       toiletQrCode: toiletQrCode,
       toiletName: toiletName,
       reporterId: reporterId,
+      reporterRole: reporterRole,
+      latitude: latitude,
+      longitude: longitude,
       issueType: issueType,
       description: description,
       reportedAt: reportedAt,
@@ -118,17 +127,20 @@ class CleanlinessReport {
   }
 
   factory CleanlinessReport.fromJson(Map<String, dynamic> json) => CleanlinessReport(
-        id: json['id'] as String? ?? '',
+        id: json['id'] as String? ?? json['report_id'] as String? ?? '',
         toiletId: json['toilet_id'] as String? ?? '',
         toiletQrCode: json['toilet_qr_code'] as String? ?? '',
-        toiletName: json['toilet_name'] as String? ?? 'Toilet Facility',
+        toiletName: json['toilet_name'] as String? ?? 'Sanitation Facility',
         reporterId: json['reporter_id'] as String? ?? '',
+        reporterRole: json['reporter_role'] as String? ?? 'VARKARI',
+        latitude: (json['latitude'] as num?)?.toDouble(),
+        longitude: (json['longitude'] as num?)?.toDouble(),
         issueType: CleanlinessIssueType.values.firstWhere(
-          (e) => e.name == (json['issue_type'] as String? ?? 'NEEDS_CLEANING'),
+          (e) => e.name == (json['issue_type'] as String? ?? json['category'] as String? ?? 'NEEDS_CLEANING'),
           orElse: () => CleanlinessIssueType.NEEDS_CLEANING,
         ),
         description: json['description'] as String? ?? '',
-        reportedAt: DateTime.tryParse(json['reported_at'] as String? ?? '') ?? DateTime.now(),
+        reportedAt: DateTime.tryParse(json['reported_at'] as String? ?? json['created_at'] as String? ?? '') ?? DateTime.now(),
         status: CleanlinessReportStatus.values.firstWhere(
           (e) => e.name == (json['status'] as String? ?? 'REPORTED'),
           orElse: () => CleanlinessReportStatus.REPORTED,
@@ -137,28 +149,37 @@ class CleanlinessReport {
           (e) => e.name == (json['priority'] as String? ?? 'MEDIUM'),
           orElse: () => CleanlinessReportPriority.MEDIUM,
         ),
-        assignedCleanerId: json['assigned_cleaner_id'] as String?,
-        assignedCleanerName: json['assigned_cleaner_name'] as String?,
+        assignedCleanerId: json['assigned_cleaner_id'] as String? ?? json['assigned_worker_id'] as String?,
+        assignedCleanerName: json['assigned_cleaner_name'] as String? ?? json['assigned_worker_name'] as String?,
         resolvedAt: DateTime.tryParse(json['resolved_at'] as String? ?? ''),
-        resolutionNote: json['resolution_note'] as String?,
-        isDemo: json['is_demo'] as bool? ?? true,
+        resolutionNote: json['resolution_note'] as String? ?? json['resolution_notes'] as String?,
+        isDemo: json['is_demo'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'report_id': id,
         'toilet_id': toiletId,
         'toilet_qr_code': toiletQrCode,
         'toilet_name': toiletName,
         'reporter_id': reporterId,
+        'reporter_role': reporterRole,
+        'latitude': latitude,
+        'longitude': longitude,
         'issue_type': issueType.name,
+        'category': issueType.name,
         'description': description,
         'reported_at': reportedAt.toIso8601String(),
+        'created_at': reportedAt.toIso8601String(),
         'status': status.name,
         'priority': priority.name,
         'assigned_cleaner_id': assignedCleanerId,
+        'assigned_worker_id': assignedCleanerId,
         'assigned_cleaner_name': assignedCleanerName,
+        'assigned_worker_name': assignedCleanerName,
         'resolved_at': resolvedAt?.toIso8601String(),
         'resolution_note': resolutionNote,
+        'resolution_notes': resolutionNote,
         'is_demo': isDemo,
       };
 }
