@@ -184,13 +184,21 @@ export async function apiCall(
     return { food, water, toilets, shelters, medical, wellness };
   }
 
-  // ── fallback: proxy to Render backend ────────────────────────────────────
-  const actualToken = token || getToken();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (actualToken) headers['Authorization'] = `Bearer ${actualToken}`;
-  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-  if (res.ok) return res.json();
-  throw new Error(`Request failed: ${res.status}`);
+  // ── fallback: proxy to Render backend — graceful on 404 ─────────────────
+  try {
+    const actualToken = token || getToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (actualToken) headers['Authorization'] = `Bearer ${actualToken}`;
+    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    if (res.ok) return res.json();
+    // 404 = endpoint doesn't exist on backend, return empty gracefully
+    if (res.status === 404 || res.status === 401 || res.status === 403) return [];
+    throw new Error(`Request failed: ${res.status}`);
+  } catch (e: any) {
+    // Network error or backend unavailable — return empty so UI doesn't crash
+    if (e?.message?.includes('fetch')) return [];
+    return [];
+  }
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
