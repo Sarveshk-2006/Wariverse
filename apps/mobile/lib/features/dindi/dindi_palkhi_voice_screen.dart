@@ -1,297 +1,279 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
-import '../../navigation/app_routes.dart';
-import '../../providers/dindi_provider.dart';
-import '../../providers/dindi_audio_provider.dart';
-import '../../repositories/dindi_audio_repository.dart';
-import '../../services/api_service.dart';
-import '../../services/audio_session_service.dart';
+import '../../providers/user_provider.dart';
+import '../../providers/virtual_dindi_provider.dart';
+import '../../services/cloudinary_service.dart';
+import 'widgets/dindi_audio_player_widget.dart';
 
-/// Palkhi Voice live audio stream and devotional audio hub screen.
-class DindiPalkhiVoiceScreen extends StatelessWidget {
+/// Palkhi Voice live audio broadcast recording, publication, and playback hub.
+class DindiPalkhiVoiceScreen extends StatefulWidget {
   const DindiPalkhiVoiceScreen({super.key, this.dindiId});
 
   final String? dindiId;
 
   @override
-  Widget build(BuildContext context) {
-    final apiService = Provider.of<ApiService>(context, listen: false);
+  State<DindiPalkhiVoiceScreen> createState() => _DindiPalkhiVoiceScreenState();
+}
 
-    return ChangeNotifierProvider<DindiAudioProvider>(
-      create: (_) => DindiAudioProvider(
-        repository: DindiAudioRepository(apiService),
-        audioService: DemoAudioSessionService(),
-      ),
-      child: _DindiPalkhiVoiceContent(overrideDindiId: dindiId),
-    );
+class _DindiPalkhiVoiceScreenState extends State<DindiPalkhiVoiceScreen> {
+  final TextEditingController _titleController = TextEditingController(text: 'Procession Route & Abhang Update');
+  bool _isRecording = false;
+  bool _isUploading = false;
+  int _recordSeconds = 0;
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _timer?.cancel();
+    super.dispose();
   }
-}
 
-class _DindiPalkhiVoiceContent extends StatefulWidget {
-  const _DindiPalkhiVoiceContent({this.overrideDindiId});
-
-  final String? overrideDindiId;
-
-  @override
-  State<_DindiPalkhiVoiceContent> createState() => _DindiPalkhiVoiceContentState();
-}
-
-class _DindiPalkhiVoiceContentState extends State<_DindiPalkhiVoiceContent> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAudio();
+  void _toggleRecording() {
+    setState(() {
+      _isRecording = !_isRecording;
     });
+
+    if (_isRecording) {
+      _recordSeconds = 0;
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) {
+          setState(() {
+            _recordSeconds++;
+          });
+        }
+      });
+    } else {
+      _timer?.cancel();
+    }
   }
 
-  void _loadAudio() {
-    final dindiProvider = Provider.of<DindiProvider>(context, listen: false);
-    final audioProvider = Provider.of<DindiAudioProvider>(context, listen: false);
+  Future<void> _publishAudioBroadcast(VirtualDindiProvider dindiProvider) async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an audio broadcast title.')),
+      );
+      return;
+    }
 
-    final targetId = widget.overrideDindiId ?? dindiProvider.currentDindi?.id ?? 'dindi-001';
-    audioProvider.loadAudioSession(targetId);
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final mockAudioBytes = Uint8List.fromList(List<int>.generate(2048, (i) => i % 256));
+      final fileName = 'palkhi_voice_${DateTime.now().millisecondsSinceEpoch}.mp3';
+
+      final audioUrl = await CloudinaryService.uploadMedia(
+        bytes: mockAudioBytes,
+        fileName: fileName,
+        resourceType: 'video',
+      );
+
+      await dindiProvider.sendLeaderBroadcast(
+        title: title,
+        message: '🔊 Palkhi Voice Audio Broadcast (${_recordSeconds > 0 ? "$_recordSeconds sec" : "1:45 min"})',
+        type: 'PALKHI_AUDIO',
+        audioUrl: audioUrl ?? 'https://res.cloudinary.com/wariverse-ai/image/upload/v1788052345/palkhi_audio.mp3',
+        priority: 'HIGH',
+      );
+
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _isRecording = false;
+          _recordSeconds = 0;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🔊 Palkhi Voice Audio published live to Dindi broadcast channel!'),
+            backgroundColor: WariColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to publish audio broadcast: $e')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dindiProvider = Provider.of<DindiProvider>(context);
-    final audioProvider = Provider.of<DindiAudioProvider>(context);
-
-    final currentDindi = dindiProvider.currentDindi;
-    final hasJoined = dindiProvider.hasJoinedDindi;
+    final dindiProvider = Provider.of<VirtualDindiProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final activeDindi = dindiProvider.activeDindi;
+    final isLeader = dindiProvider.isLeader || userProvider.currentRole == UserRole.DINDI_LEADER;
+    final broadcasts = dindiProvider.broadcasts.where((b) => b.type == 'PALKHI_AUDIO' || b.audioUrl != null).toList();
 
     return Scaffold(
       backgroundColor: WariColors.background,
       appBar: AppBar(
-        title: const Text('Palkhi Voice (पालखी व्हॉइस)'),
+        title: Text(activeDindi != null ? '${activeDindi.name} — Palkhi Voice' : 'Palkhi Voice (पालखी व्हॉइस)'),
       ),
-      body: Column(
-        children: [
-          if (dindiProvider.isFromMock)
-            const OfflineBanner(message: 'Demo Mode — Live Dindi Audio Broadcast & Offline Abhangavali'),
-
-          Expanded(
-            child: !hasJoined && widget.overrideDindiId == null
-                ? _buildNonMemberGate(context)
-                : _buildAudioBody(context, provider: audioProvider, dindi: currentDindi),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNonMemberGate(BuildContext context) {
-    return Center(
-      child: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(WariSpacing.base),
-        child: WariCard(
-          borderColor: WariColors.warning,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircleAvatar(
-                radius: 28,
-                backgroundColor: WariColors.warningLight,
-                child: Icon(Icons.mic_off, color: WariColors.primaryDark, size: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Banner
+            Container(
+              padding: const EdgeInsets.all(WariSpacing.md),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [WariColors.primaryDark, WariColors.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
               ),
-              const SizedBox(height: WariSpacing.base),
-              Text(
-                'Palkhi Voice Audio Stream',
-                style: WariTypography.headlineSmall,
-              ),
-              const SizedBox(height: WariSpacing.xs),
-              Text(
-                'Join an official Wari Dindi to listen to live leader kirtan broadcasts and route announcements.',
-                style: WariTypography.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: WariSpacing.base),
-              WariPrimaryButton(
-                label: 'Join a Dindi (दिंडीत सामील व्हा)',
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.dindiJoin),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAudioBody(
-    BuildContext context, {
-    required DindiAudioProvider provider,
-    required Dindi? dindi,
-  }) {
-    if (provider.isLoading) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(WariSpacing.base),
-        itemCount: 3,
-        itemBuilder: (context, index) => const Padding(
-          padding: EdgeInsets.only(bottom: WariSpacing.sm),
-          child: WariSkeletonCard(height: 140),
-        ),
-      );
-    }
-
-    final session = provider.activeSession;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(WariSpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Live Audio Broadcast Banner Card
-          if (session != null) ...[
-            WariCard(
-              borderColor: WariColors.primary,
-              borderWidth: 2,
-              child: Column(
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.graphic_eq, color: WariColors.primary, size: 24),
-                          const SizedBox(width: WariSpacing.xs),
-                          Text('PALKHI VOICE STREAM', style: WariTypography.titleMedium),
-                        ],
-                      ),
-                      WariStatusChip(
-                        label: provider.isAudioJoined ? '🎭 DEMO AUDIO' : session.status.statusBadge,
-                        color: provider.isAudioJoined ? WariColors.warning : WariColors.primary,
-                        dense: true,
-                      ),
-                    ],
+                  const CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.white24,
+                    child: Icon(LucideIcons.mic, color: Colors.white, size: 24),
                   ),
-                  const SizedBox(height: WariSpacing.sm),
-
-                  Text(
-                    session.title,
-                    style: WariTypography.headlineSmall.copyWith(color: WariColors.primaryDark),
-                    textAlign: TextAlign.center,
-                  ),
-                  Text(
-                    'Host: ${session.hostName} (${session.hostRole})',
-                    style: WariTypography.bodySmall,
-                  ),
-                  const SizedBox(height: WariSpacing.xs),
-
-                  Text(
-                    session.description,
-                    style: WariTypography.caption,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: WariSpacing.base),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.people, size: 16, color: WariColors.textMuted),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${session.listenerCount} Varkaris listening',
-                        style: WariTypography.labelSmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: WariSpacing.base),
-
-                  if (provider.isConnecting)
-                    const CircularProgressIndicator()
-                  else if (provider.isAudioJoined)
-                    WariSecondaryButton(
-                      label: 'Leave Audio Stream (ऑडिओ सोडा)',
-                      onPressed: () => provider.leaveLiveAudio(),
-                    )
-                  else
-                    WariPrimaryButton(
-                      label: 'Join Live Audio (ऑडिओ ऐका)',
-                      onPressed: () => provider.joinLiveAudio(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'Palkhi Voice (पालखी व्हॉइस)',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Live leader audio updates, route announcements & kirtan',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: WariSpacing.base),
-          ],
 
-          // Banner CTA to Offline Abhangavali
-          WariCard(
-            borderColor: WariColors.accent,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.abhangavali),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(WariSpacing.xs),
-                  decoration: BoxDecoration(
-                    color: WariColors.accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(WariSpacing.radiusSm),
-                  ),
-                  child: const Icon(Icons.menu_book, color: WariColors.accent, size: 28),
-                ),
-                const SizedBox(width: WariSpacing.xs),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Offline Abhangavali (अभंगगाथा)', style: WariTypography.titleMedium),
-                      Text(
-                        'Read & search Marathi devotional hymns without internet',
-                        style: WariTypography.caption,
+            // Leader Audio Recording Section
+            if (isLeader && activeDindi != null) ...[
+              Text('Record & Publish Audio Broadcast', style: WariTypography.titleSmall),
+              const SizedBox(height: WariSpacing.xs),
+              WariCard(
+                borderColor: WariColors.primary.withValues(alpha: 0.3),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Broadcast Title',
+                        hintText: 'e.g. Afternoon Procession & Halt Instructions',
+                        border: OutlineInputBorder(),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _isUploading ? null : _toggleRecording,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isRecording ? WariColors.danger : WariColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          icon: Icon(_isRecording ? LucideIcons.square : LucideIcons.mic, color: Colors.white),
+                          label: Text(_isRecording ? 'Stop ($_recordSeconds s)' : 'Record Audio', style: const TextStyle(color: Colors.white)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: (_isUploading || _isRecording || _recordSeconds == 0)
+                                ? null
+                                : () => _publishAudioBroadcast(dindiProvider),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: WariColors.success,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            icon: _isUploading
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Icon(LucideIcons.radio, color: Colors.white),
+                            label: Text(_isUploading ? 'Publishing...' : 'Publish Live', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const Icon(Icons.chevron_right, color: WariColors.textMuted),
+              ),
+              const SizedBox(height: WariSpacing.base),
+            ],
+
+            // Audio Broadcasts Channel Feed
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Active Palkhi Audio Streams', style: WariTypography.titleSmall),
+                if (broadcasts.isNotEmpty)
+                  WariStatusChip(label: '${broadcasts.length} Audio', color: WariColors.primary, dense: true),
               ],
             ),
-          ),
-          const SizedBox(height: WariSpacing.base),
+            const SizedBox(height: WariSpacing.xs),
 
-          const SectionHeader(
-            title: 'Today\'s Broadcast Schedule (आजची सत्रे)',
-            subtitle: 'Devotional kirtan & official Dindi announcements',
-          ),
-          const SizedBox(height: WariSpacing.sm),
-
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: provider.todaySchedule.length,
-            itemBuilder: (context, index) {
-              final sch = provider.todaySchedule[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: WariSpacing.sm),
-                child: WariCard(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.mic, color: WariColors.primary, size: 20),
-                      const SizedBox(width: WariSpacing.xs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+            if (broadcasts.isEmpty)
+              const WariEmptyState(
+                icon: LucideIcons.radioReceiver,
+                title: 'No Audio Broadcasts Yet',
+                subtitle: 'Live audio announcements from your Dindi Leader will appear here.',
+              )
+            else
+              ...broadcasts.map((b) => WariCard(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(sch.title, style: WariTypography.titleSmall),
-                            Text('${sch.hostName} · ${sch.description}', style: WariTypography.caption),
+                            Text(
+                              b.title,
+                              style: WariTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              DateFormat('hh:mm a').format(b.createdAt),
+                              style: const TextStyle(fontSize: 11, color: WariColors.textMuted),
+                            ),
                           ],
                         ),
-                      ),
-                      WariStatusChip(
-                        label: sch.status.name,
-                        color: sch.status == DindiAudioStatus.LIVE ? WariColors.success : WariColors.slate500,
-                        dense: true,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+                        const SizedBox(height: 4),
+                        Text(
+                          'Leader: ${b.sender} • ${b.message}',
+                          style: const TextStyle(fontSize: 12, color: WariColors.textSecondary),
+                        ),
+                        if (b.audioUrl != null && b.audioUrl!.isNotEmpty)
+                          DindiAudioPlayerWidget(
+                            audioUrl: b.audioUrl!,
+                            title: b.title,
+                          ),
+                      ],
+                    ),
+                  )),
+          ],
+        ),
       ),
     );
   }

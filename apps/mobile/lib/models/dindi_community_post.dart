@@ -1,4 +1,4 @@
-﻿// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names
 
 /// Category of private Dindi community posts.
 enum DindiPostType {
@@ -23,34 +23,79 @@ extension DindiPostTypeX on DindiPostType {
 class DindiBroadcast {
   final String id;
   final String dindiId;
+  final String? dindiCode;
+  final String? senderUid;
   final String sender;
   final String senderRole;
+  final String type; // ANNOUNCEMENT, PALKHI_AUDIO, ALERT
   final String title;
   final String message;
+  final String? audioUrl;
+  final String? imageUrl;
   final DateTime createdAt;
+  final DateTime? updatedAt;
+  final DateTime? expiresAt;
   final String priority; // HIGH, MEDIUM, CRITICAL
   final bool isActive;
 
   const DindiBroadcast({
     required this.id,
     required this.dindiId,
+    this.dindiCode,
+    this.senderUid,
     required this.sender,
-    required this.senderRole,
+    this.senderRole = 'LEADER',
+    this.type = 'ANNOUNCEMENT',
     required this.title,
     required this.message,
+    this.audioUrl,
+    this.imageUrl,
     required this.createdAt,
+    this.updatedAt,
+    this.expiresAt,
     this.priority = 'HIGH',
     this.isActive = true,
   });
 
+  static DateTime _parseDateTime(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is DateTime) return val;
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    try {
+      if (val is num) return DateTime.fromMillisecondsSinceEpoch(val.toInt());
+      return (val as dynamic).toDate() as DateTime;
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
+
+  static DateTime? _parseNullableDateTime(dynamic val) {
+    if (val == null) return null;
+    if (val is DateTime) return val;
+    if (val is String) return DateTime.tryParse(val);
+    try {
+      if (val is num) return DateTime.fromMillisecondsSinceEpoch(val.toInt());
+      return (val as dynamic).toDate() as DateTime;
+    } catch (_) {
+      return null;
+    }
+  }
+
   factory DindiBroadcast.fromJson(Map<String, dynamic> json) => DindiBroadcast(
         id: json['id'] as String? ?? '',
-        dindiId: json['dindi_id'] as String? ?? '',
-        sender: json['sender'] as String? ?? 'Dindi Pramukh',
+        dindiId: json['dindi_id'] as String? ?? json['dindiId'] as String? ?? '',
+        dindiCode: json['dindi_code'] as String?,
+        senderUid: json['sender_uid'] as String? ?? json['sender_id'] as String?,
+        sender: json['sender'] as String? ?? json['sender_name'] as String? ?? 'Dindi Pramukh',
         senderRole: json['sender_role'] as String? ?? 'LEADER',
-        title: json['title'] as String? ?? '',
+        type: json['type'] as String? ?? (json['audio_url'] != null ? 'PALKHI_AUDIO' : 'ANNOUNCEMENT'),
+        title: json['title'] as String? ?? 'Dindi Announcement',
         message: json['message'] as String? ?? '',
-        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
+        audioUrl: json['audio_url'] as String?,
+        imageUrl: json['image_url'] as String?,
+        createdAt: _parseDateTime(json['created_at']),
+        updatedAt: _parseNullableDateTime(json['updated_at']),
+        expiresAt: _parseNullableDateTime(json['expires_at']),
         priority: json['priority'] as String? ?? 'HIGH',
         isActive: json['is_active'] as bool? ?? true,
       );
@@ -58,11 +103,18 @@ class DindiBroadcast {
   Map<String, dynamic> toJson() => {
         'id': id,
         'dindi_id': dindiId,
+        'dindi_code': dindiCode,
+        'sender_uid': senderUid,
         'sender': sender,
         'sender_role': senderRole,
+        'type': type,
         'title': title,
         'message': message,
+        'audio_url': audioUrl,
+        'image_url': imageUrl,
         'created_at': createdAt.toIso8601String(),
+        'updated_at': updatedAt?.toIso8601String(),
+        'expires_at': expiresAt?.toIso8601String(),
         'priority': priority,
         'is_active': isActive,
       };

@@ -1,9 +1,9 @@
-// ignore_for_file: constant_identifier_names, unused_field
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/virtual_dindi_model.dart';
+import '../models/dindi_community_post.dart';
 import '../repositories/virtual_dindi_repository.dart';
 import '../services/virtual_dindi_local_service.dart';
 import '../services/dindi_notification_service.dart';
@@ -29,6 +29,7 @@ class VirtualDindiProvider with ChangeNotifier {
 
   VirtualDindi? _activeDindi;
   List<VirtualDindiMember> _members = [];
+  List<DindiBroadcast> _broadcasts = [];
   GroupCenterResult? _groupCenter;
   
   SeparationState _currentSeparationState = SeparationState.SAFE;
@@ -42,6 +43,7 @@ class VirtualDindiProvider with ChangeNotifier {
 
   StreamSubscription<VirtualDindi?>? _dindiSubscription;
   StreamSubscription<List<VirtualDindiMember>>? _membersSubscription;
+  StreamSubscription<List<DindiBroadcast>>? _broadcastsSubscription;
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
@@ -49,6 +51,7 @@ class VirtualDindiProvider with ChangeNotifier {
   VirtualDindi? get activeDindi => _activeDindi;
   bool get hasActiveDindi => _activeDindi != null;
   List<VirtualDindiMember> get members => List.unmodifiable(_members);
+  List<DindiBroadcast> get broadcasts => List.unmodifiable(_broadcasts);
   GroupCenterResult? get groupCenter => _groupCenter;
 
   List<VirtualDindiMember> get separatedMembers => _members.where((m) =>
@@ -218,6 +221,43 @@ class VirtualDindiProvider with ChangeNotifier {
       VirtualDindiLocalService.saveMembers(memberList);
       notifyListeners();
     });
+
+    _broadcastsSubscription = _repository.streamBroadcasts(dindiId).listen((bList) {
+      _broadcasts = bList;
+      notifyListeners();
+    });
+  }
+
+  /// Send/publish a Dindi Leader announcement or audio broadcast to Cloud Firestore.
+  Future<void> sendLeaderBroadcast({
+    required String title,
+    required String message,
+    String type = 'ANNOUNCEMENT',
+    String? audioUrl,
+    String priority = 'HIGH',
+  }) async {
+    if (_activeDindi == null) return;
+
+    final broadcast = DindiBroadcast(
+      id: 'bc_${DateTime.now().millisecondsSinceEpoch}',
+      dindiId: _activeDindi!.dindiId,
+      dindiCode: _activeDindi!.joinCode,
+      senderUid: _currentUserUid,
+      sender: _currentDisplayName ?? _activeDindi!.leaderName,
+      senderRole: 'LEADER',
+      type: type,
+      title: title,
+      message: message,
+      audioUrl: audioUrl,
+      createdAt: DateTime.now(),
+      priority: priority,
+      isActive: true,
+    );
+
+    await _repository.sendBroadcast(
+      dindiId: _activeDindi!.dindiId,
+      broadcast: broadcast,
+    );
   }
 
   void _startGpsLocationTracking() async {
@@ -379,18 +419,6 @@ class VirtualDindiProvider with ChangeNotifier {
     );
   }
 
-  /// Leader Controls: Send Broadcast Message to Members
-  Future<void> sendLeaderBroadcast(String message) async {
-    if (_activeDindi == null || _currentUserUid == null) return;
-    await _repository.logEvent(
-      dindiId: _activeDindi!.dindiId,
-      type: VirtualDindiEventType.BROADCAST_SENT,
-      actorUid: _currentUserUid!,
-      targetUid: _activeDindi!.dindiId,
-      details: 'Leader Broadcast: "$message"',
-    );
-  }
-
   /// Leader Controls: Remove a member from the Virtual Dindi.
   Future<void> removeMember(String targetUid) async {
     if (_activeDindi == null || _currentUserUid == null || !isLeader) return;
@@ -404,6 +432,7 @@ class VirtualDindiProvider with ChangeNotifier {
   void _cancelSubscriptions() {
     _dindiSubscription?.cancel();
     _membersSubscription?.cancel();
+    _broadcastsSubscription?.cancel();
     _positionSubscription?.cancel();
   }
 

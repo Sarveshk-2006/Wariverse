@@ -7,6 +7,7 @@ import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
 import '../../providers/virtual_dindi_provider.dart';
 import 'dindi_palkhi_voice_screen.dart';
+import 'widgets/dindi_audio_player_widget.dart';
 
 /// "MY DINDI" Tab — Procession & Group Overview Screen.
 /// Focuses purely on Dindi identity, checkpoints, schedule, announcements, and separation metrics.
@@ -158,26 +159,68 @@ class VirtualDindiOverviewScreen extends StatelessWidget {
             const SizedBox(height: WariSpacing.base),
 
             // 4. ANNOUNCEMENTS & PALKHI VOICE ACCESS
-            Text('Latest Dindi Announcement', style: WariTypography.titleSmall),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('📢 Dindi Announcements & Broadcasts', style: WariTypography.titleSmall),
+                if (dindiProvider.broadcasts.isNotEmpty)
+                  WariStatusChip(label: '${dindiProvider.broadcasts.length} Broadcasts', color: WariColors.primary, dense: true),
+              ],
+            ),
             const SizedBox(height: WariSpacing.xs),
-            WariCard(
-              borderColor: WariColors.primary.withValues(alpha: 0.2),
-              child: Row(
-                children: [
-                  const Icon(Icons.campaign_rounded, color: WariColors.primary, size: 28),
-                  const SizedBox(width: WariSpacing.xs),
-                  Expanded(
+
+            if (dindiProvider.broadcasts.isEmpty)
+              WariCard(
+                borderColor: WariColors.primary.withValues(alpha: 0.2),
+                child: Row(
+                  children: [
+                    const Icon(Icons.campaign_rounded, color: WariColors.primary, size: 28),
+                    const SizedBox(width: WariSpacing.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('No Announcements Yet', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: WariColors.primary)),
+                          Text('New broadcasts from your Dindi Leader will appear here in real time.', style: TextStyle(fontSize: 11, color: WariColors.textSecondary)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...dindiProvider.broadcasts.map((b) => WariCard(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    borderColor: b.type == 'PALKHI_AUDIO' ? WariColors.primary.withValues(alpha: 0.3) : WariColors.border,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Leader Broadcast', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: WariColors.primary)),
-                        Text('Reunification point set at Palkhi Rest Area. Keep safe distance within 75m.', style: TextStyle(fontSize: 11, color: WariColors.textSecondary)),
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            WariStatusChip(
+                              label: b.type == 'PALKHI_AUDIO' ? '🔊 PALKHI AUDIO' : (b.type == 'ALERT' ? '⚠️ ALERT' : '📢 ANNOUNCEMENT'),
+                              color: b.type == 'PALKHI_AUDIO' ? WariColors.primary : (b.type == 'ALERT' ? WariColors.danger : WariColors.info),
+                              dense: true,
+                            ),
+                            Text(
+                              DateFormat('hh:mm a').format(b.createdAt),
+                              style: const TextStyle(fontSize: 11, color: WariColors.textMuted),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(b.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 2),
+                        Text('Leader: ${b.sender} • ${b.message}', style: const TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+                        if (b.audioUrl != null && b.audioUrl!.isNotEmpty)
+                          DindiAudioPlayerWidget(
+                            audioUrl: b.audioUrl!,
+                            title: b.title,
+                          ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  )),
             const SizedBox(height: WariSpacing.base),
 
             // 5. QUICK ACTIONS

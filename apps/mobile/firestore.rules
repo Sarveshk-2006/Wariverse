@@ -180,8 +180,11 @@ service cloud.firestore {
       }
     }
     
-    // Legacy dindi realtime path
+    // Legacy dindi realtime path & Virtual Dindi system
     match /realtime/dindis/{dindiId}/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    match /virtual_dindis/{dindiId}/{document=**} {
       allow read, write: if isAuthenticated();
     }
   }

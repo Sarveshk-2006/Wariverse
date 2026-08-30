@@ -164,6 +164,11 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         allow update, delete: if false; // Audit logs are immutable
       }
+
+      match /broadcasts/{broadcastId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAuthenticated();
+      }
     }
 
     // Continuous Threat Reporting & Real-Time Incident Response Rules

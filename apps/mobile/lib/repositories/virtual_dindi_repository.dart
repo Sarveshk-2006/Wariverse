@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/virtual_dindi_model.dart';
+import '../models/dindi_community_post.dart';
 import '../services/virtual_dindi_local_service.dart';
 import '../core/utils/app_logger.dart';
 
@@ -511,5 +512,58 @@ class VirtualDindiRepository {
 
     await VirtualDindiLocalService.clearQueuedOfflineEvents();
     AppLogger.i('Queued offline Virtual Dindi events synchronized successfully.');
+  }
+
+  /// Streams Dindi Leader broadcasts for the specified Virtual Dindi in real time.
+  Stream<List<DindiBroadcast>> streamBroadcasts(String dindiId) {
+    final fs = _firestore;
+    if (dindiId.isEmpty || fs == null) return Stream.value([]);
+    return fs
+        .collection('virtual_dindis')
+        .doc(dindiId)
+        .collection('broadcasts')
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return DindiBroadcast.fromJson(data);
+            }).toList());
+  }
+
+  /// Writes an authoritative Leader broadcast to Cloud Firestore.
+  Future<void> sendBroadcast({
+    required String dindiId,
+    required DindiBroadcast broadcast,
+  }) async {
+    if (dindiId.isEmpty) return;
+    final fs = _firestore;
+
+    final docRef = fs != null
+        ? fs
+            .collection('virtual_dindis')
+            .doc(dindiId)
+            .collection('broadcasts')
+            .doc(broadcast.id.isNotEmpty ? broadcast.id : null)
+        : null;
+
+    final broadcastId = docRef?.id ?? 'bc_${DateTime.now().millisecondsSinceEpoch}';
+    final payload = broadcast.toJson();
+    payload['id'] = broadcastId;
+
+    if (docRef != null) {
+      await docRef.set(payload, SetOptions(merge: true));
+    }
+
+    // Log broadcast sent event
+    await logEvent(
+      dindiId: dindiId,
+      type: VirtualDindiEventType.BROADCAST_SENT,
+      actorUid: broadcast.senderUid ?? '',
+      targetUid: 'ALL',
+      details: 'Broadcast: ${broadcast.title}',
+    );
+
+    AppLogger.i('Broadcast published successfully: $broadcastId (${broadcast.title})');
   }
 }

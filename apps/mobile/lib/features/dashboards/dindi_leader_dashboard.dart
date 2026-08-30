@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/virtual_dindi_provider.dart';
 import '../dindi/dindi_palkhi_voice_screen.dart';
+import '../dindi/widgets/dindi_audio_player_widget.dart';
 
 /// Dindi Leader / Pramukh Operational Management Dashboard.
 class DindiLeaderDashboard extends StatefulWidget {
@@ -70,7 +72,11 @@ class _DindiLeaderDashboardState extends State<DindiLeaderDashboard> {
               _announcementController.clear();
               Navigator.pop(ctx);
 
-              await dindiProvider.sendLeaderBroadcast(text);
+              await dindiProvider.sendLeaderBroadcast(
+                title: 'Dindi Announcement',
+                message: text,
+                type: 'ANNOUNCEMENT',
+              );
               messenger.showSnackBar(
                 const SnackBar(
                   content: Text('📣 Announcement broadcasted to Dindi members in realtime!'),
@@ -372,6 +378,90 @@ class _DindiLeaderDashboardState extends State<DindiLeaderDashboard> {
                   if (dindi != null) _showQrCodeDialog(context, dindi);
                 },
               ),
+              const SizedBox(height: WariSpacing.base),
+
+              // Dindi Broadcast Channel Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SectionHeader(title: '📢 Dindi Broadcast Channel'),
+                  if (dindiProvider.broadcasts.isNotEmpty)
+                    WariStatusChip(
+                      label: '${dindiProvider.broadcasts.length} Broadcasts',
+                      color: WariColors.primary,
+                      dense: true,
+                    ),
+                ],
+              ),
+              const SizedBox(height: WariSpacing.xs),
+
+              if (dindiProvider.broadcasts.isEmpty)
+                const WariCard(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Icon(Icons.campaign_outlined, size: 36, color: WariColors.primary),
+                        SizedBox(height: 8),
+                        Text(
+                          'No Broadcasts Published Yet',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Post an announcement or Palkhi Voice audio message to broadcast to all members in real time.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: WariColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ...dindiProvider.broadcasts.map((b) => WariCard(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      borderColor: b.type == 'PALKHI_AUDIO'
+                          ? WariColors.primary.withValues(alpha: 0.3)
+                          : WariColors.border,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              WariStatusChip(
+                                label: b.type == 'PALKHI_AUDIO'
+                                    ? '🔊 PALKHI AUDIO'
+                                    : (b.type == 'ALERT' ? '⚠️ ALERT' : '📢 ANNOUNCEMENT'),
+                                color: b.type == 'PALKHI_AUDIO'
+                                    ? WariColors.primary
+                                    : (b.type == 'ALERT' ? WariColors.danger : WariColors.info),
+                                dense: true,
+                              ),
+                              Text(
+                                DateFormat('MMM dd • hh:mm a').format(b.createdAt),
+                                style: const TextStyle(fontSize: 11, color: WariColors.textMuted),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            b.title,
+                            style: WariTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            b.message,
+                            style: WariTypography.bodyMedium.copyWith(color: WariColors.textSecondary),
+                          ),
+                          if (b.audioUrl != null && b.audioUrl!.isNotEmpty)
+                            DindiAudioPlayerWidget(
+                              audioUrl: b.audioUrl!,
+                              title: b.title,
+                            ),
+                        ],
+                      ),
+                    )),
             ],
           ),
         ),

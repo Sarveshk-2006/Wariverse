@@ -95,7 +95,11 @@ class _VirtualDindiDetailScreenState extends State<VirtualDindiDetailScreen> {
           ElevatedButton(
             onPressed: () {
               if (_broadcastController.text.trim().isNotEmpty) {
-                provider.sendLeaderBroadcast(_broadcastController.text.trim());
+                provider.sendLeaderBroadcast(
+                  title: 'Group Broadcast',
+                  message: _broadcastController.text.trim(),
+                  type: 'ANNOUNCEMENT',
+                );
                 _broadcastController.clear();
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
