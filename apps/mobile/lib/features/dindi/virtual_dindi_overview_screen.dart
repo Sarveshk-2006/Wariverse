@@ -7,6 +7,7 @@ import '../../core/widgets/wari_widgets_exports.dart';
 import '../../models/models_exports.dart';
 import '../../providers/virtual_dindi_provider.dart';
 import 'dindi_palkhi_voice_screen.dart';
+import 'dindi_community_screen.dart';
 import 'widgets/dindi_audio_player_widget.dart';
 
 /// "MY DINDI" Tab — Procession & Group Overview Screen.
@@ -224,17 +225,50 @@ class VirtualDindiOverviewScreen extends StatelessWidget {
             const SizedBox(height: WariSpacing.base),
 
             // 5. QUICK ACTIONS
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showQrCodeDialog(context, dindi),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WariColors.info,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.share_rounded, color: Colors.white, size: 18),
+                    label: const Text('Share Dindi Pass', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => DindiCommunityScreen(dindiId: dindi.dindiId)),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WariColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: const Icon(Icons.forum_rounded, color: Colors.white, size: 18),
+                    label: const Text('Community Chat', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              child: OutlinedButton.icon(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => DindiPalkhiVoiceScreen(dindiId: dindi.dindiId)),
                   );
                 },
-                icon: const Icon(Icons.record_voice_over_rounded),
-                label: const Text('Open Palkhi Voice Broadcast', style: TextStyle(fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.record_voice_over_rounded, color: WariColors.primaryDark),
+                label: const Text('Open Palkhi Voice Broadcast', style: TextStyle(fontWeight: FontWeight.bold, color: WariColors.primaryDark)),
               ),
             ),
           ],

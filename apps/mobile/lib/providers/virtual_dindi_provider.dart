@@ -30,6 +30,7 @@ class VirtualDindiProvider with ChangeNotifier {
   VirtualDindi? _activeDindi;
   List<VirtualDindiMember> _members = [];
   List<DindiBroadcast> _broadcasts = [];
+  List<DindiCommunityPost> _communityMessages = [];
   GroupCenterResult? _groupCenter;
   
   SeparationState _currentSeparationState = SeparationState.SAFE;
@@ -44,6 +45,7 @@ class VirtualDindiProvider with ChangeNotifier {
   StreamSubscription<VirtualDindi?>? _dindiSubscription;
   StreamSubscription<List<VirtualDindiMember>>? _membersSubscription;
   StreamSubscription<List<DindiBroadcast>>? _broadcastsSubscription;
+  StreamSubscription<List<DindiCommunityPost>>? _communitySubscription;
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
@@ -52,6 +54,7 @@ class VirtualDindiProvider with ChangeNotifier {
   bool get hasActiveDindi => _activeDindi != null;
   List<VirtualDindiMember> get members => List.unmodifiable(_members);
   List<DindiBroadcast> get broadcasts => List.unmodifiable(_broadcasts);
+  List<DindiCommunityPost> get communityMessages => List.unmodifiable(_communityMessages);
   GroupCenterResult? get groupCenter => _groupCenter;
 
   List<VirtualDindiMember> get separatedMembers => _members.where((m) =>
@@ -226,6 +229,11 @@ class VirtualDindiProvider with ChangeNotifier {
       _broadcasts = bList;
       notifyListeners();
     });
+
+    _communitySubscription = _repository.streamCommunityMessages(dindiId).listen((mList) {
+      _communityMessages = mList;
+      notifyListeners();
+    });
   }
 
   /// Send/publish a Dindi Leader announcement or audio broadcast to Cloud Firestore.
@@ -257,6 +265,27 @@ class VirtualDindiProvider with ChangeNotifier {
     await _repository.sendBroadcast(
       dindiId: _activeDindi!.dindiId,
       broadcast: broadcast,
+    );
+  }
+
+  /// Send a general chat community message to Cloud Firestore.
+  Future<void> sendCommunityMessage(String content) async {
+    if (_activeDindi == null || content.trim().isEmpty) return;
+
+    final post = DindiCommunityPost(
+      id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
+      dindiId: _activeDindi!.dindiId,
+      authorId: _currentUserUid ?? 'varkari_anon',
+      authorName: _currentDisplayName ?? 'Varkari Pilgrim',
+      authorRole: _currentRole ?? 'VARKARI',
+      content: content.trim(),
+      postType: DindiPostType.GENERAL,
+      createdAt: DateTime.now(),
+    );
+
+    await _repository.sendCommunityMessage(
+      dindiId: _activeDindi!.dindiId,
+      post: post,
     );
   }
 
@@ -433,6 +462,7 @@ class VirtualDindiProvider with ChangeNotifier {
     _dindiSubscription?.cancel();
     _membersSubscription?.cancel();
     _broadcastsSubscription?.cancel();
+    _communitySubscription?.cancel();
     _positionSubscription?.cancel();
   }
 

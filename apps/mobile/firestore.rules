@@ -184,8 +184,24 @@ service cloud.firestore {
     match /realtime/dindis/{dindiId}/{document=**} {
       allow read, write: if isAuthenticated();
     }
-    match /virtual_dindis/{dindiId}/{document=**} {
+    match /virtual_dindis/{dindiId} {
       allow read, write: if isAuthenticated();
+
+      match /broadcasts/{broadcastId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && (isRole('DINDI_LEADER') || isAdmin() || resource.data.sender_uid == request.auth.uid);
+      }
+
+      match /announcements/{announcementId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && (isRole('DINDI_LEADER') || isAdmin() || resource.data.sender_uid == request.auth.uid);
+      }
+
+      match /community_messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && (resource.data.author_id == request.auth.uid || isAdmin());
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
 import '../../core/utils/virtual_dindi_engine.dart';
@@ -176,21 +177,80 @@ class _VirtualDindiMembersScreenState extends State<VirtualDindiMembersScreen> {
                       ),
                     ],
                   ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: badgeColor),
-                    ),
-                    child: Text(
-                      m.separationState.name,
-                      style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: badgeColor),
+                        ),
+                        child: Text(
+                          m.separationState.name,
+                          style: TextStyle(color: badgeColor, fontSize: 9, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.qr_code_2_rounded, size: 22, color: WariColors.primary),
+                        onPressed: () => _showMemberQrDialog(context, m, dindi.name),
+                        tooltip: 'Member QR Identity Pass',
+                      ),
+                    ],
                   ),
                 );
               },
             ),
+    );
+  }
+
+  void _showMemberQrDialog(BuildContext context, VirtualDindiMember member, String dindiName) {
+    final qrToken = 'WVRK:${member.uid}';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Column(
+          children: [
+            Image.asset('assets/images/wariverse_logo.png', width: 44, height: 44),
+            const SizedBox(height: 6),
+            Text(member.displayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Dindi: $dindiName', style: const TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: WariColors.border),
+              ),
+              child: QrImageView(
+                data: 'https://web-one-tau-17.vercel.app/verify-pilgrim?token=$qrToken',
+                version: QrVersions.auto,
+                size: 160.0,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SelectableText(
+              'PASS TOKEN: $qrToken',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: WariColors.primaryDark),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Official Verified WariVerse Pilgrim Identity',
+              style: TextStyle(fontSize: 10, color: WariColors.success, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+        ],
+      ),
     );
   }
 

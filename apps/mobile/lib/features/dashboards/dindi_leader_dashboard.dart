@@ -8,6 +8,7 @@ import '../../models/models_exports.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/virtual_dindi_provider.dart';
 import '../dindi/dindi_palkhi_voice_screen.dart';
+import '../dindi/dindi_community_screen.dart';
 import '../dindi/widgets/dindi_audio_player_widget.dart';
 
 /// Dindi Leader / Pramukh Operational Management Dashboard.
@@ -376,6 +377,29 @@ class _DindiLeaderDashboardState extends State<DindiLeaderDashboard> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   if (dindi != null) _showQrCodeDialog(context, dindi);
+                },
+              ),
+              const SizedBox(height: WariSpacing.xs),
+
+              // Open Dindi Community Chat
+              ListTile(
+                tileColor: WariColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(WariSpacing.sm),
+                  side: const BorderSide(color: WariColors.border),
+                ),
+                leading: const CircleAvatar(
+                  backgroundColor: WariColors.primaryLight,
+                  child: Icon(Icons.forum_rounded, color: WariColors.primaryDark, size: 20),
+                ),
+                title: Text('Dindi Community Chat & Channel', style: WariTypography.titleMedium),
+                subtitle: const Text('Open real-time announcements & general pilgrim chat'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => DindiCommunityScreen(dindiId: dindi?.dindiId)),
+                  );
                 },
               ),
               const SizedBox(height: WariSpacing.base),

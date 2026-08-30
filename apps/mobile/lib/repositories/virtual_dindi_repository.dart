@@ -566,4 +566,46 @@ class VirtualDindiRepository {
 
     AppLogger.i('Broadcast published successfully: $broadcastId (${broadcast.title})');
   }
+
+  /// Streams General Community Messages for the specified Virtual Dindi in real time.
+  Stream<List<DindiCommunityPost>> streamCommunityMessages(String dindiId) {
+    final fs = _firestore;
+    if (dindiId.isEmpty || fs == null) return Stream.value([]);
+    return fs
+        .collection('virtual_dindis')
+        .doc(dindiId)
+        .collection('community_messages')
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return DindiCommunityPost.fromJson(data);
+            }).toList());
+  }
+
+  /// Writes a General Community Message to Cloud Firestore.
+  Future<void> sendCommunityMessage({
+    required String dindiId,
+    required DindiCommunityPost post,
+  }) async {
+    if (dindiId.isEmpty) return;
+    final fs = _firestore;
+
+    final docRef = fs != null
+        ? fs
+            .collection('virtual_dindis')
+            .doc(dindiId)
+            .collection('community_messages')
+            .doc(post.id.isNotEmpty ? post.id : null)
+        : null;
+
+    final msgId = docRef?.id ?? 'msg_${DateTime.now().millisecondsSinceEpoch}';
+    final payload = post.toJson();
+    payload['id'] = msgId;
+
+    if (docRef != null) {
+      await docRef.set(payload, SetOptions(merge: true));
+    }
+  }
 }
