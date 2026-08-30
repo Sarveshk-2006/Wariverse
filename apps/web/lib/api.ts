@@ -42,8 +42,13 @@ if (typeof window !== 'undefined') {
     const app = getApps().length
       ? getApps()[0]
       : initializeApp({
-          projectId: 'wariverse-a8fca',
-          apiKey: 'AIzaSyCF9SRQF-mIwy1G2PzYGnOLZ7cU1rcScZc',
+          apiKey: 'AIzaSyAs-_Vdx_EOveIJKHxHblvwptHpljDpeYM',
+          authDomain: 'variverse-79b42.firebaseapp.com',
+          projectId: 'variverse-79b42',
+          storageBucket: 'variverse-79b42.firebasestorage.app',
+          messagingSenderId: '1087752438013',
+          appId: '1:1087752438013:web:b4f663929ca26507d77e94',
+          measurementId: 'G-04E0VSKK3K',
         });
     fbDb = getFirestore(app);
   } catch (e) {
