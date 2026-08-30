@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 const POST_TYPE_COLORS: Record<string, string> = {
   FOOD_AVAILABLE: '#22C55E', WATER_AVAILABLE: '#3B82F6', MEDICAL_HELP: '#EF4444',
@@ -10,6 +11,7 @@ const POST_TYPE_COLORS: Record<string, string> = {
 };
 
 export default function AdminCommunityPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,8 @@ export default function AdminCommunityPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>📢 Community Moderation</h1>
-            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>Wari Connect — All community posts</p>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>📢 {t('community') || 'Community Moderation'}</h1>
+            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>Vari Connect — All community posts</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span className="badge badge-blue">{posts.length} total posts</span>

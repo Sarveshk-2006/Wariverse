@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 const ROLE_COLORS: Record<string, string> = {
   ADMIN: '#6366F1', VARKARI: '#F97316', VOLUNTEER: '#22C55E',
@@ -10,6 +11,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function AdminUsersPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,8 +62,8 @@ export default function AdminUsersPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>👥 User Management</h1>
-            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>All registered WariVerse users</p>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>👥 {t('users') || 'User Management'}</h1>
+            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>All registered VariVerse users</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span className="badge badge-blue">{users.length} total users</span>

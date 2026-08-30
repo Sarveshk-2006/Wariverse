@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminFoodPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [food, setFood] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function AdminFoodPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>🍛 Food Centre Management</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>🍛 {t('foodDist') || 'Food Centre Management'}</h1>
             <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>Admin — Manage all Annadan centres</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>

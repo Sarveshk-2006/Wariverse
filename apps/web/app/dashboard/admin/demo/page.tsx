@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 const DEMO_EVENTS = [
   {
@@ -46,25 +47,12 @@ const DEMO_EVENTS = [
   },
 ];
 
-const JUDGE_SCENARIO = [
-  { step: 1, action: 'Login as Varkari', event: null, desc: 'Explore map, services, nearby food/water/medical' },
-  { step: 2, action: 'Open Wari Connect', event: null, desc: 'View community posts from nearby pilgrims' },
-  { step: 3, action: 'Create "Need water" request', event: null, desc: 'AI finds nearest volunteer with water' },
-  { step: 4, action: 'Trigger: Network Failure', event: 'NETWORK_FAILURE', desc: 'App goes offline, relay simulation activates' },
-  { step: 5, action: 'Trigger: SOS Event', event: 'SOS_EVENT', desc: 'SOS queued → relayed → admin receives' },
-  { step: 6, action: 'Switch to Admin dashboard', event: null, desc: 'See SOS in live feed, assign medical team' },
-  { step: 7, action: 'Trigger: Crowd Surge', event: 'CROWD_SURGE', desc: 'Digital Twin turns RED, AI predicts congestion' },
-  { step: 8, action: 'View AI Predictions', event: null, desc: 'AI recommends alternate route' },
-  { step: 9, action: 'Trigger: Food Shortage', event: 'FOOD_SHORTAGE', desc: 'AI recommends 1,300+ additional meals' },
-  { step: 10, action: 'View Analytics', event: null, desc: 'Final overview of all metrics and AI insights' },
-  { step: 11, action: 'Reset Demo', event: 'RESET', desc: 'Reset all data for next demonstration' },
-];
 
 export default function DemoControlPanel() {
+  const { t, tn } = useLanguage();
   const [results, setResults] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [log, setLog] = useState<string[]>([]);
-  const [currentStep, setCurrentStep] = useState<number | null>(null);
 
   const triggerEvent = async (eventId: string) => {
     setLoading(prev => ({ ...prev, [eventId]: true }));
@@ -83,21 +71,13 @@ export default function DemoControlPanel() {
     }
   };
 
-  const handleScenarioStep = async (step: typeof JUDGE_SCENARIO[0]) => {
-    setCurrentStep(step.step);
-    if (step.event) {
-      await triggerEvent(step.event);
-    }
-    setLog(prev => [`[${new Date().toLocaleTimeString()}] 📋 Step ${step.step}: ${step.action}`, ...prev.slice(0, 19)]);
-  };
-
   return (
     <div className="dashboard-layout">
       <Sidebar />
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>🎮 Demo Control Panel</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>{t('demoControl') || 'Demo Control Panel'}</h1>
             <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>Trigger hackathon demo scenarios in real-time</p>
           </div>
           <span className="badge badge-orange">HACKATHON DEMO MODE</span>
@@ -141,48 +121,6 @@ export default function DemoControlPanel() {
                   </div>
                 ))}
               </div>
-
-              {/* Judge Scenario */}
-              <h3 style={{ marginBottom: '1rem' }}>📋 Judge Demo Sequence (5-minute flow)</h3>
-              <div className="card">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {JUDGE_SCENARIO.map(scenario => (
-                    <div key={scenario.step}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem',
-                        borderRadius: 10, background: currentStep === scenario.step ? '#FFF7ED' : '#F9FAFB',
-                        border: currentStep === scenario.step ? '2px solid #F97316' : '2px solid transparent',
-                        transition: 'all 0.2s',
-                      }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                        background: currentStep === scenario.step ? '#F97316' : '#E5E7EB',
-                        color: currentStep === scenario.step ? 'white' : '#6B7280',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 800, fontSize: '0.8rem',
-                      }}>{scenario.step}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{scenario.action}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{scenario.desc}</div>
-                      </div>
-                      {scenario.event && (
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleScenarioStep(scenario)}
-                          disabled={Object.values(loading).some(Boolean)}
-                        >
-                          ▶ Run
-                        </button>
-                      )}
-                      {!scenario.event && (
-                        <button className="btn btn-sm btn-secondary" onClick={() => setCurrentStep(scenario.step)}>
-                          Mark
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Event Log */}
@@ -213,7 +151,7 @@ export default function DemoControlPanel() {
                   {[
                     { label: '🗺️ Digital Twin Map', path: '/dashboard/admin/digital-twin' },
                     { label: '🆘 Live SOS Feed', path: '/dashboard/admin/sos' },
-                    { label: '🤖 AI Predictions', path: '/dashboard/admin/predictions' },
+                    { label: `🤖 ${t('aiPredictions') || 'AI Predictions'}`, path: '/dashboard/admin/predictions' },
                     { label: '📊 Analytics', path: '/dashboard/admin/analytics' },
                     { label: '👤 Missing Persons', path: '/dashboard/admin/lost' },
                     { label: '🙏 Varkari View', path: '/dashboard/varkari' },

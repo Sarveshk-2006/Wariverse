@@ -2,8 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiCall, getToken, createWebSocket } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminDashboard() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [analytics, setAnalytics] = useState<any>(null);
   const [sosFeed, setSosFeed] = useState<any[]>([]);
@@ -68,12 +70,12 @@ export default function AdminDashboard() {
   }, []);
 
   const statsConfig = analytics ? [
-    { label: 'Active Varkaris', value: analytics.active_varkaris.toLocaleString(), icon: '🙏', color: '#F97316', sub: 'On pilgrimage today' },
-    { label: 'Active SOS', value: analytics.active_sos, icon: '🆘', color: '#EF4444', sub: analytics.total_sos + ' total incidents' },
-    { label: 'Red Zones', value: analytics.red_zones, icon: '🔴', color: '#EF4444', sub: analytics.total_crowd_zones + ' total zones' },
-    { label: 'Volunteers', value: analytics.active_volunteers, icon: '🤝', color: '#22C55E', sub: 'Available now' },
+    { label: t('totalVarkaris') || 'Active Varkaris', value: analytics.active_varkaris.toLocaleString(), icon: '🙏', color: '#F97316', sub: t('onPilgrimage') || 'On pilgrimage today' },
+    { label: t('activeSOS') || 'Active SOS', value: analytics.active_sos, icon: '🆘', color: '#EF4444', sub: tn(analytics.total_sos) + ' ' + (t('totalIncidents') || 'total incidents') },
+    { label: t('redZones') || 'Red Zones', value: analytics.red_zones, icon: '🔴', color: '#EF4444', sub: tn(analytics.total_crowd_zones) + ' ' + (t('totalZones') || 'total zones') },
+    { label: t('activeVolunteers') || 'Volunteers', value: analytics.active_volunteers, icon: '🤝', color: '#22C55E', sub: t('availableNow') || 'Available now' },
     { label: 'Food Centres Open', value: analytics.food_centres_open, icon: '🍛', color: '#F97316', sub: 'Serving pilgrims' },
-    { label: 'Water Points', value: analytics.water_points_available, icon: '💧', color: '#3B82F6', sub: 'Available now' },
+    { label: 'Water Points', value: analytics.water_points_available, icon: '💧', color: '#3B82F6', sub: t('availableNow') || 'Available now' },
     { label: 'Missing Persons', value: analytics.lost_persons_missing, icon: '👤', color: '#EC4899', sub: 'Active cases' },
     { label: 'Pilgrims (Est.)', value: analytics.total_pilgrims_estimate.toLocaleString(), icon: '📊', color: '#6366F1', sub: 'DEMO DATA' },
   ] : [];
@@ -105,10 +107,10 @@ export default function AdminDashboard() {
         <header className="dashboard-header">
           <div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>
-              ⚙️ WariVerse AI Command Center
+              ⚙️ {t('commandCenter')}
             </h1>
             <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-              Real-time situational awareness · {analytics ? new Date(analytics.timestamp).toLocaleTimeString() : '—'}
+              {t('situationalAwareness') || 'Real-time situational awareness'} · {analytics ? new Date(analytics.timestamp).toLocaleTimeString() : '—'}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -147,7 +149,7 @@ export default function AdminDashboard() {
                   <div key={s.label} className="stat-card" style={{ borderTop: `3px solid ${s.color}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+                        <div className="stat-value" style={{ color: s.color }}>{tn(s.value)}</div>
                         <div className="stat-label">{s.label}</div>
                         <div style={{ fontSize: '0.7rem', color: '#9CA3AF', marginTop: '0.25rem' }}>{s.sub}</div>
                       </div>
@@ -161,8 +163,8 @@ export default function AdminDashboard() {
                 {/* Live SOS Feed */}
                 <div className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3>🆘 Live SOS Feed</h3>
-                    <a href="/dashboard/admin/sos" className="btn btn-ghost btn-sm">View All</a>
+                    <h3>🆘 {t('liveSOS')}</h3>
+                    <a href="/dashboard/admin/sos" className="btn btn-ghost btn-sm">{t('viewAll') || 'View All'}</a>
                   </div>
                   {sosFeed.length === 0 ? (
                     <div style={{ color: '#9CA3AF', textAlign: 'center', padding: '1.5rem' }}>No active SOS incidents</div>
@@ -187,8 +189,8 @@ export default function AdminDashboard() {
                 {/* Crowd Zones */}
                 <div className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3>🚦 Crowd Zones</h3>
-                    <a href="/dashboard/admin/predictions" className="btn btn-ghost btn-sm">AI Predict</a>
+                    <h3>🚦 {t('crowdZones')}</h3>
+                    <a href="/dashboard/admin/predictions" className="btn btn-ghost btn-sm">{t('aiPredict') || 'AI Predict'}</a>
                   </div>
                   {crowdZones.map((zone: any) => (
                     <div key={zone.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid #F3F4F6' }}>
@@ -254,8 +256,8 @@ export default function AdminDashboard() {
                 {/* Lost Persons */}
                 <div className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3>👤 Missing Persons</h3>
-                    <a href="/dashboard/admin/lost" className="btn btn-ghost btn-sm">View All</a>
+                    <h3>👤 {t('missingPersons')}</h3>
+                    <a href="/dashboard/admin/lost" className="btn btn-ghost btn-sm">{t('viewAll') || 'View All'}</a>
                   </div>
                   {lostPersons.length === 0 ? (
                     <div style={{ color: '#9CA3AF', textAlign: 'center', padding: '1.5rem' }}>No missing person cases</div>
@@ -281,8 +283,8 @@ export default function AdminDashboard() {
               {/* Community Posts */}
               <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3>📢 Wari Connect Activity</h3>
-                  <a href="/dashboard/admin/community" className="btn btn-ghost btn-sm">Moderate</a>
+                  <h3>📢 {t('activity')}</h3>
+                  <a href="/dashboard/admin/community" className="btn btn-ghost btn-sm">{t('moderate') || 'Moderate'}</a>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
                   {posts.slice(0, 6).map((post: any) => (

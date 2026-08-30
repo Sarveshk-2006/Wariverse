@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 import dynamic from 'next/dynamic';
 
 const CROWD_COLORS: Record<string, string> = { GREEN: '#22C55E', YELLOW: '#EAB308', ORANGE: '#F97316', RED: '#EF4444' };
@@ -38,6 +39,7 @@ const LeafletMap = dynamic(() => import('@/app/dashboard/admin/digital-twin/Leaf
 )});
 
 export default function DigitalTwinPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(['crowd', 'sos', 'food', 'water', 'medical', 'users']));
   const [crowdZones, setCrowdZones] = useState<any[]>([]);
@@ -143,8 +145,8 @@ export default function DigitalTwinPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>🗺️ Digital Twin — Live Map</h1>
-            <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>Real-time Wari pilgrimage visualization · DEMO DATA</p>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>🗺️ {t('digitalTwin') || 'Digital Twin — Live Map'}</h1>
+            <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>Real-time Vari pilgrimage visualization · DEMO DATA</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             {redZones.length > 0 && <span className="badge badge-red">🔴 {redZones.length} RED zones</span>}

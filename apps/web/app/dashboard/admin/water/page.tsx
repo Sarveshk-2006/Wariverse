@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminWaterPage() {
+  const { t, tn } = useLanguage();
   const [water, setWater] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
@@ -27,8 +29,8 @@ export default function AdminWaterPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>💧 Water Points — Admin</h1>
-            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>All water distribution points across the Wari route</p>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>💧 {t('waterDist') || 'Water Points'}</h1>
+            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>All water distribution points across the Vari route</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {empty > 0 && <span className="badge badge-red">🔴 {empty} Empty</span>}

@@ -143,7 +143,7 @@ const MOCK_DATA: Record<string, any> = {
     { id: 'u5', email: 'ngo@wariverse.demo', display_name: 'Seva Trust Coordinator', role: 'NGO', is_verified: true, is_active: true, created_at: new Date(Date.now() - 464000000).toISOString() },
     { id: 'u6', email: 'provider@wariverse.demo', display_name: 'Annadan Kendra Head', role: 'SERVICE_PROVIDER', is_verified: true, is_active: true, created_at: new Date(Date.now() - 364000000).toISOString() },
     { id: 'u7', email: 'cleaner@wariverse.demo', display_name: 'Swachhata Sevak Ramesh', role: 'CLEANER', is_verified: true, is_active: true, created_at: new Date(Date.now() - 264000000).toISOString() },
-    { id: 'u8', email: 'admin@wariverse.demo', display_name: 'Wari Control Admin', role: 'ADMIN', is_verified: true, is_active: true, created_at: new Date(Date.now() - 164000000).toISOString() },
+    { id: 'u8', email: 'admin@wariverse.demo', display_name: 'Vari Control Admin', role: 'ADMIN', is_verified: true, is_active: true, created_at: new Date(Date.now() - 164000000).toISOString() },
   ],
   '/police/routes': [
     { id: 'r1', route_name: 'Alandi - Pune - Pandharpur Palkhi Route', status: 'HEAVY_CROWD', advisory: 'Ringan procession active at Wakhari. Divert heavy vehicles via Bypass.', active_pilgrims: 450000 },
@@ -166,26 +166,125 @@ const MOCK_DATA: Record<string, any> = {
     { id: 'w1', name: 'Ayurvedic Foot Care Seva #1', services: ['Foot Massage', 'Blister Care', 'Oil Treatment'], status: 'OPEN', waiting_pilgrims: 12 },
     { id: 'w2', name: 'Pilgrim Rest & Stretch Camp', services: ['Yoga & Rest', 'Hydration Salt Solution'], status: 'OPEN', waiting_pilgrims: 4 },
   ],
+
+
+  '/reports': [
+    { id: 'r1', user: 'Varkari Ramesh', message: 'Water shortage near Solapur highway.', priority: 'HIGH', status: 'PENDING', timestamp: new Date().toISOString() },
+    { id: 'r2', user: 'Mauli Tukaram', message: 'Medical emergency at camp 4.', priority: 'HIGH', status: 'RESOLVED', timestamp: new Date(Date.now() - 3600000).toISOString() },
+    { id: 'r3', user: 'Anonymous', message: 'Road is too crowded, stampede risk.', priority: 'MEDIUM', status: 'PENDING', timestamp: new Date(Date.now() - 7200000).toISOString() },
+  ],
+  '/feedback': [
+    { id: 'f1', user: 'Varkari Santosh', message: 'The new app is very helpful for finding food.', timestamp: new Date().toISOString() },
+    { id: 'f2', user: 'Anonymous', message: 'Please add more local Marathi songs in the connect section.', timestamp: new Date(Date.now() - 86400000).toISOString() },
+  ],
+
+
   '/cleaner/log': [
     { id: 'cl1', toilet_name: 'Mobile Sanitation Complex A', cleaned_by: 'Swachhata Sevak Ramesh', cleaned_at: new Date(Date.now() - 720000).toISOString(), status: 'COMPLETED' },
     { id: 'cl2', toilet_name: 'Ghat Sanitation Block B', cleaned_by: 'Swachhata Staff Team B', cleaned_at: new Date(Date.now() - 3900000).toISOString(), status: 'NEEDS_INSPECTION' },
   ]
 };
 
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+
+let fbDb: any = null;
+if (typeof window !== 'undefined') {
+  try {
+    const app = initializeApp({
+      projectId: "wariverse-a8fca",
+      apiKey: "AIzaSyCF9SRQF-mIwy1G2PzYGnOLZ7cU1rcScZc"
+    });
+    fbDb = getFirestore(app);
+  } catch (e) {}
+}
+
 export async function apiCall(
   endpoint: string,
   options: RequestInit = {},
   token?: string | null
 ): Promise<any> {
+  const actualToken = token || getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (actualToken) {
+    headers['Authorization'] = `Bearer ${actualToken}`;
   }
 
+  // Intercept and use Firebase directly for shared collections
+  if (fbDb && typeof window !== 'undefined') {
+    try {
+      if (endpoint === '/food') {
+        const snap = await getDocs(collection(fbDb, 'food_centers'));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      if (endpoint.startsWith('/food/') && options.method === 'PATCH') {
+        const id = endpoint.split('/')[2];
+        const body = JSON.parse(options.body as string);
+        await updateDoc(doc(fbDb, 'food_centers', id), body);
+        return { success: true };
+      }
+      if (endpoint === '/water') {
+        const snap = await getDocs(collection(fbDb, 'water_points'));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      
+      
+      if (endpoint === '/reports') {
+        const snap = await getDocs(collection(fbDb, 'reports'));
+        if (!snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+      }
+      if (endpoint.startsWith('/reports/') && options.method === 'PATCH') {
+        const id = endpoint.split('/')[2];
+        const body = JSON.parse(options.body);
+        await updateDoc(doc(fbDb, 'reports', id), body);
+        return { success: true };
+      }
+
+      
+      if (endpoint === '/sanitation_reports') {
+        const snap = await getDocs(collection(fbDb, 'sanitation_reports'));
+        if (!snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+      }
+
+      if (endpoint === '/feedback') {
+        const snap = await getDocs(collection(fbDb, 'feedback'));
+        if (!snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+      }
+      if (endpoint.startsWith('/feedback/') && options.method === 'PATCH') {
+        const id = endpoint.split('/')[2];
+        const body = JSON.parse(options.body);
+        await updateDoc(doc(fbDb, 'feedback', id), body);
+        return { success: true };
+      }
+
+      if (endpoint === '/shelters') {
+        const snap = await getDocs(collection(fbDb, 'shelters'));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+    } catch (e) {
+      console.warn("Firebase fetch failed, falling back to Python API:", e);
+    }
+  }
+
+
+  // Hardcoded interception for reports and feedback if backend doesn't support it yet
+  if (endpoint === '/sanitation_reports') return MOCK_DATA['/sanitation_reports'] || [];
+  if (endpoint === '/reports') return MOCK_DATA['/reports'];
+  if (endpoint.startsWith('/sanitation_reports/') && options.method === 'PATCH') return { success: true };
+  if (endpoint.startsWith('/reports/') && options.method === 'PATCH') return { success: true };
+  if (endpoint === '/feedback') return MOCK_DATA['/feedback'];
+
   let backendUnavailable = false;
+
   try {
     const res = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
@@ -251,7 +350,7 @@ const MOCK_DEMO_USERS: Record<string, { role: string; display_name: string }> = 
   'ngo@wariverse.demo': { role: 'NGO', display_name: 'Seva Trust Coordinator' },
   'provider@wariverse.demo': { role: 'SERVICE_PROVIDER', display_name: 'Annadan Kendra Head' },
   'cleaner@wariverse.demo': { role: 'CLEANER', display_name: 'Swachhata Sevak Ramesh' },
-  'admin@wariverse.demo': { role: 'ADMIN', display_name: 'Wari Control Admin' },
+  'admin@wariverse.demo': { role: 'ADMIN', display_name: 'Vari Control Admin' },
 };
 
 export async function loginUser(email: string, password: string) {
@@ -259,7 +358,16 @@ export async function loginUser(email: string, password: string) {
   formData.append('username', email);
   formData.append('password', password);
 
+
+  // Hardcoded interception for reports and feedback if backend doesn't support it yet
+  if (endpoint === '/sanitation_reports') return MOCK_DATA['/sanitation_reports'] || [];
+  if (endpoint === '/reports') return MOCK_DATA['/reports'];
+  if (endpoint.startsWith('/sanitation_reports/') && options.method === 'PATCH') return { success: true };
+  if (endpoint.startsWith('/reports/') && options.method === 'PATCH') return { success: true };
+  if (endpoint === '/feedback') return MOCK_DATA['/feedback'];
+
   let backendUnavailable = false;
+
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
@@ -321,8 +429,9 @@ export function clearAuth() {
 
 export function createWebSocket(clientId: string, onMessage: (data: any) => void, token?: string | null): WebSocket {
   try {
-    if (!token) return {} as WebSocket;
-    const ws = new WebSocket(`${WS_BASE}/ws/${clientId}?token=${encodeURIComponent(token)}`);
+    const actualToken = token || getToken();
+    if (!actualToken) return {} as WebSocket;
+    const ws = new WebSocket(`${WS_BASE}/ws/${clientId}?token=${encodeURIComponent(actualToken)}`);
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);

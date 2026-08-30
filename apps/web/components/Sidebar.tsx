@@ -7,71 +7,12 @@ import { useLanguage, Language } from '@/context/LanguageContext';
 type NavItemKey = { icon: string; key: string; path: string };
 
 const ROLE_NAV: Record<string, NavItemKey[]> = {
-  VARKARI: [
-    { icon: '🏠', key: 'home', path: '/dashboard/varkari' },
-    { icon: '🚩', key: 'dindi', path: '/dashboard/varkari/dindi' },
-    { icon: '🗺️', key: 'map', path: '/dashboard/varkari/map' },
-    { icon: '🆘', key: 'smartSos', path: '/dashboard/varkari/sos' },
-    { icon: '👥', key: 'wariConnect', path: '/dashboard/varkari/connect' },
-    { icon: '🍛', key: 'food', path: '/dashboard/varkari/food' },
-    { icon: '💧', key: 'water', path: '/dashboard/varkari/water' },
-    { icon: '🏥', key: 'medical', path: '/dashboard/varkari/medical' },
-    { icon: '🏠', key: 'shelter', path: '/dashboard/varkari/shelter' },
-    { icon: '🚻', key: 'toilets', path: '/dashboard/varkari/toilets' },
-    { icon: '🌿', key: 'wellness', path: '/dashboard/varkari/wellness' },
-    { icon: '👤', key: 'lostFound', path: '/dashboard/varkari/lost' },
-    { icon: '🔔', key: 'alerts', path: '/dashboard/varkari/alerts' },
-  ],
-  DINDI_LEADER: [
-    { icon: '👑', key: 'leaderDashboard', path: '/dashboard/dindi-leader' },
-    { icon: '🚩', key: 'dindi', path: '/dashboard/varkari/dindi' },
-    { icon: '🗺️', key: 'map', path: '/dashboard/varkari/map' },
-    { icon: '🆘', key: 'smartSos', path: '/dashboard/varkari/sos' },
-    { icon: '📢', key: 'community', path: '/dashboard/varkari/connect' },
-  ],
-  VOLUNTEER: [
-    { icon: '🏠', key: 'dashboard', path: '/dashboard/volunteer' },
-    { icon: '🆘', key: 'sosIncidents', path: '/dashboard/volunteer/sos' },
-    { icon: '🤝', key: 'helpRequests', path: '/dashboard/volunteer/help' },
-    { icon: '👤', key: 'lostPersons', path: '/dashboard/volunteer/lost' },
-    { icon: '👥', key: 'community', path: '/dashboard/volunteer/community' },
-    { icon: '📊', key: 'crowdReports', path: '/dashboard/volunteer/crowd' },
-  ],
-  MEDICAL_TEAM: [
-    { icon: '🏠', key: 'dashboard', path: '/dashboard/medical' },
-    { icon: '🆘', key: 'emergencyQueue', path: '/dashboard/medical/queue' },
-    { icon: '🏥', key: 'camps', path: '/dashboard/medical/camps' },
-    { icon: '🚑', key: 'ambulance', path: '/dashboard/medical/ambulance' },
-    { icon: '📋', key: 'cases', path: '/dashboard/medical/cases' },
-  ],
-  POLICE: [
-    { icon: '🏠', key: 'dashboard', path: '/dashboard/police' },
-    { icon: '🆘', key: 'sosIncidents', path: '/dashboard/police/sos' },
-    { icon: '👤', key: 'lostPersons', path: '/dashboard/police/missing' },
-    { icon: '🚦', key: 'crowdAlerts', path: '/dashboard/police/crowd' },
-    { icon: '⚠️', key: 'routeAlerts', path: '/dashboard/police/routes' },
-  ],
   NGO: [
     { icon: '🏠', key: 'dashboard', path: '/dashboard/ngo' },
     { icon: '🍛', key: 'foodDist', path: '/dashboard/ngo/food' },
     { icon: '💧', key: 'waterDist', path: '/dashboard/ngo/water' },
     { icon: '🏠', key: 'shelter', path: '/dashboard/ngo/shelters' },
     { icon: '🤝', key: 'volunteers', path: '/dashboard/ngo/volunteers' },
-    { icon: '📦', key: 'resources', path: '/dashboard/ngo/resources' },
-  ],
-  SERVICE_PROVIDER: [
-    { icon: '🏠', key: 'dashboard', path: '/dashboard/provider' },
-    { icon: '🍛', key: 'food', path: '/dashboard/provider/food' },
-    { icon: '💧', key: 'water', path: '/dashboard/provider/water' },
-    { icon: '🏠', key: 'shelter', path: '/dashboard/provider/shelter' },
-    { icon: '⚡', key: 'charging', path: '/dashboard/provider/charging' },
-    { icon: '🌿', key: 'wellness', path: '/dashboard/provider/wellness' },
-  ],
-  CLEANER: [
-    { icon: '🏠', key: 'dashboard', path: '/dashboard/cleaner' },
-    { icon: '🚻', key: 'toilets', path: '/dashboard/cleaner/toilets' },
-    { icon: '📋', key: 'cleaningLog', path: '/dashboard/cleaner/log' },
-    { icon: '⚠️', key: 'issues', path: '/dashboard/cleaner/issues' },
   ],
   ADMIN: [
     { icon: '🏠', key: 'commandCenter', path: '/dashboard/admin' },
@@ -80,6 +21,8 @@ const ROLE_NAV: Record<string, NavItemKey[]> = {
     { icon: '📊', key: 'analytics', path: '/dashboard/admin/analytics' },
     { icon: '🤖', key: 'aiPredictions', path: '/dashboard/admin/predictions' },
     { icon: '👥', key: 'users', path: '/dashboard/admin/users' },
+    { icon: '🚨', key: 'reports', path: '/dashboard/admin/reports' },
+    { icon: '💬', key: 'feedback', path: '/dashboard/admin/feedback' },
     { icon: '🍛', key: 'food', path: '/dashboard/admin/food' },
     { icon: '💧', key: 'water', path: '/dashboard/admin/water' },
     { icon: '🚻', key: 'toilets', path: '/dashboard/admin/toilets' },
@@ -90,28 +33,11 @@ const ROLE_NAV: Record<string, NavItemKey[]> = {
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  VARKARI: '#D97706', // Saffron / Gold
-  DINDI_LEADER: '#7C3AED',
-  VOLUNTEER: '#16A34A',
-  MEDICAL_TEAM: '#DC2626',
-  POLICE: '#2563EB',
   NGO: '#7C3AED',
-  SERVICE_PROVIDER: '#0891B2',
-  CLEANER: '#CA8A04',
   ADMIN: '#4F46E5',
 };
 
-const ROLE_ICONS: Record<string, string> = {
-  VARKARI: '🚩',
-  DINDI_LEADER: '👑',
-  VOLUNTEER: '🤝',
-  MEDICAL_TEAM: '🏥',
-  POLICE: '🚔',
-  NGO: '🌿',
-  SERVICE_PROVIDER: '🏪',
-  CLEANER: '🧹',
-  ADMIN: '⚙️',
-};
+
 
 export default function Sidebar() {
   const router = useRouter();
@@ -125,19 +51,13 @@ export default function Sidebar() {
     setMounted(true);
   }, []);
 
-  const role = (mounted ? user?.role : 'VARKARI') || 'VARKARI';
+  const role = (mounted ? user?.role : 'ADMIN') || 'ADMIN';
   const displayName = mounted ? (user?.display_name || 'User') : 'User';
-  const navItems = ROLE_NAV[role] || ROLE_NAV.VARKARI;
-  const roleColor = ROLE_COLORS[role] || '#D97706';
+  const navItems = ROLE_NAV[role] || ROLE_NAV.ADMIN;
+  const roleColor = ROLE_COLORS[role] || '#4F46E5';
 
   const roleKeyMap: Record<string, string> = {
-    VARKARI: 'varkari',
-    VOLUNTEER: 'volunteer',
-    MEDICAL_TEAM: 'medicalTeam',
-    POLICE: 'police',
     NGO: 'ngo',
-    SERVICE_PROVIDER: 'serviceProvider',
-    CLEANER: 'cleaner',
     ADMIN: 'admin',
   };
 
@@ -150,10 +70,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       {/* Devotional / Professional Header */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">🚩</div>
+        <img src="/images/logo.jpg" alt="VariVerse Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', flexShrink: 0, boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }} />
         <div>
           <div className="sidebar-logo-text">{t('appName')}</div>
-          <div className="sidebar-logo-sub">{t('appSubtitle')}</div>
         </div>
       </div>
 
@@ -173,9 +92,6 @@ export default function Sidebar() {
 
       {/* User Info */}
       <div style={{ padding: '0.75rem 1rem', background: `${roleColor}0D`, borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 8, background: roleColor, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-          {ROLE_ICONS[role]}
-        </div>
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1.2, color: '#1E293B' }}>{displayName}</div>
           <div style={{ fontSize: '0.7rem', color: roleColor, fontWeight: 600 }}>{t(roleKeyMap[role] || 'varkari')}</div>

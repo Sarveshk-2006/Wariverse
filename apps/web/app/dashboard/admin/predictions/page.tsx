@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AIPredictionsPage() {
+  const { t, tn } = useLanguage();
   const [crowdPred, setCrowdPred] = useState<any>(null);
   const [resourcePred, setResourcePred] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function AIPredictionsPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>🤖 AI Predictions</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 900 }}>🤖 {t('aiPredictions') || 'AI Predictions'}</h1>
             <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>
               Crowd & Resource Intelligence · <span className="badge badge-orange" style={{ fontSize: '0.65rem' }}>DEMO MODE</span>
             </p>
@@ -138,7 +140,7 @@ export default function AIPredictionsPage() {
                 <div style={{ fontSize: '0.7rem', color: '#FB923C', fontWeight: 700, marginBottom: '0.5rem' }}>⚠️ DEMO PREDICTION NOTICE</div>
                 <p style={{ fontSize: '0.8rem', color: '#9CA3AF' }}>
                   These predictions use deterministic demo algorithms for hackathon demonstration. 
-                  In production, real ML models trained on historical Wari crowd data would be used.
+                  In production, real ML models trained on historical Vari crowd data would be used.
                   Model: DEMO_PREDICTION_v1 · Confidence: 78% (simulated)
                 </p>
               </div>

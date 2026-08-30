@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminAnalyticsPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [analytics, setAnalytics] = useState<any>(null);
   const [crowd, setCrowd] = useState<any[]>([]);
@@ -58,7 +60,7 @@ export default function AdminAnalyticsPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>📊 Analytics Dashboard</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>📊 {t('analytics') || 'Analytics Dashboard'}</h1>
             <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>
               Admin — Real-time situational awareness · {analytics ? new Date(analytics.timestamp).toLocaleTimeString() : '—'}
             </p>
@@ -205,7 +207,7 @@ export default function AdminAnalyticsPage() {
                     { label: '🌐 Digital Twin', path: '/dashboard/admin/digital-twin' },
                     { label: '🔮 Predictions', path: '/dashboard/admin/predictions' },
                     { label: '🆘 SOS Monitor', path: '/dashboard/admin/sos' },
-                    { label: '👥 User Management', path: '/dashboard/admin/users' },
+                    { label: `👥 ${t('users') || 'User Management'}`, path: '/dashboard/admin/users' },
                     { label: '🍛 Food Centres', path: '/dashboard/admin/food' },
                     { label: '💧 Water Points', path: '/dashboard/admin/water' },
                     { label: '👤 Missing Persons', path: '/dashboard/admin/lost' },

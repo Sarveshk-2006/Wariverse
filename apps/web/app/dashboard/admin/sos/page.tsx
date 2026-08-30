@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminSOSPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [sos, setSos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,18 @@ export default function AdminSOSPage() {
   };
 
   const filtered = filter === 'ALL' ? sos : sos.filter(s => s.status === filter);
+  
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'ALL': return t('all') || 'All';
+      case 'CREATED': return t('statusCreated') || 'CREATED';
+      case 'ACKNOWLEDGED': return t('statusAck') || 'ACKNOWLEDGED';
+      case 'IN_PROGRESS': return t('statusInProgress') || 'IN PROGRESS';
+      case 'RESOLVED': return t('statusResolved') || 'RESOLVED';
+      default: return status.replace('_', ' ');
+    }
+  }
+
   const statusColor: Record<string, string> = { CREATED: '#EF4444', ACKNOWLEDGED: '#F59E0B', VOLUNTEER_ASSIGNED: '#3B82F6', MEDICAL_ASSIGNED: '#8B5CF6', IN_PROGRESS: '#F97316', RESOLVED: '#22C55E', CANCELLED: '#9CA3AF' };
 
   return (
@@ -26,11 +40,11 @@ export default function AdminSOSPage() {
       <Sidebar />
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>🆘 SOS Feed</h1>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>🆘 {t('sosIncidents') || 'SOS Feed'}</h1>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {['ALL', 'CREATED', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED'].map(f => (
               <button key={f} className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setFilter(f)}>
-                {f === 'ALL' ? 'All' : f.replace('_', ' ')} {f !== 'ALL' && `(${sos.filter(s => s.status === f).length})`}
+                {getStatusLabel(f)} {f !== 'ALL' && `(${tn(sos.filter(s => s.status === f).length)})`}
               </button>
             ))}
           </div>
@@ -44,7 +58,7 @@ export default function AdminSOSPage() {
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 800, color: statusColor[s.status], fontSize: '1rem' }}>{s.category}</span>
-                        <span className="badge" style={{ background: `${statusColor[s.status]}20`, color: statusColor[s.status] }}>{s.status}</span>
+                        <span className="badge" style={{ background: `${statusColor[s.status]}20`, color: statusColor[s.status] }}>{getStatusLabel(s.status)}</span>
                         {s.is_offline && <span className="badge badge-yellow">📡 Offline</span>}
                         <span style={{ fontSize: '0.7rem', color: '#9CA3AF', marginLeft: 'auto' }}>
                           {new Date(s.created_at).toLocaleString()}
@@ -59,9 +73,9 @@ export default function AdminSOSPage() {
                     </div>
                   </div>
                   <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {s.status === 'CREATED' && <button className="btn btn-sm btn-primary" onClick={() => updateStatus(s.id, 'ACKNOWLEDGED')}>Acknowledge</button>}
-                    {['ACKNOWLEDGED', 'VOLUNTEER_ASSIGNED'].includes(s.status) && <button className="btn btn-sm" style={{ background: '#8B5CF6', color: 'white' }} onClick={() => updateStatus(s.id, 'IN_PROGRESS')}>In Progress</button>}
-                    {!['RESOLVED', 'CANCELLED'].includes(s.status) && <button className="btn btn-sm" style={{ background: '#22C55E', color: 'white' }} onClick={() => updateStatus(s.id, 'RESOLVED')}>Mark Resolved</button>}
+                    {s.status === 'CREATED' && <button className="btn btn-sm btn-primary" onClick={() => updateStatus(s.id, 'ACKNOWLEDGED')}>{t('acknowledge') || 'Acknowledge'}</button>}
+                    {['ACKNOWLEDGED', 'VOLUNTEER_ASSIGNED'].includes(s.status) && <button className="btn btn-sm" style={{ background: '#8B5CF6', color: 'white' }} onClick={() => updateStatus(s.id, 'IN_PROGRESS')}>{t('inProgressBtn') || 'In Progress'}</button>}
+                    {!['RESOLVED', 'CANCELLED'].includes(s.status) && <button className="btn btn-sm" style={{ background: '#22C55E', color: 'white' }} onClick={() => updateStatus(s.id, 'RESOLVED')}>{t('resolve') || 'Mark Resolved'}</button>}
                     <span style={{ fontSize: '0.7rem', color: '#9CA3AF', alignSelf: 'center' }}>ID: {s.id.slice(0, 8)}</span>
                   </div>
                 </div>

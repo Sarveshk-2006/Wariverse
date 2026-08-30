@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import { apiCall, getToken } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AdminLostPage() {
+  const { t, tn } = useLanguage();
   const token = getToken();
   const [cases, setCases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,8 +36,8 @@ export default function AdminLostPage() {
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>👤 Missing Persons — Admin</h1>
-            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>All lost person cases across the Wari route</p>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 800 }}>👤 {t('lostPersons') || 'Missing Persons'}</h1>
+            <p style={{ fontSize: '0.8rem', color: '#6B7280' }}>All lost person cases across the Vari route</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <span className="badge badge-red">{missing} Missing</span>
@@ -98,7 +100,7 @@ export default function AdminLostPage() {
                       <div>📅 {new Date(lp.created_at).toLocaleDateString()}</div>
                     </div>
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`MISSING PERSON\nName: ${lp.name}\nAge: ${lp.age}\nGender: ${lp.gender}\nAadhar: 9876 5432 ${lp.id.slice(0,4).replace(/\D/g, '0').padEnd(4, '0')}\nAddress: 12, Pandurang Niwas, Wari Route\nBlood Group: ${lp.blood_group || 'Unknown'}\nGuardian Contact: ${lp.emergency_contact || 'N/A'}\nID: ${lp.qr_code}`)}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`MISSING PERSON\nName: ${lp.name}\nAge: ${lp.age}\nGender: ${lp.gender}\nAadhar: 9876 5432 ${lp.id.slice(0,4).replace(/\D/g, '0').padEnd(4, '0')}\nAddress: 12, Pandurang Niwas, Vari Route\nBlood Group: ${lp.blood_group || 'Unknown'}\nGuardian Contact: ${lp.emergency_contact || 'N/A'}\nID: ${lp.qr_code}`)}`} 
                       alt="Missing Person QR" 
                       style={{ width: 64, height: 64, borderRadius: 8, border: '1px solid #E2E8F0', cursor: 'pointer' }}
                       title="Scan to view missing person details"
@@ -139,7 +141,7 @@ export default function AdminLostPage() {
                 
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: 12, display: 'inline-block', border: '1px solid #E2E8F0' }}>
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`MISSING PERSON\nName: ${showQrModal.name}\nAge: ${showQrModal.age}\nGender: ${showQrModal.gender}\nAadhar: 9876 5432 ${showQrModal.id.slice(0,4).replace(/\D/g, '0').padEnd(4, '0')}\nAddress: 12, Pandurang Niwas, Wari Route\nBlood Group: ${showQrModal.blood_group || 'Unknown'}\nGuardian Contact: ${showQrModal.emergency_contact || 'N/A'}\nID: ${showQrModal.qr_code}`)}`} 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`MISSING PERSON\nName: ${showQrModal.name}\nAge: ${showQrModal.age}\nGender: ${showQrModal.gender}\nAadhar: 9876 5432 ${showQrModal.id.slice(0,4).replace(/\D/g, '0').padEnd(4, '0')}\nAddress: 12, Pandurang Niwas, Vari Route\nBlood Group: ${showQrModal.blood_group || 'Unknown'}\nGuardian Contact: ${showQrModal.emergency_contact || 'N/A'}\nID: ${showQrModal.qr_code}`)}`} 
                     alt="Enlarged QR ID" 
                     style={{ width: 200, height: 200, display: 'block' }} 
                   />
