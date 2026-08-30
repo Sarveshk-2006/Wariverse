@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     XAI_REALTIME_BASE_URL: str = "https://api.x.ai/v1"
     XAI_VOICE: str = "ara"
     DEMO_MODE: bool = True
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,https://web-one-tau-17.vercel.app"
     APP_NAME: str = "WariVerse AI"
     
     class Config:

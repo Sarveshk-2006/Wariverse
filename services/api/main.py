@@ -2387,7 +2387,7 @@ async def create_grok_realtime_session(
 # ─── Health Check ──────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "WariVerse AI API", "version": "1.0.0", "demo_mode": settings.DEMO_MODE}
+    return {"status": "ok"}
 
 
 @app.get("/")
