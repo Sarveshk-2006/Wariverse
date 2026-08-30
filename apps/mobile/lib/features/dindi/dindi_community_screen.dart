@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/wari_theme_exports.dart';
 import '../../core/widgets/wari_widgets_exports.dart';
+import '../../models/models_exports.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/virtual_dindi_provider.dart';
 import 'widgets/dindi_audio_player_widget.dart';
 
-/// Dual-Channel Dindi Communication Center (Official Announcements + Community General Chat).
+/// Unified Dual-Channel Dindi Communication Center (Official Announcements + Community General Chat).
+/// Shared by both Dindi Leaders and Varkari Pilgrims with role-based write permissions.
 class DindiCommunityScreen extends StatefulWidget {
   const DindiCommunityScreen({super.key, this.dindiId});
 
@@ -41,6 +43,244 @@ class _DindiCommunityScreenState extends State<DindiCommunityScreen> with Single
     _messageController.clear();
   }
 
+  void _showPostAnnouncementDialog(BuildContext context, VirtualDindiProvider provider) {
+    final titleController = TextEditingController();
+    final messageController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Icon(Icons.campaign_rounded, color: WariColors.primary, size: 24),
+                  SizedBox(width: 8),
+                  Text('Post Official Dindi Announcement', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Announcement Title',
+                  hintText: 'e.g. Schedule Update / Palkhi Arrival',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: messageController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Announcement Message',
+                  hintText: 'Type details for all Varkari pilgrims...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WariColors.primary,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  final title = titleController.text.trim();
+                  final msg = messageController.text.trim();
+                  if (title.isEmpty || msg.isEmpty) return;
+
+                  provider.sendLeaderBroadcast(
+                    title: title,
+                    message: msg,
+                    type: 'ANNOUNCEMENT',
+                  );
+
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Announcement published to all Dindi members in real time.')),
+                  );
+                },
+                icon: const Icon(Icons.send_rounded, color: Colors.white),
+                label: const Text('Publish Announcement', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPalkhiAudioBroadcastDialog(BuildContext context, VirtualDindiProvider provider) {
+    final titleController = TextEditingController(text: 'Palkhi Voice Audio Broadcast');
+    final captionController = TextEditingController();
+    bool isRecordingSimulated = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: const [
+                      Icon(Icons.mic_rounded, color: WariColors.primary, size: 24),
+                      SizedBox(width: 8),
+                      Text('Palkhi Audio Broadcast', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Broadcast Title',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: captionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Optional Audio Caption / Instructions',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Simulated Audio Recording Control Box
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: WariColors.primaryLight.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: WariColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: isRecordingSimulated ? WariColors.danger : WariColors.primary,
+                          child: Icon(
+                            isRecordingSimulated ? Icons.stop_rounded : Icons.mic_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isRecordingSimulated ? 'Recording Palkhi Audio... (00:14)' : 'Ready to Record Voice Broadcast',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                              Text(
+                                isRecordingSimulated ? 'Tap Stop when finished' : 'Tap Record to capture audio instructions',
+                                style: const TextStyle(fontSize: 11, color: WariColors.textMuted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isRecordingSimulated ? WariColors.danger : WariColors.primary,
+                          ),
+                          onPressed: () {
+                            setModalState(() {
+                              isRecordingSimulated = !isRecordingSimulated;
+                            });
+                          },
+                          child: Text(isRecordingSimulated ? 'STOP' : 'REC', style: const TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WariColors.primary,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      final title = titleController.text.trim();
+                      final caption = captionController.text.trim();
+
+                      provider.sendLeaderBroadcast(
+                        title: title.isEmpty ? 'Palkhi Voice Audio Broadcast' : title,
+                        message: caption.isEmpty ? 'Live audio message from Dindi Leader' : caption,
+                        type: 'PALKHI_AUDIO',
+                        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                      );
+
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Palkhi Audio Broadcast published to all Dindi members.')),
+                      );
+                    },
+                    icon: const Icon(Icons.graphic_eq_rounded, color: Colors.white),
+                    label: const Text('Publish Audio Broadcast', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dindiProvider = Provider.of<VirtualDindiProvider>(context);
@@ -59,6 +299,8 @@ class _DindiCommunityScreenState extends State<DindiCommunityScreen> with Single
         ),
       );
     }
+
+    final isLeaderOrAdmin = userProvider.currentRole == UserRole.DINDI_LEADER || userProvider.currentRole == UserRole.ADMIN;
 
     return Scaffold(
       backgroundColor: WariColors.background,
@@ -80,7 +322,7 @@ class _DindiCommunityScreenState extends State<DindiCommunityScreen> with Single
         controller: _tabController,
         children: [
           // Tab 1: Official Announcements Channel
-          _buildAnnouncementsTab(dindiProvider, userProvider),
+          _buildAnnouncementsTab(dindiProvider, userProvider, isLeaderOrAdmin),
 
           // Tab 2: General Chat / Community Messages Tab
           _buildCommunityChatTab(dindiProvider, userProvider),
@@ -89,33 +331,92 @@ class _DindiCommunityScreenState extends State<DindiCommunityScreen> with Single
     );
   }
 
-  Widget _buildAnnouncementsTab(VirtualDindiProvider dindiProvider, UserProvider userProvider) {
+  Widget _buildAnnouncementsTab(VirtualDindiProvider dindiProvider, UserProvider userProvider, bool isLeaderOrAdmin) {
     final broadcasts = dindiProvider.broadcasts;
 
     return ListView(
       padding: const EdgeInsets.all(WariSpacing.base),
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: WariColors.primaryLight.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
-            border: Border.all(color: WariColors.primary.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: const [
-              Icon(Icons.verified_user_rounded, color: WariColors.primary, size: 20),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Official Dindi Broadcast Channel — Only Dindi Leaders and Admins publish updates here.',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: WariColors.primaryDark),
+        // Leader Action Bar (Only visible to Leaders & Admins)
+        if (isLeaderOrAdmin) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: WariColors.primaryLight.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+              border: Border.all(color: WariColors.primary.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.shield_outlined, color: WariColors.primaryDark, size: 18),
+                    SizedBox(width: 6),
+                    Text(
+                      'Dindi Leader Controls',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: WariColors.primaryDark),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: WariColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () => _showPostAnnouncementDialog(context, dindiProvider),
+                        icon: const Icon(Icons.add_alert_rounded, size: 16, color: Colors.white),
+                        label: const Text('Post Text', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: WariColors.primaryDark,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () => _showPalkhiAudioBroadcastDialog(context, dindiProvider),
+                        icon: const Icon(Icons.graphic_eq_rounded, size: 16, color: Colors.white),
+                        label: const Text('Palkhi Audio', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: WariSpacing.base),
+          const SizedBox(height: WariSpacing.base),
+        ] else ...[
+          // Varkari Banner
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: WariColors.primaryLight.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
+              border: Border.all(color: WariColors.primary.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: const [
+                Icon(Icons.verified_user_rounded, color: WariColors.primary, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Official Dindi Broadcast Channel — Real-time verified updates & audio from your Leader.',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: WariColors.primaryDark),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: WariSpacing.base),
+        ],
 
         if (broadcasts.isEmpty)
           const WariEmptyState(
@@ -235,7 +536,7 @@ class _DindiCommunityScreenState extends State<DindiCommunityScreen> with Single
                 ),
         ),
 
-        // Text Message Input Bar
+        // Text Message Input Bar (Both Leaders and Varkaris can send general chat messages)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: const BoxDecoration(

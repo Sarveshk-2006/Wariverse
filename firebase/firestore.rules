@@ -230,12 +230,12 @@ service cloud.firestore {
 
       match /broadcasts/{broadcastId} {
         allow read: if isAuthenticated();
-        allow create, update: if isAuthenticated() && (isRole('DINDI_LEADER') || isAdmin() || resource.data.sender_uid == request.auth.uid);
+        allow create, update, delete: if isAuthenticated() && (isRole('DINDI_LEADER') || isAdmin() || request.auth.uid == get(/databases/$(database)/documents/virtual_dindis/$(dindiId)).data.leader_user_id);
       }
 
       match /announcements/{announcementId} {
         allow read: if isAuthenticated();
-        allow create, update: if isAuthenticated() && (isRole('DINDI_LEADER') || isAdmin() || resource.data.sender_uid == request.auth.uid);
+        allow create, update, delete: if isAuthenticated() && (isRole('DINDI_LEADER') || isAdmin() || request.auth.uid == get(/databases/$(database)/documents/virtual_dindis/$(dindiId)).data.leader_user_id);
       }
 
       match /community_messages/{messageId} {
