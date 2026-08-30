@@ -15,6 +15,25 @@ import {
 const API_BASE = '/api';
 const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || 'wss://variverse.onrender.com';
 
+// ── In-memory cache (5-minute TTL) — prevents Firestore quota exhaustion ──────
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const _cache: Record<string, { data: any; ts: number }> = {};
+
+function cacheGet(key: string): any | null {
+  const entry = _cache[key];
+  if (entry && Date.now() - entry.ts < CACHE_TTL_MS) return entry.data;
+  return null;
+}
+
+function cacheSet(key: string, data: any) {
+  _cache[key] = { data, ts: Date.now() };
+}
+
+export function invalidateCache(key?: string) {
+  if (key) delete _cache[key];
+  else Object.keys(_cache).forEach(k => delete _cache[k]);
+}
+
 // ── Firebase init ─────────────────────────────────────────────────────────────
 let fbDb: any = null;
 
@@ -38,8 +57,12 @@ export function getFirestoreDb() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 async function fetchCollection(col: string) {
+  const cached = cacheGet(col);
+  if (cached) return cached;
   const snap = await getDocs(collection(fbDb, col));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  cacheSet(col, data);
+  return data;
 }
 
 async function patchDoc(col: string, id: string, data: any) {
