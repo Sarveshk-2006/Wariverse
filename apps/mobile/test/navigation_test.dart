@@ -181,7 +181,7 @@ void main() {
 
     final cleanerTabs = RoleNavigationConfig.getTabsForRole(UserRole.CLEANER);
     expect(cleanerTabs.length, 5);
-    expect(cleanerTabs.map((t) => t.label), containsAll(['RESPONSE QUEUE', 'LIVE MAP', 'ACTIVE TASK', 'HISTORY', 'PROFILE']));
+    expect(cleanerTabs.map((t) => t.label), containsAll(['TASKS', 'LIVE MAP', 'ACTIVE TASK', 'HISTORY', 'PROFILE']));
 
     final adminTabs = RoleNavigationConfig.getTabsForRole(UserRole.ADMIN);
     expect(adminTabs.length, 3);

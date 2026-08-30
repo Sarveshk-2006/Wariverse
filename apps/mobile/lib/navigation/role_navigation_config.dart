@@ -6,9 +6,14 @@ import '../features/map/map_screen.dart';
 import '../features/sos/sos_screen.dart';
 import '../features/services/services_screen.dart';
 import '../features/placeholders/profile_placeholder.dart';
-import '../features/dindi/virtual_dindi_detail_screen.dart';
+import '../features/dindi/virtual_dindi_overview_screen.dart';
+import '../features/dindi/virtual_dindi_members_screen.dart';
 import '../features/incidents/volunteer_response_queue_screen.dart';
+import '../features/incidents/volunteer_active_task_screen.dart';
 import '../features/sos/sos_incident_history_screen.dart';
+import '../features/cleanwari/sanitation_tasks_screen.dart';
+import '../features/cleanwari/sanitation_active_task_screen.dart';
+import '../features/cleanwari/sanitation_history_screen.dart';
 
 class RoleTabItem {
   final String label;
@@ -86,8 +91,8 @@ class RoleNavigationConfig {
             label: 'MY DINDI',
             icon: Icons.groups_outlined,
             selectedIcon: Icons.groups,
-            pageWidget: const VirtualDindiDetailScreen(),
-            pageTitle: 'Virtual Dindi Management & Roster',
+            pageWidget: const VirtualDindiOverviewScreen(),
+            pageTitle: 'Procession Overview & Schedule',
           ),
           RoleTabItem(
             label: 'LIVE MAP',
@@ -100,8 +105,8 @@ class RoleNavigationConfig {
             label: 'MEMBERS',
             icon: Icons.people_alt_outlined,
             selectedIcon: Icons.people_alt,
-            pageWidget: const VirtualDindiDetailScreen(),
-            pageTitle: 'Live Member Locations & Separation',
+            pageWidget: const VirtualDindiMembersScreen(),
+            pageTitle: 'Live Member Roster & Separation Monitor',
           ),
           RoleTabItem(
             label: 'PROFILE',
@@ -112,11 +117,10 @@ class RoleNavigationConfig {
           ),
         ];
 
-      // 3. FIELD RESPONDER PORTAL (VOLUNTEER, POLICE, MEDICAL, CLEANER)
+      // 3. FIELD VOLUNTEER RESPONDER PORTAL
       case UserRole.VOLUNTEER:
       case UserRole.POLICE:
       case UserRole.MEDICAL_TEAM:
-      case UserRole.CLEANER:
         return [
           RoleTabItem(
             label: 'RESPONSE QUEUE',
@@ -136,15 +140,15 @@ class RoleNavigationConfig {
             label: 'ACTIVE TASK',
             icon: Icons.task_alt_outlined,
             selectedIcon: Icons.task_alt,
-            pageWidget: const VolunteerResponseQueueScreen(),
-            pageTitle: 'Active Incident Response & Navigation',
+            pageWidget: const VolunteerActiveTaskScreen(),
+            pageTitle: 'Active Response Task',
           ),
           RoleTabItem(
             label: 'HISTORY',
             icon: Icons.history_outlined,
             selectedIcon: Icons.history,
-            pageWidget: const SosScreen(),
-            pageTitle: 'Volunteer Incident History',
+            pageWidget: const SosIncidentHistoryScreen(),
+            pageTitle: 'Completed Incident History',
           ),
           RoleTabItem(
             label: 'PROFILE',
@@ -152,6 +156,46 @@ class RoleNavigationConfig {
             selectedIcon: Icons.person,
             pageWidget: const ProfilePlaceholder(),
             pageTitle: 'Volunteer Responder Profile',
+          ),
+        ];
+
+      // 4. SANITATION CLEANER STAFF PORTAL
+      case UserRole.CLEANER:
+        return [
+          RoleTabItem(
+            label: 'TASKS',
+            icon: Icons.cleaning_services_outlined,
+            selectedIcon: Icons.cleaning_services,
+            pageWidget: const SanitationTasksScreen(),
+            pageTitle: 'Sanitation Dispatch Queue',
+          ),
+          RoleTabItem(
+            label: 'LIVE MAP',
+            icon: Icons.map_outlined,
+            selectedIcon: Icons.map,
+            pageWidget: liveMapWidget,
+            pageTitle: 'Sanitation Facilities Map',
+          ),
+          RoleTabItem(
+            label: 'ACTIVE TASK',
+            icon: Icons.task_alt_outlined,
+            selectedIcon: Icons.task_alt,
+            pageWidget: const SanitationActiveTaskScreen(),
+            pageTitle: 'Active Sanitation Task',
+          ),
+          RoleTabItem(
+            label: 'HISTORY',
+            icon: Icons.history_outlined,
+            selectedIcon: Icons.history,
+            pageWidget: const SanitationHistoryScreen(),
+            pageTitle: 'Completed Sanitation History',
+          ),
+          RoleTabItem(
+            label: 'PROFILE',
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+            pageWidget: const ProfilePlaceholder(),
+            pageTitle: 'Sanitation Staff Profile',
           ),
         ];
 
