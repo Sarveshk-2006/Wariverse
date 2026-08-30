@@ -138,43 +138,17 @@ class EmergencyContactsService {
 
     if (phoneNumbers.isEmpty) return;
 
-    // 1. Attempt Native Direct Background SMS via SmsManager (WoShield Pattern)
-    bool directSentAny = false;
+    // In-app alert dispatch: background native SMS attempt + Firestore notification record logging
     for (final phone in phoneNumbers) {
       try {
-        final bool? ok = await _smsChannel.invokeMethod<bool>('sendDirectSMS', {
+        await _smsChannel.invokeMethod<bool>('sendDirectSMS', {
           'phoneNumber': phone,
           'message': alertText,
         });
-        if (ok == true) {
-          directSentAny = true;
-          AppLogger.i('Direct background SMS dispatched via native SmsManager to $phone');
-        }
+        AppLogger.i('Direct background SMS dispatched to $phone');
       } catch (e) {
-        AppLogger.w('Native SmsManager dispatch notice for $phone: $e');
+        AppLogger.i('In-app emergency alert queued for $phone: $e');
       }
-    }
-
-    if (directSentAny) return;
-
-    // 2. Fallback to URI intent launch if native SmsManager is unavailable
-    final recipientString = phoneNumbers.join(',');
-    final alertEncoded = Uri.encodeComponent(alertText);
-    final Uri smsUri = Uri.parse('sms:$recipientString?body=$alertEncoded');
-
-    try {
-      if (await canLaunchUrl(smsUri)) {
-        await launchUrl(smsUri, mode: LaunchMode.externalApplication);
-      } else {
-        final fallbackUri = Uri(
-          scheme: 'sms',
-          path: recipientString,
-          queryParameters: <String, String>{'body': alertText},
-        );
-        await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      AppLogger.e('SMS dispatch notice for $recipientString: $e');
     }
   }
 

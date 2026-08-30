@@ -20,6 +20,8 @@ class VirtualDindiRepository {
     }
   }
 
+  FirebaseFirestore? get firestore => _firestore;
+
   /// Creates a new Virtual Dindi in Firestore.
   Future<VirtualDindi> createVirtualDindi({
     required String name,
@@ -607,5 +609,32 @@ class VirtualDindiRepository {
     if (docRef != null) {
       await docRef.set(payload, SetOptions(merge: true));
     }
+  }
+
+  /// Fetches a Virtual Dindi by doc ID or join code.
+  Future<VirtualDindi?> getVirtualDindiByIdOrCode(String codeOrId) async {
+    final fs = _firestore;
+    if (codeOrId.isEmpty || fs == null) return null;
+    try {
+      final doc = await fs.collection('virtual_dindis').doc(codeOrId).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        data['id'] = doc.id;
+        return VirtualDindi.fromJson(data);
+      }
+      final snap = await fs
+          .collection('virtual_dindis')
+          .where('join_code', isEqualTo: codeOrId.trim().toUpperCase())
+          .limit(1)
+          .get();
+      if (snap.docs.isNotEmpty) {
+        final data = snap.docs.first.data();
+        data['id'] = snap.docs.first.id;
+        return VirtualDindi.fromJson(data);
+      }
+    } catch (e) {
+      AppLogger.w('getVirtualDindiByIdOrCode notice: $e');
+    }
+    return null;
   }
 }
