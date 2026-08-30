@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/wari_theme_exports.dart';
 import '../../providers/user_provider.dart';
 import '../../navigation/app_routes.dart';
 
-/// Animated Splash Screen featuring the official WariVerse AI logo.
+/// Premium Apple-Style Multi-Phase Animated Splash Screen for WariVerse AI.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -14,33 +13,41 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+  late Animation<double> _sparkPulse;
+  late Animation<double> _logoScale;
+  late Animation<double> _logoOpacity;
+  late Animation<double> _brandOpacity;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1400),
     );
 
-    _fadeAnimation = CurvedAnimation(
+    _sparkPulse = Tween<double>(begin: 0.2, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
+    );
+
+    _logoScale = Tween<double>(begin: 0.75, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
+    );
+
+    _logoOpacity = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeIn,
+      curve: const Interval(0.2, 0.6, curve: Curves.easeIn),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ),
+    _brandOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.5, 1.0, curve: Curves.easeIn),
     );
 
     _controller.forward();
 
-    // Navigate to Auth or App Shell after 1.2 seconds
-    Future.delayed(const Duration(milliseconds: 1300), () {
+    // Transition naturally after 1.2s animation finishes
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (!mounted) return;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final targetRoute = userProvider.isAuthenticated ? AppRoutes.shell : AppRoutes.login;
@@ -57,70 +64,120 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WariColors.background,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              WariColors.surface,
-              WariColors.background,
-              WariColors.primary.withValues(alpha: 0.05),
-            ],
-          ),
-        ),
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Official WariVerse AI Logo
-                      Image.asset(
-                        'assets/images/wariverse_logo.png',
-                        width: 140,
-                        height: 140,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(height: WariSpacing.md),
-                      Text(
-                        'WariVerse AI',
-                        style: WariTypography.headlineLarge.copyWith(
-                          color: WariColors.primaryDark,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Multi-Portal Pilgrimage Operations System',
-                        style: WariTypography.bodySmall.copyWith(
-                          color: WariColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: WariSpacing.xl),
-                      const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(WariColors.primary),
-                        ),
-                      ),
-                    ],
+      backgroundColor: const Color(0xFF0F172A),
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // Background Warm Golden Aura Radial Glow
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.8 * _sparkPulse.value,
+                      colors: [
+                        const Color(0xFFF97316).withValues(alpha: 0.25 * _sparkPulse.value),
+                        const Color(0xFFD97706).withValues(alpha: 0.10 * _sparkPulse.value),
+                        const Color(0xFF0F172A),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo Container with Golden Aura Ring
+                    Opacity(
+                      opacity: _logoOpacity.value,
+                      child: Transform.scale(
+                        scale: _logoScale.value,
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFF97316).withValues(alpha: 0.4 * _sparkPulse.value),
+                                blurRadius: 28,
+                                spreadRadius: 4 * _sparkPulse.value,
+                              ),
+                            ],
+                          ),
+                          child: Image.asset(
+                            'assets/images/wariverse_logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Brand Title & Tagline Reveal
+                    Opacity(
+                      opacity: _brandOpacity.value,
+                      child: Column(
+                        children: [
+                          Text(
+                            'WariVerse AI',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFF97316),
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Safer Wari. Smarter Coordination.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFFDBA74),
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Multi-Portal Pilgrimage Operations System',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Elegant Progress Indicator
+                    Opacity(
+                      opacity: _brandOpacity.value,
+                      child: const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF97316)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
