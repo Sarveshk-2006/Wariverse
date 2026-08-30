@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,14 +24,23 @@ class _SosIncidentHistoryScreenState extends State<SosIncidentHistoryScreen> {
   String? _errorMessage;
   List<SOSIncident> _sosIncidents = [];
   List<ThreatIncident> _threatIncidents = [];
+  StreamSubscription? _sosSub;
+  StreamSubscription? _threatSub;
 
   @override
   void initState() {
     super.initState();
-    _fetchHistoricalIncidents();
+    _subscribeRealtimeIncidents();
   }
 
-  Future<void> _fetchHistoricalIncidents() async {
+  @override
+  void dispose() {
+    _sosSub?.cancel();
+    _threatSub?.cancel();
+    super.dispose();
+  }
+
+  void _subscribeRealtimeIncidents() {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -41,16 +51,43 @@ class _SosIncidentHistoryScreenState extends State<SosIncidentHistoryScreen> {
       final sosRepo = Provider.of<SosRepository>(context, listen: false);
       final incidentRepo = Provider.of<IncidentRepository>(context, listen: false);
 
-      final sosResult = await sosRepo.getIncidents();
-      final threatList = await incidentRepo.getIncidents();
+      _sosSub?.cancel();
+      _sosSub = sosRepo.firestore.collection('sos_incidents').snapshots().listen((snap) {
+        final list = snap.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return SOSIncident.fromJson(data);
+        }).toList();
+        if (mounted) {
+          setState(() {
+            _sosIncidents = list;
+            _isLoading = false;
+          });
+        }
+      }, onError: (err) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Unable to stream live SOS: $err';
+            _isLoading = false;
+          });
+        }
+      });
 
-      if (mounted) {
-        setState(() {
-          _sosIncidents = sosResult.incidents;
-          _threatIncidents = threatList;
-          _isLoading = false;
-        });
-      }
+      _threatSub?.cancel();
+      _threatSub = incidentRepo.streamIncidents().listen((list) {
+        if (mounted) {
+          setState(() {
+            _threatIncidents = list;
+            _isLoading = false;
+          });
+        }
+      }, onError: (err) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -72,7 +109,7 @@ class _SosIncidentHistoryScreenState extends State<SosIncidentHistoryScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            onPressed: _fetchHistoricalIncidents,
+            onPressed: _subscribeRealtimeIncidents,
             tooltip: 'Refresh History',
           ),
         ],
@@ -108,7 +145,7 @@ class _SosIncidentHistoryScreenState extends State<SosIncidentHistoryScreen> {
               ),
               const SizedBox(height: WariSpacing.md),
               ElevatedButton.icon(
-                onPressed: _fetchHistoricalIncidents,
+                onPressed: _subscribeRealtimeIncidents,
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('RETRY FIREBASE FETCH'),
               ),
@@ -123,7 +160,7 @@ class _SosIncidentHistoryScreenState extends State<SosIncidentHistoryScreen> {
 
     if (allCount == 0) {
       return RefreshIndicator(
-        onRefresh: _fetchHistoricalIncidents,
+        onRefresh: () async => _subscribeRealtimeIncidents(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(WariSpacing.lg),
@@ -155,7 +192,7 @@ class _SosIncidentHistoryScreenState extends State<SosIncidentHistoryScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _fetchHistoricalIncidents,
+      onRefresh: () async => _subscribeRealtimeIncidents(),
       child: ListView(
         padding: const EdgeInsets.all(WariSpacing.base),
         children: [

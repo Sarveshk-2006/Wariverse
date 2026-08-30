@@ -244,6 +244,44 @@ class ThreatIncident {
     };
   }
 
+  static String _parseStringDate(dynamic val) {
+    if (val == null) return DateTime.now().toIso8601String();
+    if (val is String) return val;
+    if (val is DateTime) return val.toIso8601String();
+    try {
+      if (val is num) return DateTime.fromMillisecondsSinceEpoch(val.toInt()).toIso8601String();
+      return ((val as dynamic).toDate() as DateTime).toIso8601String();
+    } catch (_) {
+      return DateTime.now().toIso8601String();
+    }
+  }
+
+  static String? _parseNullableStringDate(dynamic val) {
+    if (val == null) return null;
+    if (val is String) return val;
+    if (val is DateTime) return val.toIso8601String();
+    try {
+      if (val is num) return DateTime.fromMillisecondsSinceEpoch(val.toInt()).toIso8601String();
+      return ((val as dynamic).toDate() as DateTime).toIso8601String();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static double _parseLat(dynamic val) {
+    if (val == null) return 18.5204;
+    final num? n = val is num ? val : num.tryParse(val.toString());
+    if (n == null || n.isNaN || n.isInfinite || n.abs() > 90.0 || n == 0.0) return 18.5204;
+    return n.toDouble();
+  }
+
+  static double _parseLng(dynamic val) {
+    if (val == null) return 73.8567;
+    final num? n = val is num ? val : num.tryParse(val.toString());
+    if (n == null || n.isNaN || n.isInfinite || n.abs() > 180.0 || n == 0.0) return 73.8567;
+    return n.toDouble();
+  }
+
   factory ThreatIncident.fromJson(Map<String, dynamic> json) {
     return ThreatIncident(
       incidentId: json['incident_id'] as String? ?? json['id'] as String? ?? '',
@@ -260,10 +298,10 @@ class ThreatIncident {
         orElse: () => IncidentSeverity.MEDIUM,
       ),
       description: json['description'] as String? ?? '',
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 18.5204,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 73.8567,
+      latitude: _parseLat(json['latitude']),
+      longitude: _parseLng(json['longitude']),
       accuracyMeters: (json['accuracy_meters'] as num?)?.toDouble() ?? 10.0,
-      locationTimestamp: json['location_timestamp'] as String? ?? json['created_at'] as String? ?? DateTime.now().toIso8601String(),
+      locationTimestamp: _parseStringDate(json['location_timestamp'] ?? json['created_at']),
       mediaUrls: (json['media_urls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       mediaType: json['media_type'] as String? ?? 'NONE',
       status: IncidentStatus.values.firstWhere(
@@ -278,14 +316,14 @@ class ThreatIncident {
       volunteerLongitude: (json['volunteer_longitude'] as num?)?.toDouble(),
       volunteerAccuracyMeters: (json['volunteer_accuracy_meters'] as num?)?.toDouble(),
       volunteerLocationTimestamp: json['volunteer_location_timestamp'] as String?,
-      createdAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
-      updatedAt: json['updated_at'] as String? ?? DateTime.now().toIso8601String(),
-      assignedAt: json['assigned_at'] as String?,
-      acceptedAt: json['accepted_at'] as String?,
-      enrouteAt: json['enroute_at'] as String?,
-      arrivedAt: json['arrived_at'] as String?,
-      resolvedAt: json['resolved_at'] as String?,
-      cancelledAt: json['cancelled_at'] as String?,
+      createdAt: _parseStringDate(json['created_at']),
+      updatedAt: _parseStringDate(json['updated_at']),
+      assignedAt: _parseNullableStringDate(json['assigned_at']),
+      acceptedAt: _parseNullableStringDate(json['accepted_at']),
+      enrouteAt: _parseNullableStringDate(json['enroute_at']),
+      arrivedAt: _parseNullableStringDate(json['arrived_at']),
+      resolvedAt: _parseNullableStringDate(json['resolved_at']),
+      cancelledAt: _parseNullableStringDate(json['cancelled_at']),
       resolutionNotes: json['resolution_notes'] as String?,
       isOffline: json['is_offline'] as bool? ?? false,
     );

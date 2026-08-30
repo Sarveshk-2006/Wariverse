@@ -49,8 +49,8 @@ void main() {
         category: ThreatCategory.OTHER,
         severity: IncidentSeverity.LOW,
         description: 'Resolved',
-        latitude: 18.5,
-        longitude: 73.8,
+        latitude: 18.5204,
+        longitude: 73.8567,
         locationTimestamp: '2026-08-30T00:00:00Z',
         status: IncidentStatus.RESOLVED,
         createdAt: '2026-08-30T00:00:00Z',
@@ -58,6 +58,30 @@ void main() {
       );
 
       expect(incident.isActive, isFalse);
+    });
+
+    test('Robustly handles malformed timestamps, null values, and missing GPS without crash', () {
+      final malformedMap = <String, dynamic>{
+        'id': 'inc_malformed_001',
+        'latitude': null,
+        'longitude': 0.0,
+        'created_at': 1788050000000,
+        'resolved_at': null,
+        'category': 'INVALID_CATEGORY',
+        'status': 'UNKNOWN_STATUS',
+      };
+
+      final parsed = ThreatIncident.fromJson(malformedMap);
+      expect(parsed.incidentId, equals('inc_malformed_001'));
+      expect(parsed.latitude, equals(18.5204));
+      expect(parsed.longitude, equals(73.8567));
+      expect(parsed.category, equals(ThreatCategory.OTHER));
+      expect(parsed.status, equals(IncidentStatus.CREATED));
+
+      final parsedSos = SOSIncident.fromJson(malformedMap);
+      expect(parsedSos.id, equals('inc_malformed_001'));
+      expect(parsedSos.latitude, equals(18.5204));
+      expect(parsedSos.longitude, equals(73.8567));
     });
   });
 

@@ -76,13 +76,14 @@ service cloud.firestore {
     // ── SOS Incidents Pipeline ───────────────────────────────────────────────
     match /sos_incidents/{incidentId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (
         resource.data.user_id == request.auth.uid ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.volunteer_enabled == true ||
         isRole('VOLUNTEER') ||
         isRole('MEDICAL_TEAM') ||
         isRole('POLICE') ||
+        isRole('NGO') ||
         isAdmin()
       );
       allow delete: if isAdmin();

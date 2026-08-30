@@ -59,14 +59,16 @@ service cloud.firestore {
         isRole('VOLUNTEER') || 
         isRole('MEDICAL_TEAM') || 
         isRole('POLICE') ||
+        isRole('NGO') ||
         isAdmin()
       );
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.user_id;
+      allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.user_id || 
         isRole('VOLUNTEER') || 
         isRole('MEDICAL_TEAM') || 
         isRole('POLICE') ||
+        isRole('NGO') ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -173,15 +175,17 @@ service cloud.firestore {
         isRole('MEDICAL_TEAM') ||
         isRole('POLICE') ||
         isRole('CLEANER') ||
+        isRole('NGO') ||
         isAdmin()
       );
-      allow create: if isAuthenticated() && request.resource.data.reporter_uid == request.auth.uid;
+      allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (
         resource.data.reporter_uid == request.auth.uid ||
         resource.data.assigned_volunteer_uid == request.auth.uid ||
         isRole('VOLUNTEER') ||
         isRole('MEDICAL_TEAM') ||
         isRole('POLICE') ||
+        isRole('NGO') ||
         isAdmin()
       );
       allow delete: if isAdmin();

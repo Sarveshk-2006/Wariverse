@@ -84,24 +84,59 @@ class SOSIncident {
     this.resolvedAt,
   });
 
+  static DateTime _parseDateTime(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is DateTime) return val;
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    try {
+      if (val is num) return DateTime.fromMillisecondsSinceEpoch(val.toInt());
+      return (val as dynamic).toDate() as DateTime;
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
+
+  static DateTime? _parseNullableDateTime(dynamic val) {
+    if (val == null) return null;
+    if (val is DateTime) return val;
+    if (val is String) return DateTime.tryParse(val);
+    try {
+      if (val is num) return DateTime.fromMillisecondsSinceEpoch(val.toInt());
+      return (val as dynamic).toDate() as DateTime;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static double _parseLatitude(dynamic val) {
+    if (val == null) return 18.5204;
+    final num? n = val is num ? val : num.tryParse(val.toString());
+    if (n == null || n.isNaN || n.isInfinite || n.abs() > 90.0 || n == 0.0) return 18.5204;
+    return n.toDouble();
+  }
+
+  static double _parseLongitude(dynamic val) {
+    if (val == null) return 73.8567;
+    final num? n = val is num ? val : num.tryParse(val.toString());
+    if (n == null || n.isNaN || n.isInfinite || n.abs() > 180.0 || n == 0.0) return 73.8567;
+    return n.toDouble();
+  }
+
   factory SOSIncident.fromJson(Map<String, dynamic> json) => SOSIncident(
-        id: json['id'] as String? ?? '',
-        userId: json['user_id'] as String? ?? '',
-        latitude: (json['latitude'] as num?)?.toDouble() ?? 17.6741,
-        longitude: (json['longitude'] as num?)?.toDouble() ?? 75.3279,
+        id: json['id'] as String? ?? json['sos_id'] as String? ?? '',
+        userId: json['user_id'] as String? ?? json['reporter_uid'] as String? ?? '',
+        latitude: _parseLatitude(json['latitude']),
+        longitude: _parseLongitude(json['longitude']),
         category: SOSCategoryX.fromString(json['category'] as String? ?? 'OTHER'),
         status: SOSStatusX.fromString(json['status'] as String? ?? 'CREATED'),
         description: json['description'] as String?,
         bloodGroup: json['blood_group'] as String?,
         emergencyContact: json['emergency_contact'] as String?,
         isOffline: json['is_offline'] as bool? ?? false,
-        responderName: json['responder_name'] as String?,
+        responderName: json['responder_name'] as String? ?? json['assigned_volunteer_name'] as String?,
         responderDistanceM: (json['responder_distance_m'] as num?)?.toDouble(),
-        createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
-            DateTime.now(),
-        resolvedAt: json['resolved_at'] != null
-            ? DateTime.tryParse(json['resolved_at'] as String)
-            : null,
+        createdAt: _parseDateTime(json['created_at']),
+        resolvedAt: _parseNullableDateTime(json['resolved_at']),
       );
 
   factory SOSIncident.fromSnapshot(dynamic doc) {

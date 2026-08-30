@@ -343,6 +343,15 @@ class IncidentRepository {
         .map((snap) => snap.docs.map((doc) => ThreatIncident.fromJson(doc.data())).toList());
   }
 
+  /// Realtime Stream of all operational incidents for Admin and NGO monitoring.
+  Stream<List<ThreatIncident>> streamIncidents() {
+    if (_firestore == null) return Stream.value([]);
+    return _firestore
+        .collection('incidents')
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) => ThreatIncident.fromJson(doc.data())).toList());
+  }
+
   /// One-time fetch of historical incidents from Cloud Firestore.
   Future<List<ThreatIncident>> getIncidents() async {
     if (_firestore == null) return [];
