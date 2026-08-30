@@ -240,7 +240,7 @@ export async function apiCall(
       }
       if (endpoint.startsWith('/reports/') && options.method === 'PATCH') {
         const id = endpoint.split('/')[2];
-        const body = JSON.parse(options.body);
+        const body = JSON.parse(options.body as string);
         await updateDoc(doc(fbDb, 'reports', id), body);
         return { success: true };
       }
@@ -261,7 +261,7 @@ export async function apiCall(
       }
       if (endpoint.startsWith('/feedback/') && options.method === 'PATCH') {
         const id = endpoint.split('/')[2];
-        const body = JSON.parse(options.body);
+        const body = JSON.parse(options.body as string);
         await updateDoc(doc(fbDb, 'feedback', id), body);
         return { success: true };
       }
@@ -358,73 +358,44 @@ export async function loginUser(email: string, password: string) {
   formData.append('username', email);
   formData.append('password', password);
 
-
-  // Hardcoded interception for reports and feedback if backend doesn't support it yet
-  if (endpoint === '/sanitation_reports') return MOCK_DATA['/sanitation_reports'] || [];
-  if (endpoint === '/reports') return MOCK_DATA['/reports'];
-  if (endpoint.startsWith('/sanitation_reports/') && options.method === 'PATCH') return { success: true };
-  if (endpoint.startsWith('/reports/') && options.method === 'PATCH') return { success: true };
-  if (endpoint === '/feedback') return MOCK_DATA['/feedback'];
-
-  let backendUnavailable = false;
-
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData,
     });
-
-    if (res.ok) {
-      return await res.json();
-    }
-
-    const detail = await res.text();
-    throw new Error(detail || `Login failed with status ${res.status}`);
+    if (res.ok) return await res.json();
+    return { error: 'Invalid credentials' };
   } catch (e) {
-    if (e instanceof TypeError) {
-      backendUnavailable = true;
-    } else {
-      throw e;
-    }
+    return { error: 'Network error' };
   }
-
-  // Allow demo login only when the backend is unreachable.
-  if (!backendUnavailable) throw new Error('Invalid credentials.');
-
-  if (MOCK_DEMO_USERS[email]) {
-    const demoUser = MOCK_DEMO_USERS[email];
-    return {
-      access_token: `demo-jwt-token-${demoUser.role.toLowerCase()}`,
-      token_type: 'bearer',
-      user_id: `demo-user-id-${demoUser.role.toLowerCase()}`,
-      role: demoUser.role,
-      display_name: demoUser.display_name,
-    };
-  }
-
-  throw new Error('Invalid credentials. Please use one of the Quick Demo Login buttons.');
-}
-
-export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('wv_token');
-}
-
-export function getUser(): any {
-  if (typeof window === 'undefined') return null;
-  const u = localStorage.getItem('wv_user');
-  return u ? JSON.parse(u) : null;
 }
 
 export function setAuth(token: string, user: any) {
-  localStorage.setItem('wv_token', token);
-  localStorage.setItem('wv_user', JSON.stringify(user));
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('wv_token', token);
+    localStorage.setItem('wv_user', JSON.stringify(user));
+  }
+}
+
+export function getToken() {
+  if (typeof window !== 'undefined') return localStorage.getItem('wv_token');
+  return null;
+}
+
+export function getUser() {
+  if (typeof window !== 'undefined') {
+    const u = localStorage.getItem('wv_user');
+    return u ? JSON.parse(u) : null;
+  }
+  return null;
 }
 
 export function clearAuth() {
-  localStorage.removeItem('wv_token');
-  localStorage.removeItem('wv_user');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('wv_token');
+    localStorage.removeItem('wv_user');
+  }
 }
 
 export function createWebSocket(clientId: string, onMessage: (data: any) => void, token?: string | null): WebSocket {
