@@ -12,8 +12,7 @@ import {
   where,
 } from 'firebase/firestore';
 
-const API_BASE = '/api';
-const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || 'wss://variverse.onrender.com';
+// Render decoupled: App is now completely serverless using Firebase + Next.js
 
 // ── In-memory cache (5-minute TTL) — prevents Firestore quota exhaustion ──────
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -184,39 +183,15 @@ export async function apiCall(
     return { food, water, toilets, shelters, medical, wellness };
   }
 
-  // ── fallback: proxy to Render backend — graceful on 404 ─────────────────
-  try {
-    const actualToken = token || getToken();
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (actualToken) headers['Authorization'] = `Bearer ${actualToken}`;
-    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-    if (res.ok) return res.json();
-    // 404 = endpoint doesn't exist on backend, return empty gracefully
-    if (res.status === 404 || res.status === 401 || res.status === 403) return [];
-    throw new Error(`Request failed: ${res.status}`);
-  } catch (e: any) {
-    // Network error or backend unavailable — return empty so UI doesn't crash
-    if (e?.message?.includes('fetch')) return [];
-    return [];
-  }
+  // ── fallback: completely decoupled from Render ───────────────────────────
+  // If an endpoint isn't mapped to a Firestore collection above, return []
+  return [];
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export async function loginUser(email: string, password: string) {
-  const formData = new URLSearchParams();
-  formData.append('username', email);
-  formData.append('password', password);
-  try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData,
-    });
-    if (res.ok) return await res.json();
-    return { error: 'Invalid credentials' };
-  } catch (e) {
-    return { error: 'Network error' };
-  }
+  // Backend login removed — auth is now handled completely serverlessly on frontend
+  return { error: 'Backend auth removed. Please use the simulated frontend auth flow.' };
 }
 
 export function setAuth(token: string, user: any) {
@@ -251,25 +226,16 @@ export function createWebSocket(
   onMessage: (data: any) => void,
   token?: string | null
 ): WebSocket {
-  try {
-    const actualToken = token || getToken();
-    if (!actualToken) return {} as WebSocket;
-    const ws = new WebSocket(
-      `${WS_BASE}/ws/${clientId}?token=${encodeURIComponent(actualToken)}`
-    );
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onMessage(data);
-      } catch {}
-    };
-    return ws;
-  } catch (e) {
-    return {} as WebSocket;
-  }
+  // Render backend removed completely. Returning dummy WebSocket.
+  // Real-time updates can be handled directly via Firestore onSnapshot if needed in future.
+  return {
+    close: () => {},
+    send: () => {},
+    readyState: 1, // OPEN
+  } as unknown as WebSocket;
 }
 
-export const API_BASE_URL = 'https://variverse.onrender.com';
+// API_BASE_URL removed
 
 export function openDirections(latitude: number, longitude: number, label?: string) {
   if (typeof window === 'undefined') return;
