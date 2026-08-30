@@ -1,4 +1,4 @@
-const API_BASE = typeof window !== 'undefined' ? '/api' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
 
 const MOCK_DATA: Record<string, any> = {
