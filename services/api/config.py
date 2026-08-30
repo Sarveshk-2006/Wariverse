@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
     GEMINI_API_KEY: str = ""
+    XAI_API_KEY: str = ""
+    XAI_REALTIME_MODEL: str = "grok-2-realtime"
+    XAI_REALTIME_BASE_URL: str = "https://api.x.ai/v1"
+    XAI_VOICE: str = "ara"
     DEMO_MODE: bool = True
     CORS_ORIGINS: str = "http://localhost:3000"
     APP_NAME: str = "WariVerse AI"

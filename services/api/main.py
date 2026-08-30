@@ -7,6 +7,7 @@ import json
 import math
 import random
 import uuid
+import httpx
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -2277,6 +2278,110 @@ async def get_dindi_leader_overview(
         "leader_user_id": current_user.id,
         "dindis": [serialize_model(d) for d in dindis]
     }
+
+
+# ─── xAI Grok Realtime Voice Session Authorization ───────────────────────────
+class GrokRealtimeSessionRequest(BaseModel):
+    voice: Optional[str] = None
+    model: Optional[str] = None
+    language: Optional[str] = "mr_IN"
+    system_instructions: Optional[str] = None
+
+class GrokRealtimeSessionResponse(BaseModel):
+    session_id: str
+    ws_url: str
+    ephemeral_token: str
+    model: str
+    voice: str
+    expires_at: str
+    is_demo_session: bool
+    default_instructions: str
+
+@app.post("/api/v1/realtime/grok-session", response_model=GrokRealtimeSessionResponse)
+async def create_grok_realtime_session(
+    payload: Optional[GrokRealtimeSessionRequest] = None,
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Secure backend authorization endpoint for xAI / Grok Realtime Voice-to-Voice sessions.
+    
+    Exchanges user session credentials for a temporary, short-lived xAI Realtime session
+    without exposing the server's permanent XAI_API_KEY secret to Flutter mobile clients.
+    """
+    if payload is None:
+        payload = GrokRealtimeSessionRequest()
+
+    selected_model = payload.model or settings.XAI_REALTIME_MODEL or "grok-2-realtime"
+    selected_voice = payload.voice or settings.XAI_VOICE or "ara"
+    
+    default_instructions = (
+        payload.system_instructions
+        or "You are WariVerse AI Assistant for Pandharpur Wari pilgrims. "
+           "Provide concise, reassuring, real-time voice guidance for navigation, "
+           "emergency SOS, Dindi procession tracking, and pilgrim aid in Marathi and English."
+    )
+
+    now = datetime.utcnow()
+    expires = now + timedelta(minutes=30)
+    session_id = f"grok_realtime_{uuid.uuid4().hex[:12]}"
+
+    # 1. If permanent XAI_API_KEY is configured, negotiate ephemeral session with xAI upstream
+    if settings.XAI_API_KEY and settings.XAI_API_KEY.strip():
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                upstream_res = await client.post(
+                    f"{settings.XAI_REALTIME_BASE_URL.rstrip('/')}/realtime/sessions",
+                    headers={
+                        "Authorization": f"Bearer {settings.XAI_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": selected_model,
+                        "voice": selected_voice,
+                        "modalities": ["audio", "text"],
+                        "instructions": default_instructions,
+                    }
+                )
+
+                if upstream_res.status_code in (200, 201):
+                    data = upstream_res.json()
+                    return GrokRealtimeSessionResponse(
+                        session_id=data.get("id", session_id),
+                        ws_url=data.get("ws_url", f"wss://api.x.ai/v1/realtime?session_id={data.get('id', session_id)}"),
+                        ephemeral_token=data.get("client_secret", {}).get("value", data.get("client_secret", uuid.uuid4().hex)),
+                        model=selected_model,
+                        voice=selected_voice,
+                        expires_at=expires.isoformat() + "Z",
+                        is_demo_session=False,
+                        default_instructions=default_instructions,
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail=f"xAI Grok API session negotiation returned HTTP {upstream_res.status_code}."
+                    )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Unable to reach xAI Grok Realtime upstream service: {str(e)}"
+            )
+
+    # 2. Ephemeral session configuration for local/demo/staging environments
+    ephemeral_token = f"eph_xai_{uuid.uuid4().hex}"
+    ws_url = f"wss://api.x.ai/v1/realtime?session_id={session_id}"
+
+    return GrokRealtimeSessionResponse(
+        session_id=session_id,
+        ws_url=ws_url,
+        ephemeral_token=ephemeral_token,
+        model=selected_model,
+        voice=selected_voice,
+        expires_at=expires.isoformat() + "Z",
+        is_demo_session=True,
+        default_instructions=default_instructions,
+    )
 
 
 # ─── Health Check ──────────────────────────────────────────────────────────────

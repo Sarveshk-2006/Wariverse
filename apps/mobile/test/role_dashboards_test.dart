@@ -146,16 +146,16 @@ void main() {
     });
   });
 
-  testWidgets('NGO role displays Web Portal Redirection view on mobile', (WidgetTester tester) async {
+  testWidgets('NGO role displays NGO Operational Command view on mobile', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp(role: UserRole.NGO));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.textContaining('NGO Operations Portal'), findsOneWidget);
-    expect(find.textContaining('Open NGO Web Dashboard →'), findsOneWidget);
-    expect(find.textContaining('View Incident History'), findsOneWidget);
+    expect(find.textContaining('NGO Operational Command'), findsOneWidget);
+    expect(find.textContaining('Open NGO Operations Portal →'), findsOneWidget);
+    expect(find.textContaining('Deploy Aid Center'), findsOneWidget);
 
     addTearDown(() async {
       tester.view.resetPhysicalSize();

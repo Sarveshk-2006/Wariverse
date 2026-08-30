@@ -14,6 +14,7 @@ import '../features/sos/sos_incident_history_screen.dart';
 import '../features/cleanwari/sanitation_tasks_screen.dart';
 import '../features/cleanwari/sanitation_active_task_screen.dart';
 import '../features/cleanwari/sanitation_history_screen.dart';
+import '../features/ngo/ngo_food_distribution_screen.dart';
 
 class RoleTabItem {
   final String label;
@@ -199,8 +200,40 @@ class RoleNavigationConfig {
           ),
         ];
 
-      // 4. WEB PORTAL ROLES (ADMIN & NGO - MINIMAL MOBILE EXPERIENCE)
+      // 5. NGO OPERATOR PORTAL
       case UserRole.NGO:
+        return [
+          RoleTabItem(
+            label: 'HOME',
+            icon: Icons.dashboard_outlined,
+            selectedIcon: Icons.dashboard,
+            pageWidget: const RoleDashboardView(),
+            pageTitle: 'NGO Operational Command',
+          ),
+          RoleTabItem(
+            label: 'FOOD AID',
+            icon: Icons.restaurant_outlined,
+            selectedIcon: Icons.restaurant,
+            pageWidget: const NgoFoodDistributionScreen(),
+            pageTitle: 'Food & Resource Distributions',
+          ),
+          RoleTabItem(
+            label: 'SOS HISTORY',
+            icon: Icons.history_rounded,
+            selectedIcon: Icons.history,
+            pageWidget: const SosIncidentHistoryScreen(),
+            pageTitle: 'Emergency SOS & Incident History',
+          ),
+          RoleTabItem(
+            label: 'PROFILE',
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+            pageWidget: const ProfilePlaceholder(),
+            pageTitle: 'NGO Account Profile',
+          ),
+        ];
+
+      // 6. EXECUTIVE ADMIN & SERVICE PROVIDER WEB PORTALS
       case UserRole.SERVICE_PROVIDER:
       case UserRole.ADMIN:
         return [

@@ -176,8 +176,8 @@ void main() {
     expect(volunteerTabs.map((t) => t.label), containsAll(['RESPONSE QUEUE', 'LIVE MAP', 'ACTIVE TASK', 'HISTORY', 'PROFILE']));
 
     final ngoTabs = RoleNavigationConfig.getTabsForRole(UserRole.NGO);
-    expect(ngoTabs.length, 3);
-    expect(ngoTabs.map((t) => t.label), containsAll(['WEB DASHBOARD', 'SOS HISTORY', 'PROFILE']));
+    expect(ngoTabs.length, 4);
+    expect(ngoTabs.map((t) => t.label), containsAll(['HOME', 'FOOD AID', 'SOS HISTORY', 'PROFILE']));
 
     final cleanerTabs = RoleNavigationConfig.getTabsForRole(UserRole.CLEANER);
     expect(cleanerTabs.length, 5);

@@ -10,6 +10,7 @@ import 'dindi_leader_dashboard.dart';
 import 'volunteer_dashboard.dart';
 import '../cleanwari/cleanwari_cleaner_screen.dart';
 import '../sos/sos_incident_history_screen.dart';
+import '../ngo/ngo_dashboard.dart';
 
 /// Centralized role-based operational dashboard renderer for WariVerse Field Mobile.
 class RoleDashboardView extends StatelessWidget {
@@ -34,8 +35,9 @@ class RoleDashboardView extends StatelessWidget {
         return const VolunteerDashboard();
       case UserRole.CLEANER:
         return const CleanWariCleanerScreen();
-      case UserRole.ADMIN:
       case UserRole.NGO:
+        return const NgoDashboard();
+      case UserRole.ADMIN:
       case UserRole.SERVICE_PROVIDER:
         return const WebPortalRedirectWidget();
     }
