@@ -22,6 +22,7 @@ import 'providers/nearby_services_provider.dart';
 import 'providers/qr_provider.dart';
 import 'providers/virtual_dindi_provider.dart';
 import 'providers/incident_provider.dart';
+import 'providers/cleanwari_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +84,14 @@ void main() async {
         ),
         ChangeNotifierProvider<IncidentProvider>(
           create: (_) => IncidentProvider(repository: incidentRepository),
+        ),
+        Provider<CleanWariRepository>(
+          create: (_) => CleanWariRepository(apiService),
+        ),
+        ChangeNotifierProvider<CleanWariProvider>(
+          create: (ctx) => CleanWariProvider(
+            repository: Provider.of<CleanWariRepository>(ctx, listen: false),
+          ),
         ),
         ChangeNotifierProvider<NearbyServicesProvider>(
           create: (_) => NearbyServicesProvider(serviceRepo: serviceRepo),

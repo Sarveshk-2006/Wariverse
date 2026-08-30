@@ -137,6 +137,17 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /sanitation_reports/{reportId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.reporter_id == request.auth.uid ||
+        isRole('CLEANER') ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
     // ── NGO Resource Inventory ───────────────────────────────────────────────
     match /resource_inventory/{itemId} {
       allow read: if isAuthenticated();

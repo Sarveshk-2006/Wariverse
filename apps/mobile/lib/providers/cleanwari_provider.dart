@@ -1,13 +1,18 @@
-﻿import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../models/models_exports.dart';
 import '../repositories/cleanwari_repository.dart';
 import '../services/cleanwari_dispatch_service.dart';
 
 /// Provider managing CleanWari reporting workflows, cleaner task feed, and duplicate protection.
+/// Real-time powered directly by Cloud Firestore `sanitation_reports` collection.
 class CleanWariProvider extends ChangeNotifier {
   final CleanWariRepository _repository;
+  StreamSubscription<List<CleanlinessReport>>? _reportsSubscription;
 
-  CleanWariProvider({required CleanWariRepository repository}) : _repository = repository;
+  CleanWariProvider({required CleanWariRepository repository}) : _repository = repository {
+    _subscribeRealtimeReports();
+  }
 
   List<CleanlinessReport> _reports = [];
   List<CleanlinessReport> _cleanerTasks = [];
@@ -25,6 +30,31 @@ class CleanWariProvider extends ChangeNotifier {
   bool get isDuplicateNotice => _isDuplicateNotice;
   String? get errorMessage => _errorMessage;
 
+  @override
+  void dispose() {
+    _reportsSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _subscribeRealtimeReports() {
+    _reportsSubscription?.cancel();
+    _reportsSubscription = _repository.streamReports().listen((list) {
+      _reports = list;
+      _cleanerTasks = list;
+      if (_activeReport != null) {
+        final updatedIndex = list.indexWhere((r) => r.id == _activeReport!.id);
+        if (updatedIndex != -1) {
+          _activeReport = list[updatedIndex];
+        }
+      }
+      notifyListeners();
+    }, onError: (err) {
+      _hasError = true;
+      _errorMessage = 'Unable to stream sanitation reports: $err';
+      notifyListeners();
+    });
+  }
+
   Future<void> loadReports() async {
     _isLoading = true;
     _hasError = false;
@@ -32,6 +62,7 @@ class CleanWariProvider extends ChangeNotifier {
 
     try {
       _reports = await _repository.fetchReports();
+      _cleanerTasks = _reports;
     } catch (e) {
       _hasError = true;
       _errorMessage = 'Unable to load reports: $e';
@@ -47,7 +78,8 @@ class CleanWariProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _cleanerTasks = await _repository.fetchCleanerTasks(cleanerId);
+      final all = await _repository.fetchCleanerTasks(cleanerId);
+      _cleanerTasks = all;
     } catch (e) {
       _hasError = true;
       _errorMessage = 'Unable to load cleaner tasks: $e';
@@ -90,7 +122,6 @@ class CleanWariProvider extends ChangeNotifier {
 
     final submitted = await _repository.submitReport(report);
     _activeReport = submitted;
-    await loadReports();
     return submitted;
   }
 
@@ -98,7 +129,15 @@ class CleanWariProvider extends ChangeNotifier {
     final updated = await _repository.updateReportStatus(reportId, CleanlinessReportStatus.ACCEPTED);
     if (updated != null) {
       _activeReport = updated;
-      await loadReports();
+      notifyListeners();
+    }
+  }
+
+  Future<void> markEnRoute(String reportId) async {
+    final updated = await _repository.updateReportStatus(reportId, CleanlinessReportStatus.IN_PROGRESS);
+    if (updated != null) {
+      _activeReport = updated;
+      notifyListeners();
     }
   }
 
@@ -106,7 +145,7 @@ class CleanWariProvider extends ChangeNotifier {
     final updated = await _repository.updateReportStatus(reportId, CleanlinessReportStatus.IN_PROGRESS);
     if (updated != null) {
       _activeReport = updated;
-      await loadReports();
+      notifyListeners();
     }
   }
 
@@ -118,19 +157,7 @@ class CleanWariProvider extends ChangeNotifier {
     );
     if (updated != null) {
       _activeReport = updated;
-      await loadReports();
-    }
-  }
-
-  Future<void> unableToComplete(String reportId, String reason) async {
-    final updated = await _repository.updateReportStatus(
-      reportId,
-      CleanlinessReportStatus.UNABLE_TO_COMPLETE,
-      resolutionNote: reason,
-    );
-    if (updated != null) {
-      _activeReport = updated;
-      await loadReports();
+      notifyListeners();
     }
   }
 }

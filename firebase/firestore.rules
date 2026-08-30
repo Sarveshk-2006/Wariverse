@@ -92,6 +92,31 @@ service cloud.firestore {
     // Realtime Dindi Documents
     match /dindis/{dindiId} {
       allow read: if isAuthenticated();
+      
+      // ── CleanWari Sanitation System ──────────────────────────────────────────
+      match /toilets/{toiletId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated();
+        allow delete: if isAdmin();
+      }
+
+      match /cleaning_logs/{logId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && (isRole('CLEANER') || isAdmin());
+        allow update, delete: if isAdmin();
+      }
+
+      match /sanitation_reports/{reportId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated() && (
+          resource.data.reporter_id == request.auth.uid ||
+          isRole('CLEANER') ||
+          isAdmin()
+        );
+        allow delete: if isAdmin();
+      }
+
       allow write: if isDindiLeader(dindiId);
       
       match /location/{updateId} {
@@ -104,6 +129,7 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         allow update, delete: if isDindiLeader(dindiId) || request.auth.uid == resource.data.author_uid;
       }
+    }
     // Realtime Resource Deployments & Aid Distribution Security Rules
     match /resource_deployments/{deploymentId} {
       allow read: if isAuthenticated();
