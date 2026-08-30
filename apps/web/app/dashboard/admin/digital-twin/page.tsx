@@ -84,7 +84,8 @@ export default function DigitalTwinPage() {
       setLoading(false);
     };
     fetchAll();
-    const interval = setInterval(fetchAll, 15000);
+    // Poll every 5 minutes to match cache TTL — prevents Firestore quota exhaustion
+    const interval = setInterval(fetchAll, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
