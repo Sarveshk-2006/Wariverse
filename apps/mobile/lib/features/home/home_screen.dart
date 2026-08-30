@@ -72,6 +72,69 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
           children: [
             const HomeHeader(),
             const SizedBox(height: WariSpacing.base),
+
+            // Senior-Citizen Accessible High-Visibility Emergency SOS Trigger Card
+            InkWell(
+              onTap: () => Navigator.pushNamed(context, '/sos'),
+              borderRadius: BorderRadius.circular(WariSpacing.radiusLg),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(WariSpacing.radiusLg),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33DC2626),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Colors.white,
+                      child: Icon(Icons.sos_rounded, color: Color(0xFFDC2626), size: 28),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'EMERGENCY SOS',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Tap here for instant emergency help & dispatch',
+                            style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(WariSpacing.radiusFull),
+                      ),
+                      child: const Text(
+                        'GET HELP',
+                        style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: WariSpacing.base),
+
             RoleSummaryCard(),
             const SizedBox(height: WariSpacing.base),
             VarkariIncidentCard(

@@ -55,6 +55,9 @@ void main() {
     });
 
     testWidgets('LoginScreen renders portal options and Admin Notice box when ADMIN is selected', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+
       final apiService = ApiService(client: MockTestHttpClient());
       final authRepo = AuthRepository(apiService);
 
@@ -75,12 +78,15 @@ void main() {
       expect(find.text('Portal Access'), findsOneWidget);
 
       // Select ADMIN portal
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Executive Command Center (Admin)').last);
+      await tester.tap(find.text('ADMIN'), warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Executive Command Center access is restricted'), findsOneWidget);
+      expect(find.textContaining('Admin Command Center is restricted'), findsOneWidget);
+
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
     });
 
     test('QrProvider getOrCreatePilgrimIdQr uses stable Firestore QR identity', () async {

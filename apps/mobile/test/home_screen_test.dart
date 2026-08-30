@@ -54,7 +54,7 @@ void main() {
   }
 
   testWidgets('Home screen renders devotional greeting and header elements', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp());
@@ -71,7 +71,7 @@ void main() {
   });
 
   testWidgets('Home screen renders crowd status card and quick actions', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp());
@@ -94,7 +94,7 @@ void main() {
   });
 
   testWidgets('Home screen renders nearest services section', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp());
@@ -109,7 +109,7 @@ void main() {
   });
 
   testWidgets('Digital Pilgrim ID QR modal opens and closes correctly', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestableApp());
