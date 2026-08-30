@@ -13,3 +13,5 @@ export 'dindi_audio_repository.dart';
 export 'abhang_repository.dart';
 export 'cleanwari_repository.dart';
 export 'qr_repository.dart';
+export 'incident_repository.dart';
+export 'virtual_dindi_repository.dart';

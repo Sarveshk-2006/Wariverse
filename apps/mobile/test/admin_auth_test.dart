@@ -12,6 +12,10 @@ import 'package:mobile/features/auth/login_screen.dart';
 import 'test_helpers.dart';
 
 import 'package:mobile/features/splash/splash_screen.dart';
+import 'package:mobile/features/sos/sos_incident_history_screen.dart';
+import 'package:mobile/repositories/sos_repository.dart';
+import 'package:mobile/repositories/incident_repository.dart';
+import 'package:mobile/providers/incident_provider.dart';
 import 'package:mobile/navigation/app_router.dart';
 
 void main() {
@@ -102,6 +106,33 @@ void main() {
       final qr2 = await qrProvider.getOrCreatePilgrimIdQr('user_varkari_101');
       expect(qr2.id, equals(qr1.id));
       expect(qr2.token, equals(qr1.token));
+    });
+
+    testWidgets('SosIncidentHistoryScreen resolves IncidentRepository and SosRepository without Provider error', (WidgetTester tester) async {
+      final apiService = ApiService(client: MockTestHttpClient());
+      final authRepo = AuthRepository(apiService);
+      final sosRepo = SosRepository(apiService);
+      final incidentRepo = IncidentRepository();
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ApiService>.value(value: apiService),
+            Provider<AuthRepository>.value(value: authRepo),
+            Provider<SosRepository>.value(value: sosRepo),
+            Provider<IncidentRepository>.value(value: incidentRepo),
+            ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider(authRepo)),
+            ChangeNotifierProvider<IncidentProvider>(create: (_) => IncidentProvider(repository: incidentRepo)),
+          ],
+          child: const MaterialApp(
+            home: SosIncidentHistoryScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('SOS & Incident History'), findsOneWidget);
+      expect(find.textContaining('Provider<IncidentRepository> not found'), findsNothing);
     });
   });
 }

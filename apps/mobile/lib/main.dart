@@ -42,6 +42,7 @@ void main() async {
   final sosRepository = SosRepository(apiService);
   final serviceRepo = ServiceRepository(apiService);
   final crowdRepo = CrowdRepository(apiService);
+  final incidentRepository = IncidentRepository();
   
   runApp(
     MultiProvider(
@@ -51,6 +52,7 @@ void main() async {
         Provider<SosRepository>.value(value: sosRepository),
         Provider<ServiceRepository>.value(value: serviceRepo),
         Provider<CrowdRepository>.value(value: crowdRepo),
+        Provider<IncidentRepository>.value(value: incidentRepository),
         ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(authRepository)..loadSavedSession(),
         ),
@@ -80,7 +82,7 @@ void main() async {
           create: (_) => VirtualDindiProvider(),
         ),
         ChangeNotifierProvider<IncidentProvider>(
-          create: (_) => IncidentProvider(),
+          create: (_) => IncidentProvider(repository: incidentRepository),
         ),
         ChangeNotifierProvider<NearbyServicesProvider>(
           create: (_) => NearbyServicesProvider(serviceRepo: serviceRepo),
