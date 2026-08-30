@@ -234,6 +234,8 @@ class VirtualDindiMember {
   final int? batteryLevel;
   final String lastOnlineAt;
   final bool isLeader;
+  final String? qrCode;
+  final String? qrPayload;
 
   const VirtualDindiMember({
     required this.uid,
@@ -252,7 +254,14 @@ class VirtualDindiMember {
     this.batteryLevel,
     required this.lastOnlineAt,
     this.isLeader = false,
+    this.qrCode,
+    this.qrPayload,
   });
+
+  String get formattedQrPayload {
+    if (qrPayload != null && qrPayload!.isNotEmpty) return qrPayload!;
+    return 'VARKARI\nID: $uid\nNAME: $displayName\nDINDI: Virtual Dindi\nREF: REG-2026-WARI';
+  }
 
   factory VirtualDindiMember.fromJson(Map<String, dynamic> json) {
     return VirtualDindiMember(
@@ -272,6 +281,8 @@ class VirtualDindiMember {
       batteryLevel: json['battery_level'] as int?,
       lastOnlineAt: json['last_online_at'] as String? ?? DateTime.now().toIso8601String(),
       isLeader: json['is_leader'] as bool? ?? false,
+      qrCode: json['qr_code'] as String? ?? json['qrCode'] as String?,
+      qrPayload: json['qr_payload'] as String? ?? json['qrPayload'] as String?,
     );
   }
 
@@ -293,6 +304,8 @@ class VirtualDindiMember {
       'battery_level': batteryLevel,
       'last_online_at': lastOnlineAt,
       'is_leader': isLeader,
+      'qr_code': qrCode,
+      'qr_payload': qrPayload,
     };
   }
 

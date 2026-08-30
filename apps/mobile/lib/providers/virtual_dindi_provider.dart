@@ -76,9 +76,39 @@ class VirtualDindiProvider with ChangeNotifier {
   String? _currentRole;
 
   void setCurrentUser({required String uid, required String displayName, required String role}) {
+    final changed = _currentUserUid != uid;
     _currentUserUid = uid;
     _currentDisplayName = displayName;
     _currentRole = role;
+    if (changed && uid.isNotEmpty) {
+      loadUserDindiOnLaunch(uid);
+    }
+  }
+
+  Future<void> loadUserDindiOnLaunch(String uid) async {
+    _currentUserUid = uid;
+    try {
+      final fs = _repository.firestore;
+      if (fs != null) {
+        final userDoc = await fs.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          final data = userDoc.data();
+          final dindiCode = data?['dindi_code'] as String? ?? data?['dindi_id'] as String?;
+          if (dindiCode != null && dindiCode.isNotEmpty) {
+            final dindi = await _repository.getVirtualDindiByIdOrCode(dindiCode);
+            if (dindi != null) {
+              _activeDindi = dindi;
+              _subscribeToStreams(dindi.dindiId);
+              _startGpsLocationTracking();
+              notifyListeners();
+              return;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.w('loadUserDindiOnLaunch notice: $e');
+    }
   }
 
   Future<void> _loadCachedState() async {

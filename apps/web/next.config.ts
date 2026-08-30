@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://variverse.onrender.com";
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${BACKEND_URL}/:path*`,
+        destination: `${apiBaseUrl}/:path*`,
       },
     ];
   },

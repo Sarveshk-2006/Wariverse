@@ -244,6 +244,22 @@ class SosProvider extends ChangeNotifier {
       _isFromMock = res.isFromMock;
       _uiState = SosUiState.active;
 
+      // Automatically capture 5-second emergency audio recording
+      _evidenceService.start5SecondSosAudioRecording(
+        incidentId: res.incident.id,
+        onComplete: (audioUrl) async {
+          try {
+            await _sosRepo.firestore.collection('sos_incidents').doc(res.incident.id).update({
+              'audio_url': audioUrl,
+              'audio_status': 'UPLOADED',
+              'audio_duration_seconds': 5,
+              'updated_at': DateTime.now().toIso8601String(),
+            });
+            AppLogger.i('Updated SOS incident ${res.incident.id} with emergency audio URL: $audioUrl');
+          } catch (_) {}
+        },
+      );
+
       _startLiveLocationTracking();
       await loadIncidents();
     } catch (e) {
@@ -324,6 +340,7 @@ class SosProvider extends ChangeNotifier {
     final targetId = id ?? _activeIncident?.id;
     if (targetId == null) return;
     _isLoading = true;
+    _evidenceService.cancelRecording();
     notifyListeners();
 
     try {
@@ -347,6 +364,7 @@ class SosProvider extends ChangeNotifier {
     final targetId = id ?? _activeIncident?.id;
     if (targetId == null) return;
     _isLoading = true;
+    _evidenceService.cancelRecording();
     notifyListeners();
 
     try {
@@ -401,6 +419,7 @@ class SosProvider extends ChangeNotifier {
   @override
   void dispose() {
     _stopLiveLocationTracking();
+    _evidenceService.cancelRecording();
     _evidenceService.removeListener(notifyListeners);
     _wsService?.unsubscribe('SOS_UPDATE', _onWebSocketSosEvent);
     _wsService?.unsubscribe('NEW_SOS', _onWebSocketSosEvent);

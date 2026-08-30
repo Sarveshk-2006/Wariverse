@@ -105,6 +105,27 @@ class _MapScreenContentState extends State<_MapScreenContent> {
   }
 
   void _recenterMap() async {
+    final modalArgs = ModalRoute.of(context)?.settings.arguments;
+    if (modalArgs is Map<String, dynamic>) {
+      final targetLat = modalArgs['targetLat'] as double?;
+      final targetLng = modalArgs['targetLng'] as double?;
+      final targetName = modalArgs['targetName'] as String?;
+      if (targetLat != null && targetLng != null && targetLat != 0.0) {
+        final targetLatLng = LatLng(targetLat, targetLng);
+        try {
+          _mapController.move(targetLatLng, 16.0);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('📍 Focused on separated Varkari location: ${targetName ?? "Member"}'),
+              backgroundColor: WariColors.primaryDark,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } catch (_) {}
+        return;
+      }
+    }
+
     final mapProvider = Provider.of<MapProvider>(context, listen: false);
     final locService = WariLocationService();
     try {
