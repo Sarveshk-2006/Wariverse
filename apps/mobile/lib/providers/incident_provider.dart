@@ -117,7 +117,11 @@ class IncidentProvider with ChangeNotifier {
             notifyListeners();
           },
         );
-      } else if (role == UserRole.VOLUNTEER) {
+      } else if (role == UserRole.VOLUNTEER ||
+                 role == UserRole.POLICE ||
+                 role == UserRole.MEDICAL_TEAM ||
+                 role == UserRole.CLEANER ||
+                 role == UserRole.ADMIN) {
         _assignedSub = _repository.streamAssignedIncidents(uid).listen(
           (incidents) {
             _isLoading = false;
@@ -138,40 +142,38 @@ class IncidentProvider with ChangeNotifier {
             notifyListeners();
           },
           onError: (err) {
-            AppLogger.e('Error loading Volunteer assigned stream', err);
+            AppLogger.e('Error loading assigned response stream', err);
             _isLoading = false;
             _hasError = true;
             _errorMessage = 'Live response queue unavailable';
             notifyListeners();
           },
         );
-      } else if (role == UserRole.ADMIN || role == UserRole.POLICE || role == UserRole.MEDICAL_TEAM) {
-        _allIncidentsSub = _repository.streamAllIncidents().listen(
-          (incidents) {
-            _isLoading = false;
-            _hasError = false;
-            _errorMessage = null;
-            _allActiveIncidents = incidents;
-            notifyListeners();
-          },
-          onError: (err) {
-            AppLogger.e('Error loading Admin incidents stream', err);
-            _isLoading = false;
-            _hasError = true;
-            _errorMessage = 'Command center incident stream unavailable';
-            notifyListeners();
-          },
-        );
 
-        _auditLogsSub = _repository.streamAuditLogs().listen(
-          (logs) {
-            _auditLogs = logs;
-            notifyListeners();
-          },
-          onError: (err) {
-            AppLogger.e('Error loading Admin audit logs stream', err);
-          },
-        );
+        if (role == UserRole.ADMIN || role == UserRole.POLICE || role == UserRole.MEDICAL_TEAM) {
+          _allIncidentsSub = _repository.streamAllIncidents().listen(
+            (incidents) {
+              _isLoading = false;
+              _hasError = false;
+              _errorMessage = null;
+              _allActiveIncidents = incidents;
+              notifyListeners();
+            },
+            onError: (err) {
+              AppLogger.e('Error loading Admin incidents stream', err);
+            },
+          );
+
+          _auditLogsSub = _repository.streamAuditLogs().listen(
+            (logs) {
+              _auditLogs = logs;
+              notifyListeners();
+            },
+            onError: (err) {
+              AppLogger.e('Error loading Admin audit logs stream', err);
+            },
+          );
+        }
       } else {
         _isLoading = false;
         notifyListeners();

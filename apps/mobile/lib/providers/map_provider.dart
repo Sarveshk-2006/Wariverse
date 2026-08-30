@@ -60,6 +60,13 @@ class MapProvider extends ChangeNotifier {
     return _allMarkers.where((m) => m.layer == _activeLayer || m.layer == 'user').toList();
   }
 
+  void setUserLocation(LatLng location) {
+    if (_userLocation.latitude != location.latitude || _userLocation.longitude != location.longitude) {
+      _userLocation = location;
+      notifyListeners();
+    }
+  }
+
   void setActiveLayer(String layerKey) {
     if (_activeLayer != layerKey) {
       _activeLayer = layerKey;

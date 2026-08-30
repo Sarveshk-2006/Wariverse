@@ -170,35 +170,51 @@ class _DownloadOfflineMapModalState extends State<DownloadOfflineMapModal> {
 
           // Download Status or Progress
           if (offlineProvider.isDownloading) ...[
-            LinearProgressIndicator(
-              value: offlineProvider.downloadProgress > 0 ? offlineProvider.downloadProgress : null,
-              backgroundColor: WariColors.slate200,
-              valueColor: const AlwaysStoppedAnimation<Color>(WariColors.primary),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(WariSpacing.xs),
+              child: LinearProgressIndicator(
+                value: offlineProvider.downloadProgress > 0 ? offlineProvider.downloadProgress : null,
+                minHeight: 8,
+                backgroundColor: WariColors.slate200,
+                valueColor: const AlwaysStoppedAnimation<Color>(WariColors.primary),
+              ),
             ),
             const SizedBox(height: WariSpacing.xs),
-            Text(
-              offlineProvider.downloadStatusMessage,
-              style: const TextStyle(fontSize: 12, color: WariColors.textSecondary),
-              textAlign: TextAlign.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  offlineProvider.downloadStatusMessage,
+                  style: const TextStyle(fontSize: 12, color: WariColors.textSecondary, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${(offlineProvider.downloadProgress * 100).clamp(0, 100).toInt()}%',
+                  style: const TextStyle(fontSize: 12, color: WariColors.primary, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: WariSpacing.md),
           ],
 
           if (offlineProvider.downloadStatusMessage.startsWith('✓')) ...[
             Container(
-              padding: const EdgeInsets.all(WariSpacing.sm),
+              padding: const EdgeInsets.all(WariSpacing.md),
               decoration: BoxDecoration(
                 color: WariColors.successLight,
-                borderRadius: BorderRadius.circular(WariSpacing.sm),
+                borderRadius: BorderRadius.circular(WariSpacing.md),
+                border: Border.all(color: WariColors.success.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: WariColors.success, size: 20),
-                  const SizedBox(width: WariSpacing.xs),
+                  const Icon(Icons.check_circle_rounded, color: WariColors.success, size: 24),
+                  const SizedBox(width: WariSpacing.sm),
                   Expanded(
-                    child: Text(
-                      offlineProvider.downloadStatusMessage,
-                      style: const TextStyle(color: WariColors.successDark, fontWeight: FontWeight.bold),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Offline Map Package Saved!', style: TextStyle(color: WariColors.successDark, fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(offlineProvider.downloadStatusMessage, style: const TextStyle(color: WariColors.textSecondary, fontSize: 11)),
+                      ],
                     ),
                   ),
                 ],

@@ -95,6 +95,8 @@ class _CreateVirtualDindiScreenState extends State<CreateVirtualDindiScreen> {
         criticalThresholdMeters: _criticalThreshold,
       );
 
+      userProvider.promoteToDindiLeader();
+
       setState(() {
         _createdDindi = dindi;
         _isCreating = false;

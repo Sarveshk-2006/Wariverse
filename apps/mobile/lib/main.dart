@@ -52,7 +52,7 @@ void main() async {
         Provider<ServiceRepository>.value(value: serviceRepo),
         Provider<CrowdRepository>.value(value: crowdRepo),
         ChangeNotifierProvider<UserProvider>(
-          create: (_) => UserProvider(authRepository)..initDefaultSession(),
+          create: (_) => UserProvider(authRepository)..loadSavedSession(),
         ),
         ChangeNotifierProvider<SosProvider>(
           create: (_) => SosProvider(

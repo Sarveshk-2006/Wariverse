@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models_exports.dart';
 import '../repositories/repositories_exports.dart';
 import '../services/onesignal_service.dart';
 import '../services/offline_map_storage_service.dart';
+import '../core/utils/app_logger.dart';
 
 enum AuthState {
   unauthenticated,
@@ -46,6 +49,54 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Load saved persistent user session & role on app launch or restart.
+  Future<void> loadSavedSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJsonStr = prefs.getString('auth_user_json');
+      final roleStr = prefs.getString('auth_role_name');
+      final isAuth = prefs.getBool('auth_is_authenticated') ?? false;
+
+      if (isAuth && userJsonStr != null && userJsonStr.isNotEmpty) {
+        final Map<String, dynamic> map = jsonDecode(userJsonStr);
+        final user = AppUser.fromJson(map);
+        _currentUser = user;
+        if (roleStr != null && roleStr.isNotEmpty) {
+          _currentRole = UserRoleX.fromString(roleStr);
+        } else {
+          _currentRole = user.userRole;
+        }
+        _isDemoMode = user.isDemoMode;
+        _authState = AuthState.authenticatedWithRole;
+        OneSignalService().loginUser(user.userId);
+        AppLogger.i('Restored persistent user session for ${user.displayName} as ${_currentRole.displayName}');
+        notifyListeners();
+        return;
+      }
+    } catch (e) {
+      AppLogger.w('Failed to restore saved user session: $e');
+    }
+    initDefaultDemoUser();
+  }
+
+  /// Save active user session & role to SharedPreferences for automatic login on restart.
+  Future<void> _persistSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_currentUser != null && _authState == AuthState.authenticatedWithRole) {
+        await prefs.setString('auth_user_json', jsonEncode(_currentUser!.toJson()));
+        await prefs.setString('auth_role_name', _currentRole.name);
+        await prefs.setBool('auth_is_authenticated', true);
+      } else {
+        await prefs.remove('auth_user_json');
+        await prefs.remove('auth_role_name');
+        await prefs.setBool('auth_is_authenticated', false);
+      }
+    } catch (e) {
+      AppLogger.w('Session persistence warning: $e');
+    }
+  }
+
   /// Helper for unit tests / demo user testing.
   void initDefaultDemoUser() {
     _currentUser = const AppUser(
@@ -58,6 +109,7 @@ class UserProvider extends ChangeNotifier {
     _currentRole = UserRole.VARKARI;
     _authState = AuthState.authenticatedWithRole;
     _isDemoMode = true;
+    _persistSession();
     notifyListeners();
   }
 
@@ -118,9 +170,26 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  /// Switch active role for authorized administrative testing.
+  /// Switch active role and persist to local storage.
   void switchRole(UserRole role) {
     _currentRole = role;
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(role: role.name);
+    }
+    _persistSession();
+    notifyListeners();
+  }
+
+  /// Promote current user to Dindi Leader upon Virtual Dindi creation.
+  void promoteToDindiLeader() {
+    _currentRole = UserRole.DINDI_LEADER;
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(
+        role: 'DINDI_LEADER',
+        dindiLeaderStatus: 'APPROVED',
+      );
+    }
+    _persistSession();
     notifyListeners();
   }
 
@@ -131,6 +200,7 @@ class UserProvider extends ChangeNotifier {
     _isDemoMode = user.isDemoMode;
     _authState = AuthState.authenticatedWithRole;
     OneSignalService().loginUser(user.userId);
+    _persistSession();
     notifyListeners();
   }
 
@@ -203,7 +273,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   /// Complete production logout.
-  void logout() {
+  void logout() async {
     OneSignalService().logoutUser();
     OfflineMapStorageService().clearUserPrivateOfflineData();
     _authRepo.signOut();
@@ -213,6 +283,12 @@ class UserProvider extends ChangeNotifier {
     _isDemoMode = false;
     _errorMessage = null;
     _authRepo.clearToken();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_user_json');
+      await prefs.remove('auth_role_name');
+      await prefs.setBool('auth_is_authenticated', false);
+    } catch (_) {}
     notifyListeners();
   }
 

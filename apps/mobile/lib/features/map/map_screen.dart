@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:provider/provider.dart';
@@ -72,43 +73,64 @@ class _MapScreenContent extends StatefulWidget {
 
 class _MapScreenContentState extends State<_MapScreenContent> {
   late final MapController _mapController;
+  StreamSubscription<WariPosition>? _livePosSub;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    final locService = WariLocationService();
+    locService.startTracking();
+    _livePosSub = locService.positionStream.listen((pos) {
+      if (mounted && pos.latitude != 0.0 && pos.longitude != 0.0) {
+        final mapProvider = Provider.of<MapProvider>(context, listen: false);
+        mapProvider.setUserLocation(LatLng(pos.latitude, pos.longitude));
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        Provider.of<MapProvider>(context, listen: false).loadMapData();
+        final mapProvider = Provider.of<MapProvider>(context, listen: false);
+        await mapProvider.loadMapData();
+        _recenterMap();
       }
     });
   }
 
   @override
   void dispose() {
+    _livePosSub?.cancel();
     _mapController.dispose();
     super.dispose();
   }
 
   void _recenterMap() async {
     final mapProvider = Provider.of<MapProvider>(context, listen: false);
-    final userLoc = mapProvider.userLocation;
-
-    if (userLoc.latitude != 0.0 && userLoc.longitude != 0.0) {
-      _mapController.move(userLoc, 15.0);
-    } else {
-      final locService = WariLocationService();
+    final locService = WariLocationService();
+    try {
       final pos = await locService.getCurrentPosition();
       if (pos.latitude != 0.0 && pos.longitude != 0.0) {
-        _mapController.move(LatLng(pos.latitude, pos.longitude), 15.0);
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location unavailable. Please enable GPS to center map on your position.'),
-            backgroundColor: WariColors.warning,
-          ),
-        );
+        final userLatLng = LatLng(pos.latitude, pos.longitude);
+        mapProvider.setUserLocation(userLatLng);
+        try {
+          _mapController.move(userLatLng, 15.5);
+        } catch (_) {}
+        return;
       }
+    } catch (_) {}
+
+    final userLoc = mapProvider.userLocation;
+    if (userLoc.latitude != 0.0 && userLoc.longitude != 0.0) {
+      try {
+        _mapController.move(userLoc, 15.5);
+      } catch (_) {}
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Acquiring Varkari GPS location... Please enable location permissions.'),
+          backgroundColor: WariColors.warning,
+        ),
+      );
     }
   }
 
