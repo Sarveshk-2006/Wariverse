@@ -133,6 +133,7 @@ class _VirtualDindiMembersScreenState extends State<VirtualDindiMembersScreen> {
                     borderRadius: BorderRadius.circular(WariSpacing.radiusMd),
                     side: BorderSide(color: isMe ? WariColors.primary : WariColors.border),
                   ),
+                  onTap: () => _showSeparationDetailModal(context, m, dindi.name),
                   leading: CircleAvatar(
                     backgroundColor: badgeColor.withValues(alpha: 0.15),
                     child: Icon(
@@ -207,16 +208,16 @@ class _VirtualDindiMembersScreenState extends State<VirtualDindiMembersScreen> {
   }
 
   void _showMemberQrDialog(BuildContext context, VirtualDindiMember member, String dindiName) {
-    final qrToken = 'WVRK:${member.uid}';
+    final payload = member.formattedQrPayload;
+    final varkariId = 'WVRK-${member.uid.hashCode.abs().toString().padLeft(6, '0').substring(0, 6)}';
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Column(
           children: [
-            Image.asset('assets/images/wariverse_logo.png', width: 44, height: 44),
-            const SizedBox(height: 6),
             Text(member.displayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('Dindi: $dindiName', style: const TextStyle(fontSize: 12, color: WariColors.textSecondary)),
+            Text('ID: $varkariId • Dindi: $dindiName', style: const TextStyle(fontSize: 12, color: WariColors.textSecondary)),
           ],
         ),
         content: Column(
@@ -230,26 +231,160 @@ class _VirtualDindiMembersScreenState extends State<VirtualDindiMembersScreen> {
                 border: Border.all(color: WariColors.border),
               ),
               child: QrImageView(
-                data: 'https://web-one-tau-17.vercel.app/verify-pilgrim?token=$qrToken',
+                data: payload,
                 version: QrVersions.auto,
                 size: 160.0,
               ),
             ),
             const SizedBox(height: 10),
-            SelectableText(
-              'PASS TOKEN: $qrToken',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: WariColors.primaryDark),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: WariColors.slate100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SelectableText(
+                payload,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: WariColors.primaryDark),
+                textAlign: TextAlign.center,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             const Text(
-              'Official Verified WariVerse Pilgrim Identity',
+              'Official Verified WariVerse Pilgrim Identity (Google Lens Compatible)',
               style: TextStyle(fontSize: 10, color: WariColors.success, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
         ],
+      ),
+    );
+  }
+
+  void _showSeparationDetailModal(BuildContext context, VirtualDindiMember member, String dindiName) {
+    final String varkariId = 'WVRK-${member.uid.hashCode.abs().toString().padLeft(6, '0').substring(0, 6)}';
+    final isSeparated = member.separationState == SeparationState.SEPARATED || member.separationState == SeparationState.CRITICAL;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: (isSeparated ? WariColors.danger : WariColors.success).withValues(alpha: 0.15),
+                  radius: 24,
+                  child: Icon(
+                    isSeparated ? Icons.warning_amber_rounded : Icons.verified_user_rounded,
+                    color: isSeparated ? WariColors.danger : WariColors.success,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(member.displayName, style: WariTypography.titleLarge),
+                      Text('ID: $varkariId • Dindi: $dindiName', style: WariTypography.caption),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isSeparated ? WariColors.danger : WariColors.success,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    member.separationState.name,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: WariColors.slate100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      const Text('DISTANCE', style: TextStyle(fontSize: 10, color: WariColors.textMuted, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(
+                        VirtualDindiEngine.formatDistance(member.distanceFromGroupMeters),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: WariColors.primaryDark),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('STATUS', style: TextStyle(fontSize: 10, color: WariColors.textMuted, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(
+                        member.trend.displayName,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: WariColors.slate800),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('GPS BEACON', style: TextStyle(fontSize: 10, color: WariColors.textMuted, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Live 🟢',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: WariColors.success),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            WariPrimaryButton(
+              label: 'VIEW LOCATION ON MAP',
+              icon: Icons.map_rounded,
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pushNamed(
+                  context,
+                  '/map',
+                  arguments: {
+                    'targetLat': member.lastLatitude,
+                    'targetLng': member.lastLongitude,
+                    'targetName': member.displayName,
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            WariSecondaryButton(
+              label: 'SHOW VARKARI PASS QR',
+              icon: Icons.qr_code_2_rounded,
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showMemberQrDialog(context, member, dindiName);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

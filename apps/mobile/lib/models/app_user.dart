@@ -55,6 +55,8 @@ class AppUser {
   final String dindiLeaderStatus;
   final String sanitationStatus;
   final String ngoStatus;
+  final String? qrCode;
+  final String? qrPayload;
 
   const AppUser({
     required this.userId,
@@ -72,9 +74,17 @@ class AppUser {
     this.dindiLeaderStatus = 'NONE',
     this.sanitationStatus = 'NONE',
     this.ngoStatus = 'NONE',
+    this.qrCode,
+    this.qrPayload,
   });
 
   UserRole get userRole => UserRoleX.fromString(role);
+
+  String get formattedQrPayload {
+    if (qrPayload != null && qrPayload!.isNotEmpty) return qrPayload!;
+    final dindi = dindiCode != null && dindiCode!.isNotEmpty ? dindiCode! : 'VDND-4107';
+    return 'VARKARI\nID: $userId\nNAME: $displayName\nDINDI: $dindi\nREF: REG-2026-WARI';
+  }
 
   bool get isVolunteerApproved => volunteerStatus == 'APPROVED' || volunteerEnabled;
   bool get isDindiLeaderApproved => dindiLeaderStatus == 'APPROVED' || isDindiLeader;
@@ -97,6 +107,8 @@ class AppUser {
     String? dindiLeaderStatus,
     String? sanitationStatus,
     String? ngoStatus,
+    String? qrCode,
+    String? qrPayload,
   }) {
     return AppUser(
       userId: userId ?? this.userId,
@@ -114,6 +126,8 @@ class AppUser {
       dindiLeaderStatus: dindiLeaderStatus ?? this.dindiLeaderStatus,
       sanitationStatus: sanitationStatus ?? this.sanitationStatus,
       ngoStatus: ngoStatus ?? this.ngoStatus,
+      qrCode: qrCode ?? this.qrCode,
+      qrPayload: qrPayload ?? this.qrPayload,
     );
   }
 
@@ -133,6 +147,8 @@ class AppUser {
         dindiLeaderStatus: json['dindi_leader_status'] as String? ?? (json['is_dindi_leader'] == true ? 'APPROVED' : 'NONE'),
         sanitationStatus: json['sanitation_status'] as String? ?? 'NONE',
         ngoStatus: json['ngo_status'] as String? ?? 'NONE',
+        qrCode: json['qr_code'] as String? ?? json['qrCode'] as String?,
+        qrPayload: json['qr_payload'] as String? ?? json['qrPayload'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -148,6 +164,8 @@ class AppUser {
         'dindi_leader_status': dindiLeaderStatus,
         'sanitation_status': sanitationStatus,
         'ngo_status': ngoStatus,
+        'qr_code': qrCode,
+        'qr_payload': qrPayload,
       };
 }
 

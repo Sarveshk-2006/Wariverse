@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/wari_theme_exports.dart';
@@ -122,7 +122,7 @@ class _DigitalDindiPassContent extends StatelessWidget {
                         ],
                       ),
                       child: QrImageView(
-                        data: pass.qrPayload,
+                        data: user?.formattedQrPayload ?? pass.qrPayload,
                         version: QrVersions.auto,
                         size: 180.0,
                         eyeStyle: const QrEyeStyle(

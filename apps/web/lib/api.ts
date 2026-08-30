@@ -238,9 +238,9 @@ export async function apiCall(
           return snap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
       }
-      if (endpoint.startsWith('/reports/') && options.method === 'PATCH') {
+      if (endpoint.startsWith('/reports/') && options?.method === 'PATCH') {
         const id = endpoint.split('/')[2];
-        const body = JSON.parse(options.body);
+        const body = JSON.parse((options.body as string) || '{}');
         await updateDoc(doc(fbDb, 'reports', id), body);
         return { success: true };
       }
@@ -259,9 +259,9 @@ export async function apiCall(
           return snap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
       }
-      if (endpoint.startsWith('/feedback/') && options.method === 'PATCH') {
+      if (endpoint.startsWith('/feedback/') && options?.method === 'PATCH') {
         const id = endpoint.split('/')[2];
-        const body = JSON.parse(options.body);
+        const body = JSON.parse((options.body as string) || '{}');
         await updateDoc(doc(fbDb, 'feedback', id), body);
         return { success: true };
       }
@@ -357,14 +357,6 @@ export async function loginUser(email: string, password: string) {
   const formData = new URLSearchParams();
   formData.append('username', email);
   formData.append('password', password);
-
-
-  // Hardcoded interception for reports and feedback if backend doesn't support it yet
-  if (endpoint === '/sanitation_reports') return MOCK_DATA['/sanitation_reports'] || [];
-  if (endpoint === '/reports') return MOCK_DATA['/reports'];
-  if (endpoint.startsWith('/sanitation_reports/') && options.method === 'PATCH') return { success: true };
-  if (endpoint.startsWith('/reports/') && options.method === 'PATCH') return { success: true };
-  if (endpoint === '/feedback') return MOCK_DATA['/feedback'];
 
   let backendUnavailable = false;
 
